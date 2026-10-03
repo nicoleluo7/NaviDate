@@ -30,7 +30,7 @@ Only authenticated SDK-stream direct text messages are processed. Event claims p
 
 ## Deliberate limitations
 
-The local graph has curated connectivity and estimated distances but needs field verification. No street-following line is invented. Venue coordinates are approximate and most hours remain unknown. Bus schedules are not seeded. Weather is daily, for the start date only. Dietary preferences and free text are soft preferences, never guarantees. No voice input is implemented; a future transcription adapter can target `CriteriaInputAdapter` and the same validation pipeline.
+The local graph has curated connectivity and estimated distances but needs field verification. No street-following line is invented. Venue coordinates are approximate and most hours remain unknown. Bus schedules are not seeded. Weather uses validated Open-Meteo hourly timestamps and the itinerary’s actual elapsed-time window, including overnight and DST transitions. Conditions rank indoor stops higher; thunderstorms or strong winds exclude outdoor activities. Missing coverage falls back honestly. Saved plans retain forecast snapshots for schedule recalculation. Dietary preferences and free text are soft preferences, never guarantees. No voice input is implemented; a future transcription adapter can target `CriteriaInputAdapter` and the same validation pipeline.
 
 Supabase, ORS, xAI and Photon compile against documented interfaces, but no live credentialed test has been run. The default OSM tile server is not an availability SLA. Serving a phone-accessible share URL remains a separate deployment decision.
 

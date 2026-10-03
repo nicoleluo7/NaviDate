@@ -1,5 +1,7 @@
 import Planner from "@/components/planner/Planner";
-export default function Home() {
+import { connection } from "next/server";
+export default async function Home() {
+  await connection();
   return (
     <Planner
       ai={!!process.env.XAI_API_KEY}

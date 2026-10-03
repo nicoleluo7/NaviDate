@@ -406,3 +406,222 @@ button[data-focus-visible],
   font-size: 15px;
   font-weight: 500;
 }
+/* Compact, readable phone layout and date-specific forecast. */
+.weather-panel {
+  margin: 22px 0;
+  padding: 20px;
+  border: 1px solid #dce3d4;
+  border-radius: 16px;
+  background: #f2f5ec;
+  min-width: 0;
+}
+.weather-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.weather-heading > svg {
+  flex-shrink: 0;
+  color: #526f5a;
+}
+.weather-heading h3 {
+  font-size: 17px;
+}
+.weather-heading p,
+.weather-advice {
+  font-size: 14px;
+  margin-top: 5px;
+}
+.weather-window,
+.weather-source {
+  font-size: 12px;
+  color: #5d6c5a;
+  margin-top: 10px;
+}
+.weather-source a {
+  text-decoration: underline;
+}
+.weather-hours {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 12px 0 4px;
+  scrollbar-width: thin;
+}
+.weather-hour {
+  flex: 0 0 88px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 6px;
+  border-radius: 12px;
+  background: #fffdf8;
+}
+.weather-hour time {
+  font-size: 12px;
+  color: #63735e;
+}
+.weather-hour strong {
+  font-size: 18px;
+}
+.weather-hour span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.card-weather {
+  font-size: 13px !important;
+  margin: 12px 0 8px;
+  color: #526f5a;
+}
+@media (max-width: 640px) {
+  .hero {
+    padding: 28px 0 24px;
+  }
+  .hero-copy {
+    text-align: center;
+  }
+  .hero .location-tag,
+  .hero-footnote {
+    justify-content: center;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 10vw, 52px);
+    line-height: 1.08;
+  }
+  .hero p {
+    margin-top: 18px;
+  }
+  .hero p br {
+    display: none;
+  }
+  .hero .primary {
+    width: 100%;
+  }
+  .planner-section {
+    padding-top: 20px;
+  }
+  .section-intro {
+    margin-bottom: 22px;
+  }
+  .section-intro h2 {
+    font-size: 29px;
+  }
+  .form-card {
+    padding: 18px 16px;
+  }
+  .form-grid {
+    gap: 14px 12px;
+  }
+  .form-grid > label > span,
+  .form-grid > .soft-field > .field-label,
+  .form-grid > .soft-field > .react-aria-TimeField > .field-label,
+  .form-grid > .wide .field-label {
+    min-height: 24px;
+    align-items: center;
+    align-content: center;
+  }
+  .form-grid > .budget-field > span {
+    min-height: 44px;
+  }
+  .form-grid > .duration-field > .field-label {
+    min-height: 44px;
+  }
+  .form-grid > .budget-field > span > svg {
+    display: none;
+  }
+  .field-control {
+    min-height: 50px;
+  }
+  .date-types {
+    margin-top: 22px;
+    padding-bottom: 20px;
+  }
+  .vibes > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .vibes button {
+    justify-content: center;
+    font-size: 13px;
+    min-height: 46px;
+  }
+  .vibes button:last-child {
+    grid-column: 1 / -1;
+  }
+  .transport-row {
+    gap: 8px;
+  }
+  .itinerary-heading h2 {
+    font-size: 29px;
+    overflow-wrap: anywhere;
+  }
+  .itinerary-heading .heart-outline {
+    display: none;
+  }
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .stat-row > span {
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .stat-row > span:last-child {
+    grid-column: 1 / -1;
+  }
+  .weather-panel {
+    padding: 16px;
+    margin: 16px 0;
+  }
+  .weather-heading {
+    align-items: flex-start;
+  }
+  .weather-heading h3 {
+    font-size: 16px;
+  }
+  .mobile-tabs {
+    position: sticky;
+    top: 8px;
+    z-index: 5;
+    box-shadow: 0 3px 14px #283b3310;
+  }
+  .timeline-step {
+    padding-left: 10px;
+  }
+  .stop-card {
+    padding: 16px;
+  }
+  .stop-select h3 {
+    font-size: 18px;
+  }
+  .stop-actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .stop-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+  .plan-card-body {
+    padding: 18px;
+  }
+  .plan-card h3 {
+    font-size: 21px;
+  }
+  .action-bar {
+    margin-top: 18px;
+  }
+  .how {
+    gap: 22px;
+    padding-top: 30px;
+  }
+  footer {
+    margin-top: 36px;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+  }
+}

@@ -268,12 +268,12 @@ export default function Planner({
               <span /> CORNELL & ITHACA, NY
             </div>
             <h1>
-              Less planning.
+              <em>Navigate</em> your
               <br />
-              More <em>butterflies.</em>
+              next <em>date.</em>
             </h1>
             <p>
-              Turn “What should we do?” into a date.
+              Turn “What should we do?” into a date.{" "}
               <br />A few favorites, a little adventure, and a plan
               <br className="desktop-break" /> that gets you there together.
             </p>
@@ -725,6 +725,7 @@ export default function Planner({
                           : "Walking"}
                       </span>
                     </div>
+                    <p className="card-weather">{p.weather.summary}</p>
                     <small>{p.suitability} · Hours may be unverified</small>
                     <div className="choose">
                       {selected?.id === p.id

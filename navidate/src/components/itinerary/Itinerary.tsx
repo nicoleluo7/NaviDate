@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Plan } from "@/types";
 import { displayTime } from "@/lib/planner/time";
+import WeatherPanel from "./WeatherPanel";
 import MapLoader from "@/components/map/MapLoader";
 export default function Itinerary({
   plan,
@@ -130,6 +131,7 @@ export default function Itinerary({
           {plan.weather.summary}
         </span>
       </div>
+      <WeatherPanel weather={plan.weather} />
       <div className="mobile-tabs" role="group" aria-label="Itinerary view">
         <Button
           aria-pressed={tab === "timeline"}

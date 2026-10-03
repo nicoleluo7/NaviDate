@@ -44,8 +44,10 @@ export default function Map({
     L.control.zoom({ position: "bottomright" }).addTo(m);
     L.control.scale({ imperial: false, position: "bottomleft" }).addTo(m);
     const tile = L.tileLayer(
-      process.env.NEXT_PUBLIC_MAP_TILE_URL ||
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      process.env.NEXT_PUBLIC_MAP_TILE_URL?.replace(/%7B/gi, "{").replace(
+        /%7D/gi,
+        "}",
+      ) || "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         attribution:
           process.env.NEXT_PUBLIC_MAP_ATTRIBUTION ||

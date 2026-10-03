@@ -18,6 +18,8 @@ export async function generate(input: unknown, options: PlannerOptions = {}) {
   const weather = await getWeather(c),
     result = await planDates(c, { ...options, sequences, weather });
   result.ai = ai;
+  if (weather.available && weather.advice && (weather.wet || weather.severe))
+    result.notices.push(weather.advice);
   if (ai && result.plans.length) {
     try {
       result.plans = await explainValidPlans(result.plans);

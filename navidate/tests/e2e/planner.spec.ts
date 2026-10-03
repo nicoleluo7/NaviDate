@@ -18,7 +18,7 @@ test("plans, maps, saves, shares and protects editing", async ({
   );
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Less planning. More butterflies." }),
+    page.getByRole("heading", { name: "Navigate your next date." }),
   ).toBeVisible();
   await page.screenshot({
     path: `test-results/home-${test.info().project.name}.png`,

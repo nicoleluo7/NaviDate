@@ -73,11 +73,29 @@ export const placeSchema = z.object({
   ]),
 });
 export type Place = z.infer<typeof placeSchema>;
+export type WeatherHour = {
+  time: string;
+  temperature: number;
+  rain: number;
+  precipitation: number;
+  snow: number;
+  wind: number;
+  code: number;
+};
 export type Weather = {
   available: boolean;
   summary: string;
   rain?: number;
   high?: number;
+  low?: number;
+  wind?: number;
+  wet?: boolean;
+  severe?: boolean;
+  advice?: string;
+  startsAt?: string;
+  endsAt?: string;
+  fetchedAt?: string;
+  hours?: WeatherHour[];
   source: string;
 };
 export type Leg = {

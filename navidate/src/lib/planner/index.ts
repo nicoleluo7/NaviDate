@@ -18,6 +18,11 @@ import {
 import { directTrips, type TransitData, type WalkLookup } from "@/lib/transit";
 import { localTime, iso } from "./time";
 import { fitsHours } from "./hours";
+import {
+  favorsIndoors,
+  weatherForWindow,
+  unavailableWeather,
+} from "@/lib/integrations/weather";
 export type PlannerOptions = {
   places?: Place[];
   router?: WalkingRouter;
@@ -173,11 +178,24 @@ export async function schedule(
     return reject(
       `Walking: this combination needs ${walkKm.toFixed(1)} km. Increase the walking limit or start closer.`,
     );
-  const weather = options.weather ?? {
-    available: false,
-    summary: "Forecast unavailable",
-    source: "Open-Meteo",
-  };
+  const weather = weatherForWindow(
+    options.weather ?? unavailableWeather(),
+    start,
+    now,
+  );
+  for (const stop of stops) {
+    if (
+      stop.place.indoorOutdoor === "outdoor" &&
+      weatherForWindow(
+        options.weather ?? unavailableWeather(),
+        Date.parse(stop.arrival),
+        Date.parse(stop.departure),
+      ).severe
+    )
+      return reject(
+        "Storms or strong wind overlap an outdoor activity. Choose indoor activities or another time.",
+      );
+  }
   const warnings = [
     "Costs are planning estimates for two, not quotes. Confirm current prices.",
   ];
@@ -197,6 +215,7 @@ export async function schedule(
     warnings.push(
       "DEMO BUS SCHEDULE: fictional service; do not use for travel.",
     );
+  if (favorsIndoors(weather) && weather.advice) warnings.push(weather.advice);
   const outdoor = sequence.some((p) => p.indoorOutdoor === "outdoor");
   const id = createHash("sha256")
     .update(JSON.stringify([c, sequence.map((p) => p.id)]))
@@ -224,10 +243,10 @@ export async function schedule(
     duration: (now - start) / 60000,
     walkKm: Math.round(walkKm * 100) / 100,
     warnings,
-    weather,
+    weather: { ...weather, hours: options.weather?.hours ?? weather.hours },
     suitability: outdoor
-      ? weather.available && weather.rain! >= 50
-        ? "Outdoor stops · bring a rain plan"
+      ? favorsIndoors(weather)
+        ? "Outdoor stops · weather caution"
         : "Outdoor stops · weather dependent"
       : "Indoor activities · outdoor travel",
   };
@@ -248,6 +267,10 @@ export async function planDates(
     )
     .sort(
       (a, b) =>
+        (favorsIndoors(options.weather) && c.setting === "any"
+          ? Number(b.indoorOutdoor === "indoor") -
+            Number(a.indoorOutdoor === "indoor")
+          : 0) ||
         Number(matchesDateType(b, c.dateType)) -
           Number(matchesDateType(a, c.dateType)) ||
         distance(a.coordinates, c.start) - distance(b.coordinates, c.start),
@@ -292,6 +315,13 @@ export async function planDates(
   const score = (p: Plan) =>
     p.stops.filter((s) => s.place.vibeTags.includes(c.vibe)).length * 10 +
     new Set(p.stops.map((s) => s.place.category)).size * 5 -
+    (favorsIndoors(p.weather)
+      ? p.stops
+          .filter((s) => s.place.indoorOutdoor === "outdoor")
+          .reduce((n, s) => n + s.place.typicalDurationMinutes, 0) *
+          2 +
+        p.walkKm * 8
+      : 0) -
     p.walkKm * 3 -
     p.cost / 30 +
     ((parseInt(p.id.slice(0, 4), 16) + seed * 997) % 17) / 8;

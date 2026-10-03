@@ -59,12 +59,12 @@ The validator prints missing verification dates and unknown hours as warnings, n
 | Walking        | Dijkstra over a small curated estimate graph, with conservative times at 65 m/min. **Not field-verified. No fabricated route lines.** No automatic arbitrary-point snapping beyond 30m of a known place. |
 | Maps           | Client-only Leaflet and standard OSM raster tiles with visible attribution. No offline prefetching. Public tiles have no uptime guarantee.                                                               |
 | Bus            | Direct-trip engine implemented. Real schedule files are empty, so real bus results are disabled and walking is used. Fictional schedules are confined to tests. No real-time tracking.                   |
-| Weather        | Open-Meteo daily forecast when inside the 16-day window. Otherwise “Forecast unavailable.” API failure never blocks planning.                                                                            |
+| Weather        | Open-Meteo hourly forecast for the selected date and time within its 16-day window. Otherwise “Forecast unavailable.” API failure never blocks planning.                                                                            |
 | xAI            | Optional interpretation, venue-ID suggestions and wording of validated results. Local planning works without it. No live xAI call was made during implementation.                                        |
 | Photon         | Stable Spectrum SDK worker, inbound planning, follow-ups, pairing and delivery-attempt state implemented. Requires a user-activated project and line; no live delivery tested.                           |
 | Supabase / ORS | Optional adapters implemented; no live account or key was configured or tested.                                                                                                                          |
 
-The app cannot verify street accessibility, temporary closures, slopes, transit changes or holiday exceptions that have not been entered. The graph needs an on-foot route audit before use as verified navigation. Outdoor activities are weather-dependent. Forecasts describe the start date; a trip crossing midnight may need a second day's forecast checked manually.
+The app cannot verify street accessibility, temporary closures, slopes, transit changes or holiday exceptions that have not been entered. The graph needs an on-foot route audit before use as verified navigation. Outdoor activities are weather-dependent. Hourly forecasts cover the full date window, including midnight crossings. Rain, snow, strong wind, freezing temperatures and heat favor indoor stops; forecast storms exclude outdoor activities. Walking remains weather-dependent. Saved dates retain a timestamped forecast snapshot; regenerate to refresh it.
 
 ## xAI text setup
 
@@ -94,6 +94,8 @@ start=arts-quad; date=2026-10-03; time=13:00; duration=180; budget=50; vibe=Cozy
 ```
 
 Follow-ups: `make it cheaper` (reduces the budget by $15), `start time 14:30`, `make it indoors`, `regenerate`. A follow-up creates a fresh immutable share link; earlier shared plans remain readable. Conversation criteria and current share ID persist across restarts. Only direct messages are handled; group messages and outbound echoes are ignored.
+
+**If “Send to myself” is disabled:** use `navidate/.env.local` (next to `package.json`), and fill in all three values: `SPECTRUM_PROJECT_ID`, `SPECTRUM_PROJECT_SECRET`, and `PHOTON_AGENT_ADDRESS`. The phone number alone is insufficient. Restart the web server and Photon worker after environment changes, refresh the page, and save your itinerary before pairing. Keep the worker running to receive the pairing message.
 
 **Send to myself:** save in the creator browser and choose “Send to myself.” Messages opens with `pair CODE` ready; press Send from your own iMessage account. After that reply, you can ask about the saved date. Questions about the time, cost, stops, weather, or link are answered on the machine and sent immediately. Anything else goes to Gemini when `GEMINI_API_KEY` is a free Google AI Studio key, using only that saved plan. If the key is missing or Gemini does not answer within a couple of seconds, the reply falls back to those same local answers. Do not add billing to the Google project. Codes are random, one-use, and expire after 10 minutes. The worker replies only to that authenticated inbound conversation. No arbitrary phone-number sending endpoint exists. Use “Check pairing status” to inspect the attempt. `accepted` means Spectrum returned a message ID, **not** independently verified handset delivery. `unknown` or `failed` never appears as “sent.”
 
@@ -149,3 +151,5 @@ The homepage restores your most recently saved date in the same browser. Its cre
 The expanded list includes three Gimme! locations, Moosewood, Viva, Bickering Twins, Purity, Ithaca Bakery, Saigon Kitchen, and DeWitt Park. New coordinates, durations, prices and walking connectivity are estimates. Reviewed opening hours are recorded only where clear; unknown or conflicting hours remain null. No new walking geometry is claimed.
 
 The form now uses React Aria Components for keyboard-accessible buttons, dropdowns, a calendar popover, and an AM/PM time field with quarter-hour suggestions. Any exact minute can still be typed. Escape dismisses menus and restores focus. The warm cream/coral theme lives in `src/app/controls.css`. The user-supplied two-pin heart logo is retained unchanged in `public/navidate-logo.png`.
+
+Weather uses the [Open-Meteo forecast API](https://open-meteo.com/en/docs), with no API key. Wet-weather ranking starts at a 60% precipitation chance, 0.5 mm precipitation per hour, or any snow. These are planning heuristics, not safety guarantees. Missing hourly coverage and API failures show “Forecast unavailable” and allow planning to continue.
