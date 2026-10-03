@@ -1,0 +1,98 @@
+import { test, expect } from "@playwright/test";
+test("plans, maps, saves, shares and protects editing", async ({
+  page,
+  browser,
+  isMobile,
+}) => {
+  // Tiles are deliberately mocked; live external services are never needed by CI.
+  await page.route("https://tile.openstreetmap.org/**", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "image/png",
+      body: Buffer.from(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=",
+        "base64",
+      ),
+    }),
+  );
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Less planning. More butterflies." }),
+  ).toBeVisible();
+  await page.screenshot({
+    path: `test-results/home-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  await page.getByLabel("Date", { exact: true }).fill("2026-10-02");
+  const planResponse = page.waitForResponse(
+    (r) => r.url().endsWith("/api/plan") && r.request().method() === "POST",
+  );
+  await page
+    .getByRole("button", { name: "Find our date", exact: true })
+    .click();
+  const draft = await (await planResponse).json();
+  await expect(
+    page.getByRole("heading", { name: "A few ways to spend it together." }),
+  ).toBeVisible();
+  await page.locator(".plan-card").first().click();
+  await expect(
+    page.getByRole("region", { name: "Selected itinerary" }),
+  ).toBeVisible();
+  if (isMobile)
+    await page.getByRole("tab", { name: "Map", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "Itinerary map" }),
+  ).toBeVisible();
+  await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
+  await page.screenshot({
+    path: `test-results/itinerary-${test.info().project.name}.png`,
+    fullPage: true,
+  });
+  if (isMobile)
+    await page.getByRole("tab", { name: "Timeline", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Save this date", exact: true })
+    .click();
+  await expect(page.getByText("Your date is saved.")).toBeVisible();
+  const share = await page
+    .getByRole("link", { name: "Open read-only share page" })
+    .getAttribute("href");
+  expect(share).toBeTruthy();
+  await page.goto(share!);
+  await expect(page.getByText("Read-only shared itinerary.")).toBeVisible();
+  const id = new URL(share!).pathname.split("/").at(-1);
+  const other = await browser.newContext();
+  const visitor = await other.newPage();
+  await visitor.goto(`/edit/${id}`);
+  await expect(
+    visitor.getByRole("heading", { name: "This date is read-only." }),
+  ).toBeVisible();
+  const denied = await other.request.patch(`/api/date/${id}`, {
+    data: { title: "changed" },
+  });
+  expect(denied.status()).toBe(403);
+  const saveDenied = await other.request.post("/api/save", {
+    data: { draftId: draft.draftId, planId: draft.plans[0].id, id },
+  });
+  expect(saveDenied.status()).toBe(403);
+  await other.close();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    ),
+  ).toBe(true);
+});
+test("preserves inputs after an impossible budget and duration", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByLabel("Total budget for two").fill("0");
+  await page.getByLabel("Time together").selectOption("60");
+  await page.locator(".preferences summary").click();
+  await page.getByLabel("Indoor or outdoor?").selectOption("indoor");
+  await page
+    .getByRole("button", { name: "Find our date", exact: true })
+    .click();
+  await expect(page.getByText(/No two-stop plan fits/)).toBeVisible();
+  await expect(page.getByLabel("Total budget for two")).toHaveValue("0");
+});

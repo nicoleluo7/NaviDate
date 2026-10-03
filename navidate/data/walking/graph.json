@@ -1,0 +1,83 @@
+{
+  "sourceUrl": "https://www.cornell.edu/maps/",
+  "verifiedAt": null,
+  "verificationStatus": "needs-field-verification",
+  "note": "Manually curated connectivity and conservative distance estimates, not verified walking routes. No line geometry is supplied. Review access, slopes, crossings and closures on foot before marking verified.",
+  "edges": [
+    {
+      "from": "johnson",
+      "to": "arts-quad",
+      "meters": 350
+    },
+    {
+      "from": "arts-quad",
+      "to": "ho-plaza",
+      "meters": 400
+    },
+    {
+      "from": "ho-plaza",
+      "to": "slope",
+      "meters": 250
+    },
+    {
+      "from": "arts-quad",
+      "to": "beebe",
+      "meters": 850
+    },
+    {
+      "from": "beebe",
+      "to": "gardens",
+      "meters": 550
+    },
+    {
+      "from": "ho-plaza",
+      "to": "commons",
+      "meters": 2200
+    },
+    {
+      "from": "commons",
+      "to": "alley-cat",
+      "meters": 306
+    },
+    {
+      "from": "commons",
+      "to": "bank",
+      "meters": 120
+    },
+    {
+      "from": "commons",
+      "to": "dewitt",
+      "meters": 418
+    },
+    {
+      "from": "commons",
+      "to": "ctb",
+      "meters": 174
+    },
+    {
+      "from": "commons",
+      "to": "hound",
+      "meters": 162
+    },
+    {
+      "from": "commons",
+      "to": "paris",
+      "meters": 222
+    },
+    {
+      "from": "commons",
+      "to": "rosie",
+      "meters": 290
+    },
+    {
+      "from": "commons",
+      "to": "taichi",
+      "meters": 120
+    },
+    {
+      "from": "commons",
+      "to": "greenstar",
+      "meters": 396
+    }
+  ]
+}

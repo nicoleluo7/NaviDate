@@ -1,0 +1,37 @@
+[
+  {
+    "id": "johnson",
+    "name": "Johnson Museum of Art",
+    "lat": 42.4505,
+    "lng": -76.4862,
+    "private": false
+  },
+  {
+    "id": "arts-quad",
+    "name": "Cornell Arts Quad",
+    "lat": 42.4494,
+    "lng": -76.4838,
+    "private": false
+  },
+  {
+    "id": "ho-plaza",
+    "name": "Ho Plaza",
+    "lat": 42.4469,
+    "lng": -76.485,
+    "private": false
+  },
+  {
+    "id": "gardens",
+    "name": "Cornell Botanic Gardens",
+    "lat": 42.4497,
+    "lng": -76.4728,
+    "private": false
+  },
+  {
+    "id": "commons",
+    "name": "Ithaca Commons",
+    "lat": 42.4399,
+    "lng": -76.4969,
+    "private": false
+  }
+]

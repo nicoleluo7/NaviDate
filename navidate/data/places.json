@@ -1,0 +1,432 @@
+[
+  {
+    "id": "johnson",
+    "name": "Johnson Museum of Art",
+    "category": "culture",
+    "coordinates": {
+      "lat": 42.4505,
+      "lng": -76.4862
+    },
+    "address": "114 Central Avenue",
+    "description": "Pick a favorite artwork, then compare notes.",
+    "vibeTags": [
+      "Creative",
+      "Romantic"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 50,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "2": [
+          [
+            "10:00",
+            "17:00"
+          ]
+        ],
+        "3": [
+          [
+            "10:00",
+            "17:00"
+          ]
+        ],
+        "4": [
+          [
+            "10:00",
+            "17:00"
+          ]
+        ],
+        "5": [
+          [
+            "10:00",
+            "17:00"
+          ]
+        ],
+        "6": [
+          [
+            "12:00",
+            "16:00"
+          ]
+        ],
+        "7": [
+          [
+            "12:00",
+            "16:00"
+          ]
+        ]
+      },
+      "exceptions": {
+        "2026-10-13": []
+      }
+    },
+    "websiteUrl": "https://museum.cornell.edu/about/visit/",
+    "sourceUrl": "https://museum.cornell.edu/about/visit/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "arts-quad",
+    "name": "Cornell Arts Quad",
+    "category": "free",
+    "coordinates": {
+      "lat": 42.4494,
+      "lng": -76.4838
+    },
+    "address": "Arts Quad, Cornell",
+    "description": "A slow stroll among Cornell\u2019s historic buildings.",
+    "vibeTags": [
+      "Romantic",
+      "Casual",
+      "Creative"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 25,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://events.cornell.edu/arts_quad",
+    "sourceUrl": "https://events.cornell.edu/arts_quad",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "slope",
+    "name": "Libe Slope",
+    "category": "park",
+    "coordinates": {
+      "lat": 42.4477,
+      "lng": -76.486
+    },
+    "address": "Libe Slope, Cornell",
+    "description": "Pause for the view across Ithaca. Steep terrain; conditions vary.",
+    "vibeTags": [
+      "Romantic",
+      "Adventurous",
+      "Casual"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 25,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.cornell.edu/about/locations/ithaca/",
+    "sourceUrl": "https://www.cornell.edu/about/locations/ithaca/",
+    "verifiedAt": null,
+    "verificationStatus": "needs-verification"
+  },
+  {
+    "id": "ho-plaza",
+    "name": "Ho Plaza",
+    "category": "free",
+    "coordinates": {
+      "lat": 42.4469,
+      "lng": -76.485
+    },
+    "address": "Ho Plaza, Cornell",
+    "description": "People-watch and enjoy a relaxed campus pause.",
+    "vibeTags": [
+      "Casual",
+      "Romantic"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 20,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.cornell.edu/about/locations/ithaca/",
+    "sourceUrl": "https://www.cornell.edu/about/locations/ithaca/",
+    "verifiedAt": null,
+    "verificationStatus": "needs-verification"
+  },
+  {
+    "id": "beebe",
+    "name": "Beebe Lake",
+    "category": "park",
+    "coordinates": {
+      "lat": 42.4508,
+      "lng": -76.4771
+    },
+    "address": "Beebe Lake, Cornell",
+    "description": "Enjoy a lakeside pause; trail access and weather need checking.",
+    "vibeTags": [
+      "Adventurous",
+      "Romantic"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 35,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://cornellbotanicgardens.org/visit",
+    "sourceUrl": "https://cornellbotanicgardens.org/visit",
+    "verifiedAt": null,
+    "verificationStatus": "needs-verification"
+  },
+  {
+    "id": "gardens",
+    "name": "Cornell Botanic Gardens",
+    "category": "park",
+    "coordinates": {
+      "lat": 42.4497,
+      "lng": -76.4728
+    },
+    "address": "124 Comstock Knoll Drive",
+    "description": "Explore the gardens together at an unhurried pace.",
+    "vibeTags": [
+      "Adventurous",
+      "Romantic",
+      "Creative"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 45,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://cornellbotanicgardens.org/visit",
+    "sourceUrl": "https://cornellbotanicgardens.org/visit",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "commons",
+    "name": "Ithaca Commons",
+    "category": "free",
+    "coordinates": {
+      "lat": 42.4399,
+      "lng": -76.4969
+    },
+    "address": "East State Street pedestrian mall",
+    "description": "Browse the pedestrian mall and its public art.",
+    "vibeTags": [
+      "Casual",
+      "Creative",
+      "Romantic"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/visit-downtown/the-commons/",
+    "sourceUrl": "https://www.downtownithaca.com/visit-downtown/the-commons/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "alley-cat",
+    "name": "Alley Cat Cafe",
+    "category": "caf\u00e9",
+    "coordinates": {
+      "lat": 42.4402,
+      "lng": -76.4992
+    },
+    "address": "112 N. Cayuga Street",
+    "description": "Share coffee and conversation. Cat-room admission is separate and not included.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 18,
+    "typicalDurationMinutes": 40,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.alleycatithaca.com/",
+    "sourceUrl": "https://www.alleycatithaca.com/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "bank",
+    "name": "Bank Coffee",
+    "category": "caf\u00e9",
+    "coordinates": {
+      "lat": 42.4396,
+      "lng": -76.4976
+    },
+    "address": "154 E. State Street",
+    "description": "Settle into a coffee break on the Commons.",
+    "vibeTags": [
+      "Cozy",
+      "Romantic"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 16,
+    "typicalDurationMinutes": 35,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "dewitt",
+    "name": "Caf\u00e9 DeWitt",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4416,
+      "lng": -76.4991
+    },
+    "address": "215 N. Cayuga Street",
+    "description": "Make time for a relaxed caf\u00e9 meal in DeWitt Mall.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 40,
+    "typicalDurationMinutes": 50,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "ctb",
+    "name": "Collegetown Bagels \u00b7 City Centre",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4397,
+      "lng": -76.4956
+    },
+    "address": "301 E. State Street",
+    "description": "A casual sandwich stop with room for conversation.",
+    "vibeTags": [
+      "Casual",
+      "Cozy"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 30,
+    "typicalDurationMinutes": 40,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "hound",
+    "name": "Hound and Mare",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4407,
+      "lng": -76.4963
+    },
+    "address": "118 N. Aurora Street",
+    "description": "Take a break over sandwiches and baked goods.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 32,
+    "typicalDurationMinutes": 40,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "paris",
+    "name": "Paris Baguette",
+    "category": "dessert",
+    "coordinates": {
+      "lat": 42.4395,
+      "lng": -76.4985
+    },
+    "address": "125 E. State Street",
+    "description": "Choose a pastry each for a sweet little detour.",
+    "vibeTags": [
+      "Romantic",
+      "Cozy"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 18,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "rosie",
+    "name": "Rosie\u2019s Cafe & Parlor",
+    "category": "dessert",
+    "coordinates": {
+      "lat": 42.4411,
+      "lng": -76.4954
+    },
+    "address": "312 E. Seneca Street",
+    "description": "A neighborhood stop for a treat and a chat.",
+    "vibeTags": [
+      "Romantic",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 18,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "taichi",
+    "name": "Taichi Bubble Tea",
+    "category": "dessert",
+    "coordinates": {
+      "lat": 42.4395,
+      "lng": -76.4965
+    },
+    "address": "215 E. State Street",
+    "description": "Compare bubble-tea favorites before the next stop.",
+    "vibeTags": [
+      "Casual",
+      "Creative"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 18,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "greenstar",
+    "name": "GreenStar \u00b7 DeWitt Mall",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4415,
+      "lng": -76.499
+    },
+    "address": "215 N. Cayuga Street",
+    "description": "Pick up a light snack together at the food co-op.",
+    "vibeTags": [
+      "Casual",
+      "Adventurous"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 20,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  }
+]

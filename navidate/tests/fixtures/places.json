@@ -1,0 +1,98 @@
+[
+  {
+    "id": "fictional-a",
+    "name": "fictional-a",
+    "category": "culture",
+    "coordinates": {
+      "lat": 42.4505,
+      "lng": -76.4862
+    },
+    "address": "114 Central Avenue",
+    "description": "Pick a favorite artwork, then compare notes.",
+    "vibeTags": ["Creative", "Romantic"],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 10,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [["09:00", "17:00"]],
+        "2": [["09:00", "17:00"]],
+        "3": [["09:00", "17:00"]],
+        "4": [["09:00", "17:00"]],
+        "5": [["09:00", "17:00"]],
+        "6": [["09:00", "17:00"]],
+        "7": [["09:00", "17:00"]]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://example.com/fictional-test-data",
+    "sourceUrl": "https://example.com/fictional-test-data",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "fixture"
+  },
+  {
+    "id": "fictional-b",
+    "name": "fictional-b",
+    "category": "culture",
+    "coordinates": {
+      "lat": 42.4505,
+      "lng": -76.4862
+    },
+    "address": "114 Central Avenue",
+    "description": "Pick a favorite artwork, then compare notes.",
+    "vibeTags": ["Creative", "Romantic"],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 12,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [["09:00", "17:00"]],
+        "2": [["09:00", "17:00"]],
+        "3": [["09:00", "17:00"]],
+        "4": [["09:00", "17:00"]],
+        "5": [["09:00", "17:00"]],
+        "6": [["09:00", "17:00"]],
+        "7": [["09:00", "17:00"]]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://example.com/fictional-test-data",
+    "sourceUrl": "https://example.com/fictional-test-data",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "fixture"
+  },
+  {
+    "id": "fictional-c",
+    "name": "fictional-c",
+    "category": "culture",
+    "coordinates": {
+      "lat": 42.4505,
+      "lng": -76.4862
+    },
+    "address": "114 Central Avenue",
+    "description": "Pick a favorite artwork, then compare notes.",
+    "vibeTags": ["Creative", "Romantic"],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [["09:00", "17:00"]],
+        "2": [["09:00", "17:00"]],
+        "3": [["09:00", "17:00"]],
+        "4": [["09:00", "17:00"]],
+        "5": [["09:00", "17:00"]],
+        "6": [["09:00", "17:00"]],
+        "7": [["09:00", "17:00"]]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://example.com/fictional-test-data",
+    "sourceUrl": "https://example.com/fictional-test-data",
+    "verifiedAt": "2026-10-02",
+    "verificationStatus": "fixture"
+  }
+]

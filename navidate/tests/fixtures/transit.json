@@ -1,0 +1,112 @@
+{
+  "stops": [
+    {
+      "id": "a",
+      "name": "Fictional A",
+      "coordinates": {
+        "lat": 42.44,
+        "lng": -76.49
+      },
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    },
+    {
+      "id": "b",
+      "name": "Fictional B",
+      "coordinates": {
+        "lat": 42.44,
+        "lng": -76.48
+      },
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    },
+    {
+      "id": "c",
+      "name": "Fictional C",
+      "coordinates": {
+        "lat": 42.44,
+        "lng": -76.47
+      },
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    }
+  ],
+  "routes": [
+    {
+      "id": "demo-east",
+      "number": "DEMO 1",
+      "name": "Fictional campus shuttle",
+      "direction": "east",
+      "fareForTwo": 3,
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    }
+  ],
+  "trips": [
+    {
+      "id": "demo-day",
+      "routeId": "demo-east",
+      "serviceId": "weekday",
+      "direction": "east",
+      "stopTimes": [
+        {
+          "stopId": "a",
+          "time": "13:10"
+        },
+        {
+          "stopId": "b",
+          "time": "13:20"
+        },
+        {
+          "stopId": "c",
+          "time": "13:30"
+        }
+      ],
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    },
+    {
+      "id": "demo-night",
+      "routeId": "demo-east",
+      "serviceId": "weekday",
+      "direction": "east",
+      "stopTimes": [
+        {
+          "stopId": "a",
+          "time": "25:10"
+        },
+        {
+          "stopId": "b",
+          "time": "25:20"
+        },
+        {
+          "stopId": "c",
+          "time": "25:30"
+        }
+      ],
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    }
+  ],
+  "calendars": [
+    {
+      "id": "weekday",
+      "weekdays": [1, 2, 3, 4, 5],
+      "start": "2026-01-01",
+      "end": "2026-12-31",
+      "exceptions": {
+        "2026-10-05": false,
+        "2026-10-03": true
+      },
+      "sourceUrl": "https://example.com/fictional-test-data",
+      "verifiedAt": "2026-10-02",
+      "demo": true
+    }
+  ]
+}
