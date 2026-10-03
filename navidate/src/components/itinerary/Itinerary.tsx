@@ -34,10 +34,15 @@ export default function Itinerary({
   canPair?: boolean;
   photon?: boolean;
 }) {
-  const [selected, setSelected] = useState(0),
+  const [selected, setSelected] = useState<number | null>(null),
+    [focus, setFocus] = useState(0),
     [tab, setTab] = useState("timeline"),
     [notice, setNotice] = useState(""),
     [pairCode, setPairCode] = useState("");
+  function choose(index: number) {
+    setSelected((current) => (current === index ? null : index));
+    setFocus((n) => n + 1);
+  }
   async function copy(text: string) {
     try {
       await navigator.clipboard.writeText(text);
@@ -165,8 +170,13 @@ export default function Itinerary({
               >
                 <button
                   className="stop-select"
-                  onClick={() => setSelected(i)}
-                  aria-label={`Highlight ${s.place.name} on map`}
+                  onClick={() => choose(i)}
+                  aria-pressed={selected === i}
+                  aria-label={
+                    selected === i
+                      ? `Show the whole route instead of ${s.place.name}`
+                      : `Center the map on ${s.place.name}`
+                  }
                 >
                   <span className="stop-number">{i + 1}</span>
                   <div>
@@ -206,7 +216,7 @@ export default function Itinerary({
                   {onSwap && (
                     <button disabled={busy} onClick={() => onSwap(i)}>
                       <RefreshCw size={14} />
-                      Swap stop
+                      Try another place
                     </button>
                   )}
                 </div>
@@ -227,11 +237,30 @@ export default function Itinerary({
         <div
           className={`map-column ${tab === "timeline" ? "mobile-hidden" : ""}`}
         >
-          <MapLoader plan={plan} selected={selected} onSelect={setSelected} />
+          <MapLoader
+            plan={plan}
+            selected={selected}
+            focus={focus}
+            onSelect={choose}
+            onClear={() => {
+              setSelected(null);
+              setFocus((n) => n + 1);
+            }}
+          />
           <div className="map-stop">
-            <span className="eyebrow">STOP {selected + 1}</span>
-            <h3>{plan.stops[selected]?.place.name}</h3>
-            <p>{plan.stops[selected]?.place.address}</p>
+            {selected == null ? (
+              <>
+                <span className="eyebrow">WHOLE ROUTE</span>
+                <h3>Every stop</h3>
+                <p>Click a stop to look closer. Click the map to zoom back out.</p>
+              </>
+            ) : (
+              <>
+                <span className="eyebrow">STOP {selected + 1}</span>
+                <h3>{plan.stops[selected]?.place.name}</h3>
+                <p>{plan.stops[selected]?.place.address}</p>
+              </>
+            )}
           </div>
           <p className="map-note">
             {plan.suitability}. No route line means travel is an estimate, not a

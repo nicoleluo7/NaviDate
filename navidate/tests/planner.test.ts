@@ -3,7 +3,7 @@ import { z } from "zod";
 import raw from "./fixtures/places.json";
 import bus from "./fixtures/transit.json";
 import { criteriaSchema, placeSchema, type Criteria } from "../src/types";
-import { schedule, planDates } from "../src/lib/planner";
+import { schedule, planDates, replaceStop } from "../src/lib/planner";
 import { fitsHours } from "../src/lib/planner/hours";
 import { localTime, serviceTime } from "../src/lib/planner/time";
 import { directTrips, runsOn } from "../src/lib/transit";
@@ -106,6 +106,37 @@ describe("deterministic scheduling", () => {
       router,
     });
     expect(result.plans).toHaveLength(1);
+  });
+  it("skips a swap that would copy another option", async () => {
+    const current = await schedule(criteria, places.slice(0, 2), { router });
+    const other = await schedule(criteria, [places[0], places[2]], { router });
+    const extra = {
+      ...places[2],
+      id: "fictional-d",
+      name: "fictional-d",
+      estimatedCostForTwo: 1,
+    };
+    const replaced = await replaceStop(
+      [current!, other!],
+      current!.id,
+      1,
+      criteria,
+      { router, places: [places[2], extra] },
+    );
+    expect(replaced?.plan.stops.map((s) => s.place.id)).toEqual([
+      "fictional-a",
+      "fictional-d",
+    ]);
+    expect(replaced?.plans.map((p) => p.id)).toEqual([
+      replaced?.plan.id,
+      other!.id,
+    ]);
+    expect(
+      await replaceStop([current!, other!], current!.id, 1, criteria, {
+        router,
+        places: [places[2]],
+      }),
+    ).toEqual({ duplicate: true });
   });
 });
 describe("manual bus matching", () => {

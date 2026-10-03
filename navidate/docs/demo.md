@@ -4,7 +4,7 @@
 
 **0:20 — The website:** Open the homepage. Choose Cornell Arts Quad, October 2, 2026, 13:00, three hours, $50 for two, Cozy, walking. Explain that no account or Google billing is involved. Generate and compare different options. Describe the estimates honestly.
 
-**0:55 — The plan:** Select an option. Point out activity times, travel included in total duration, opening-hours uncertainty and costs for two. Select a stop and its Leaflet marker. There are no invented path lines. Swap a stop; the schedule is recalculated.
+**0:55 — The plan:** Select an option. Point out activity times, travel included in total duration, opening-hours uncertainty and costs for two. Select a stop and its Leaflet marker. There are no invented path lines. Try another place for a stop; the schedule is recalculated.
 
 **1:30 — Sharing:** Save, copy the share link and open it in a private browser. Show the read-only view and the creator edit restriction. Switch the browser to 375px to show the timeline/map tabs.
 

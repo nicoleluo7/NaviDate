@@ -5,27 +5,33 @@ import type { Plan, Point } from "@/types";
 import landmarks from "../../../data/landmarks.json";
 type Props = {
   plan?: Plan;
-  selected?: number;
+  selected?: number | null;
+  focus?: number;
   onSelect?: (index: number) => void;
+  onClear?: () => void;
   onPick?: (point: Point) => void;
   point?: Point;
 };
 export default function Map({
   plan,
-  selected = 0,
+  selected = null,
+  focus = 0,
   onSelect,
+  onClear,
   onPick,
   point,
 }: Props) {
   const container = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
     markers = useRef<L.Marker[]>([]),
-    callbacks = useRef({ onSelect, onPick });
+    overview = useRef<L.LatLngBounds | null>(null),
+    pendingFocus = useRef<L.LatLng | "route" | null>(null),
+    callbacks = useRef({ onSelect, onClear, onPick });
   const [status, setStatus] = useState("loading"),
     [attempt, setAttempt] = useState(0);
   useEffect(() => {
-    callbacks.current = { onSelect, onPick };
-  }, [onSelect, onPick]);
+    callbacks.current = { onSelect, onClear, onPick };
+  }, [onSelect, onClear, onPick]);
   useEffect(() => {
     if (!container.current) return;
     const m = L.map(container.current, { scrollWheelZoom: false }).setView(
@@ -76,9 +82,10 @@ export default function Map({
         }).addTo(m);
         const text = document.createElement("span");
         text.textContent = s.place.name;
-        marker
-          .bindTooltip(text)
-          .on("click", () => callbacks.current.onSelect?.(i));
+        marker.bindTooltip(text).on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          callbacks.current.onSelect?.(i);
+        });
         markers.current.push(marker);
       });
       for (const leg of plan.legs) {
@@ -100,6 +107,12 @@ export default function Map({
             bounds.push([p.lat, p.lng]);
           }
       }
+      m.on("click", (e) => {
+        const target = e.originalEvent?.target;
+        if (target instanceof Element && target.closest(".leaflet-control"))
+          return;
+        callbacks.current.onClear?.();
+      });
     } else {
       for (const l of landmarks) {
         L.marker([l.lat, l.lng], { icon: icon("•", true), title: l.name })
@@ -116,9 +129,29 @@ export default function Map({
         callbacks.current.onPick?.({ lat: e.latlng.lat, lng: e.latlng.lng }),
       );
     }
-    if (bounds.length)
-      m.fitBounds(L.latLngBounds(bounds), { padding: [45, 45], maxZoom: 16 });
-    const observer = new ResizeObserver(() => m.invalidateSize());
+    const box = bounds.length ? L.latLngBounds(bounds) : null;
+    overview.current = box;
+    if (box) m.fitBounds(box, { padding: [45, 45], maxZoom: 16 });
+    const reduceMotion = () =>
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const showRoute = () => {
+      if (!overview.current) return;
+      const options = { padding: [45, 45] as [number, number], maxZoom: 16 };
+      if (reduceMotion()) m.fitBounds(overview.current, { ...options, animate: false });
+      else m.flyToBounds(overview.current, { ...options, duration: 0.5 });
+    };
+    const showStop = (target: L.LatLng) => {
+      if (reduceMotion()) m.setView(target, 17, { animate: false });
+      else m.flyTo(target, 17, { duration: 0.5 });
+    };
+    const observer = new ResizeObserver(() => {
+      m.invalidateSize();
+      const target = pendingFocus.current;
+      if (!target || !container.current?.offsetWidth) return;
+      pendingFocus.current = null;
+      if (target === "route") showRoute();
+      else showStop(target);
+    });
     observer.observe(container.current);
     return () => {
       observer.disconnect();
@@ -128,10 +161,42 @@ export default function Map({
   }, [plan, attempt, point]);
   useEffect(() => {
     markers.current.forEach((marker, i) => {
-      marker.getElement()?.classList.toggle("pin-selected", i === selected);
-      if (i === selected) marker.openTooltip();
+      const on = i === selected;
+      marker.getElement()?.classList.toggle("pin-selected", on);
+      if (on) marker.openTooltip();
+      else marker.closeTooltip();
     });
   }, [selected, plan]);
+  useEffect(() => {
+    if (!focus || !map.current) return;
+    const marker = selected == null ? undefined : markers.current[selected];
+    map.current.invalidateSize();
+    if (!marker || !overview.current) {
+      pendingFocus.current = marker ? null : "route";
+      if (!container.current?.offsetWidth) return;
+      pendingFocus.current = null;
+      if (!overview.current) return;
+      const reduce = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      const options = { padding: [45, 45] as [number, number], maxZoom: 16 };
+      if (reduce)
+        map.current.fitBounds(overview.current, { ...options, animate: false });
+      else map.current.flyToBounds(overview.current, { ...options, duration: 0.5 });
+      return;
+    }
+    const target = marker.getLatLng();
+    if (!container.current?.offsetWidth) {
+      pendingFocus.current = target;
+      return;
+    }
+    pendingFocus.current = null;
+    const reduce = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    if (reduce) map.current.setView(target, 17, { animate: false });
+    else map.current.flyTo(target, 17, { duration: 0.5 });
+  }, [focus, selected]);
   return (
     <div className="map-shell">
       <div

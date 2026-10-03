@@ -126,26 +126,47 @@ export default function Planner({
   }
   async function swap(index: number) {
     if (!selected || !result) return;
+    const shareId = saved?.shareId ?? editingShareId;
+    const draftId = result.draftId;
     setBusy("swap");
     setError("");
     try {
       const d = await request("/api/swap", {
-        draftId: result.draftId,
+        draftId,
         planId: selected.id,
         index,
       });
       setSelected(d.plan);
-      setResult((r) =>
-        r
-          ? {
-              ...r,
-              plans: r.plans.map((p) => (p.id === selected.id ? d.plan : p)),
-            }
-          : r,
-      );
-      setSaved(null);
+      setResult((r) => {
+        if (!r) return r;
+        const match = r.plans.findIndex((p) => p === selected);
+        const at =
+          match === -1 ? r.plans.findIndex((p) => p.id === selected.id) : match;
+        if (at < 0) return r;
+        const plans = r.plans.slice();
+        plans[at] = d.plan;
+        return { ...r, plans };
+      });
+      if (!shareId) {
+        setSaved(null);
+        return;
+      }
+      try {
+        const published = await request("/api/save", {
+          draftId,
+          planId: d.plan.id,
+          shareId,
+        });
+        setSaved({
+          url: location.origin + published.url,
+          shareId: published.shareId,
+        });
+      } catch (e) {
+        setSaved(null);
+        throw e;
+      }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not swap.");
+      setError(e instanceof Error ? e.message : "Could not replace this stop.");
     } finally {
       setBusy("");
     }
@@ -635,7 +656,7 @@ export default function Planner({
               {result.plans.map((p, i) => (
                 <button
                   className={`plan-card ${selected?.id === p.id ? "chosen" : ""}`}
-                  key={p.id}
+                  key={`${i}-${p.id}`}
                   onClick={() => {
                     setSelected(p);
                     setSaved(null);

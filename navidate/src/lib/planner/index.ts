@@ -316,3 +316,37 @@ export async function planDates(
       : {}),
   };
 }
+export async function replaceStop(
+  plans: Plan[],
+  planId: string,
+  index: number,
+  criteria: Criteria,
+  options: PlannerOptions = {},
+): Promise<{ plans: Plan[]; plan: Plan } | { duplicate: true } | null> {
+  const at = plans.findIndex((p) => p.id === planId);
+  const old = plans[at];
+  if (!old?.stops[index]) return null;
+  const taken = new Set(plans.filter((_, i) => i !== at).map((p) => p.id));
+  let duplicate = false;
+  for (const place of options.places ?? places) {
+    if (
+      old.stops.some((s) => s.place.id === place.id) ||
+      (criteria.setting !== "any" && place.indoorOutdoor !== criteria.setting)
+    )
+      continue;
+    const plan = await schedule(
+      criteria,
+      old.stops.map((s, i) => (i === index ? place : s.place)),
+      { ...options, weather: options.weather ?? old.weather },
+    );
+    if (!plan) continue;
+    if (taken.has(plan.id)) {
+      duplicate = true;
+      continue;
+    }
+    const next = plans.slice();
+    next[at] = plan;
+    return { plans: next, plan };
+  }
+  return duplicate ? { duplicate: true } : null;
+}

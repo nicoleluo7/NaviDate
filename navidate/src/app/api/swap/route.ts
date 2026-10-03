@@ -2,8 +2,7 @@ import { z } from "zod";
 import type { Draft } from "../plan/route";
 import { getStorage } from "@/lib/storage";
 import { isOwner } from "@/lib/storage/dates";
-import { places } from "@/lib/data";
-import { schedule } from "@/lib/planner";
+import { replaceStop } from "@/lib/planner";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
 export async function POST(req: Request) {
   try {
@@ -24,25 +23,22 @@ export async function POST(req: Request) {
     const old = draft.plans.find((p) => p.id === input.planId);
     if (!old || !old.stops[input.index])
       throw new HttpError(400, "Select a stop.");
-    for (const p of places) {
-      if (
-        old.stops.some((s) => s.place.id === p.id) ||
-        (draft.criteria.setting !== "any" &&
-          p.indoorOutdoor !== draft.criteria.setting)
-      )
-        continue;
-      const seq = old.stops.map((s, i) => (i === input.index ? p : s.place)),
-        plan = await schedule(draft.criteria, seq, { weather: old.weather });
-      if (plan) {
-        draft.plans = draft.plans.map((p) => (p.id === old.id ? plan : p));
-        await store.put("draft:" + input.draftId, draft);
-        return Response.json({ plan });
-      }
-    }
-    throw new HttpError(
-      422,
-      "No replacement fits these constraints. Try editing your preferences.",
+    const replaced = await replaceStop(
+      draft.plans,
+      input.planId,
+      input.index,
+      draft.criteria,
     );
+    if (!replaced || !("plan" in replaced))
+      throw new HttpError(
+        422,
+        replaced && "duplicate" in replaced
+          ? "The only other place that fits is already one of your options. Try a different stop, or regenerate."
+          : "No replacement fits these constraints. Try editing your preferences.",
+      );
+    draft.plans = replaced.plans;
+    await store.put("draft:" + input.draftId, draft);
+    return Response.json({ plan: replaced.plan });
   } catch (e) {
     return failure(e);
   }
