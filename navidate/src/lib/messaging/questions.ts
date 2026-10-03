@@ -1,9 +1,17 @@
 import type { Plan } from "@/types";
-import { displayTime } from "@/lib/planner/time";
+import { approximateDuration, displayTime } from "@/lib/planner/time";
 export const questionHelp =
   "Ask me about this date: what time, how much, where are we going, the weather, or the link.";
 export function limitedAnswer(title: string) {
   return `I can tell you the time, cost, stops, weather, or link for “${title}”.`;
+}
+export function conversationalIntro(plan: Plan, url: string) {
+  const names = plan.stops.map((stop) => stop.place.name);
+  const route =
+    names.length < 2
+      ? `You're heading to ${names[0] ?? "the first stop"}.`
+      : `You're starting at ${names[0]}, then ${names.slice(1).join(", then ")}.`;
+  return `${plan.title} runs ${displayTime(plan.startsAt)} to ${displayTime(plan.endsAt)}, ${approximateDuration(plan.duration)}. ${route} About $${plan.cost} for two. ${plan.weather.summary}\n${url}`;
 }
 export function isPlannerCommand(text: string) {
   return (
@@ -18,7 +26,7 @@ export function answerAboutDate(plan: Plan, url: string, text: string) {
   if (/^(help|\?)$/.test(q) || /what can (i|you)|help me/.test(q))
     return questionHelp;
   if (/how long|duration/.test(q))
-    return `${plan.title} is about ${plan.duration} minutes, ${displayTime(plan.startsAt)} to ${displayTime(plan.endsAt)}.`;
+    return `${plan.title} lasts ${approximateDuration(plan.duration)}, ${displayTime(plan.startsAt)} to ${displayTime(plan.endsAt)}.`;
   if (/when|what time|start|end\b/.test(q))
     return `${plan.title} runs ${displayTime(plan.startsAt)} to ${displayTime(plan.endsAt)}.`;
   if (/walk|how far|\bkm\b/.test(q))

@@ -42,3 +42,16 @@ export const displayTime = (value: string) =>
     day: "numeric",
     timeZoneName: "short",
   }).format(new Date(value));
+export function approximateDuration(minutes: number) {
+  const step = minutes >= 60 ? 15 : 5;
+  const rounded = Math.max(
+    step,
+    Math.round(Math.max(0, minutes) / step) * step,
+  );
+  const hours = Math.floor(rounded / 60);
+  const mins = rounded % 60;
+  if (hours === 0) return `about ${mins} minutes`;
+  const hourLabel = hours === 1 ? "1 hour" : `${hours} hours`;
+  if (mins === 0) return `about ${hourLabel}`;
+  return `about ${hourLabel} and ${mins} minutes`;
+}

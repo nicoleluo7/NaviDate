@@ -11,12 +11,12 @@ import { hash, saveDate } from "@/lib/storage/dates";
 import { displayTime } from "@/lib/planner/time";
 import { generate } from "@/lib/planner/service";
 import { interpret } from "@/lib/integrations/xai";
-import { answerWithGemini } from "@/lib/integrations/gemini";
+import { answerWithGemini, introduceWithGemini, type ChatTurn } from "@/lib/integrations/gemini";
 import {
   answerAboutDate,
+  conversationalIntro,
   isPlannerCommand,
   limitedAnswer,
-  questionHelp,
 } from "@/lib/messaging/questions";
 export type Incoming = {
   id: string;
@@ -32,7 +32,18 @@ export type Conversation = {
   criteria: Partial<Criteria>;
   shareId?: string;
   revision: number;
+  history?: ChatTurn[];
 };
+function withTurn(conversation: Conversation, user: string, assistant: string) {
+  return {
+    ...conversation,
+    history: [
+      ...(conversation.history ?? []),
+      { role: "user" as const, text: user.slice(0, 400) },
+      { role: "assistant" as const, text: assistant.slice(0, 700) },
+    ].slice(-8),
+  };
+}
 export type Pair = {
   ownerHash: string;
   shareId: string;
@@ -145,16 +156,27 @@ export async function handleIncoming(
         if (!saved) response = "That itinerary is no longer available.";
         else {
           await store.put(pairKey, { ...pair, status: "sending" });
-          await store.put(conversationKey, {
-            criteria: saved.criteria,
-            shareId: saved.shareId,
-            revision: 0,
-          });
-          response =
-            itineraryText(
-              saved.plan,
-              `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
-            ) + `\n${questionHelp}`;
+          const url = `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`;
+          let intro = conversationalIntro(saved.plan, url);
+          if (process.env.GEMINI_API_KEY)
+            try {
+              intro = `${await introduceWithGemini(saved.plan, url)}\n${url}`;
+            } catch {
+              /* The local intro already includes the link. */
+            }
+          response = intro;
+          await store.put(
+            conversationKey,
+            withTurn(
+              {
+                criteria: saved.criteria,
+                shareId: saved.shareId,
+                revision: 0,
+              },
+              "Tell me about this date.",
+              response,
+            ),
+          );
         }
       }
     } else {
@@ -171,16 +193,25 @@ export async function handleIncoming(
           response =
             "I don’t have a date in this chat yet. Save one on the website, then use Send to myself.";
         else {
-          const local = answerAboutDate(saved.plan, url, event.text);
-          const fallback = limitedAnswer(saved.plan.title);
-          if (local) response = local;
-          else if (process.env.GEMINI_API_KEY)
+          const fallback =
+            answerAboutDate(saved.plan, url, event.text) ??
+            limitedAnswer(saved.plan.title);
+          if (process.env.GEMINI_API_KEY)
             try {
-              response = await answerWithGemini(saved.plan, url, event.text);
+              response = await answerWithGemini(
+                saved.plan,
+                url,
+                event.text,
+                conversation.history ?? [],
+              );
             } catch {
               response = fallback;
             }
           else response = fallback;
+          await store.put(
+            conversationKey,
+            withTurn(conversation, event.text, response),
+          );
         }
       } else {
         let criteria = parseLocal(event.text, conversation.criteria),
@@ -223,6 +254,7 @@ export async function handleIncoming(
               store,
             );
             await store.put(conversationKey, {
+              ...conversation,
               criteria: parsed.data,
               shareId: saved.shareId,
               revision: conversation.revision + 1,

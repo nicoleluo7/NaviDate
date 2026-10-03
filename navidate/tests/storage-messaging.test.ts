@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalStorage } from "../src/lib/storage";
 import { handleIncoming, messagesLink, parseLocal } from "../src/lib/messaging";
-import { answerAboutDate } from "../src/lib/messaging/questions";
+import { answerAboutDate, conversationalIntro } from "../src/lib/messaging/questions";
 import { hash, isOwner, publicPlan } from "../src/lib/storage/dates";
 import { criteriaSchema, type Plan } from "../src/types";
 it("persists across closing and reopening the local adapter", async () => {
@@ -104,8 +104,8 @@ it("answers basic questions about a paired date", async () => {
     "Estimated $40 for two.",
   );
   expect(
-    answerAboutDate(plan, "http://localhost/date/abc", "where are we going?"),
-  ).toContain("Hound and Mare");
+    conversationalIntro(plan, "http://localhost/date/abc"),
+  ).toContain("You're heading to Hound and Mare.");
   const store = new LocalStorage(":memory:"),
     send = vi.fn(async (_text: string) => "provider-id");
   await store.put("date:abc", {
