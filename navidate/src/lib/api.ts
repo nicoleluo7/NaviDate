@@ -72,6 +72,17 @@ export function failure(error: unknown) {
     return Response.json({ error: error.message }, { status: error.status });
   if (error instanceof Error && error.message.startsWith("Choose a valid"))
     return Response.json({ error: error.message }, { status: 400 });
+  console.error(error);
+  if (error instanceof Error && error.message.startsWith("Hosted Navidate"))
+    return Response.json({ error: error.message }, { status: 500 });
+  if (error instanceof Error && error.message === "Storage unavailable")
+    return Response.json(
+      {
+        error:
+          "Dates could not be stored. Confirm the Supabase table exists and both Supabase keys are set for Production, then redeploy.",
+      },
+      { status: 500 },
+    );
   return Response.json(
     {
       error:

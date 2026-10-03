@@ -1,7 +1,15 @@
-import Database from "better-sqlite3";
+import type { Database as SqliteDatabase } from "better-sqlite3";
+import { createRequire } from "node:module";
 import { mkdirSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { createClient } from "@supabase/supabase-js";
+function openSqlite(filename: string) {
+  const require = createRequire(resolve("package.json"));
+  const Database = require("better-sqlite3") as new (
+    filename: string,
+  ) => SqliteDatabase;
+  return new Database(filename);
+}
 export interface Storage {
   get<T>(key: string): Promise<T | null>;
   put<T>(key: string, value: T): Promise<void>;
@@ -9,11 +17,11 @@ export interface Storage {
   remove(key: string): Promise<void>;
 }
 export class LocalStorage implements Storage {
-  private db: Database.Database;
+  private db: SqliteDatabase;
   constructor(path = process.env.LOCAL_DB_PATH ?? ".local/navidate.sqlite") {
     if (path !== ":memory:")
       mkdirSync(dirname(resolve(path)), { recursive: true });
-    this.db = new Database(path);
+    this.db = openSqlite(path);
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("busy_timeout = 5000");
     this.db.exec(
@@ -59,21 +67,21 @@ export class SupabaseStorage implements Storage {
       .select("value")
       .eq("key", key)
       .maybeSingle();
-    if (error) throw new Error("Storage unavailable");
+    if (error) fail(error);
     return (data?.value as T) ?? null;
   }
   async put<T>(key: string, value: T) {
     const { error } = await this.db
       .from("navidate_records")
       .upsert({ key, value });
-    if (error) throw new Error("Storage unavailable");
+    if (error) fail(error);
   }
   async claim<T>(key: string, value: T) {
     const { error } = await this.db
       .from("navidate_records")
       .insert({ key, value });
     if (error?.code === "23505") return false;
-    if (error) throw new Error("Storage unavailable");
+    if (error) fail(error);
     return true;
   }
   async remove(key: string) {
@@ -81,13 +89,21 @@ export class SupabaseStorage implements Storage {
       .from("navidate_records")
       .delete()
       .eq("key", key);
-    if (error) throw new Error("Storage unavailable");
+    if (error) fail(error);
   }
+}
+function fail(error: { message: string; code?: string }): never {
+  console.error("Supabase storage", error.code, error.message);
+  throw new Error("Storage unavailable");
 }
 let storage: Storage;
 export function getStorage() {
-  return (storage ??=
-    process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
-      ? new SupabaseStorage()
-      : new LocalStorage());
+  if (storage) return storage;
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY)
+    return (storage = new SupabaseStorage());
+  if (process.env.VERCEL)
+    throw new Error(
+      "Hosted Navidate needs SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY. Add both for Production, then redeploy.",
+    );
+  return (storage = new LocalStorage());
 }
