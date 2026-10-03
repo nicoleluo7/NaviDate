@@ -1,5 +1,6 @@
 import type { Plan } from "@/types";
 import { approximateDuration, displayTime } from "@/lib/planner/time";
+import { routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 export const questionHelp =
   "Ask me about this date: what time, how much, where are we going, the weather, or the link.";
 export function limitedAnswer(title: string) {
@@ -36,7 +37,7 @@ export function answerAboutDate(plan: Plan, url: string, text: string) {
   if (/weather|rain|forecast/.test(q)) return plan.weather.summary;
   if (/\blink\b|url|share/.test(q)) return url;
   if (/google maps|maps route|directions|open route/.test(q))
-    return plan.googleMapsUrl ?? url;
+    return routeUrlForPlan(plan) ?? url;
   if (/where|stop|itinerary|going|places|plan/.test(q))
     return [
       plan.title,

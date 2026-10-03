@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { Plan } from "@/types";
 import { displayTime } from "@/lib/planner/time";
+import { directionsToPlace, routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import WeatherPanel from "./WeatherPanel";
 import MapLoader from "@/components/map/MapLoader";
 export default function Itinerary({
@@ -60,6 +61,7 @@ export default function Itinerary({
       setNotice("Clipboard unavailable. Select and copy the text below.");
     }
   }
+  const routeUrl = routeUrlForPlan(plan);
   const summary = [
     plan.title,
     `${displayTime(plan.startsAt)} – ${displayTime(plan.endsAt)}`,
@@ -70,7 +72,7 @@ export default function Itinerary({
     ),
     plan.weather.summary,
     ...plan.warnings,
-    plan.googleMapsUrl ?? "",
+    routeUrl ?? "",
     savedUrl ?? "",
   ].join("\n");
   async function pair() {
@@ -212,7 +214,7 @@ export default function Itinerary({
                 </small>
                 <div className="stop-actions">
                   <a
-                    href={`https://www.google.com/maps/dir/?api=1&destination=${s.place.coordinates.lat},${s.place.coordinates.lng}&travelmode=walking`}
+                    href={directionsToPlace(s.place)}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -281,7 +283,7 @@ export default function Itinerary({
                   className="map-directions"
                   target="_blank"
                   rel="noreferrer"
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${plan.stops[selected].place.coordinates.lat},${plan.stops[selected].place.coordinates.lng}&travelmode=walking`}
+                  href={directionsToPlace(plan.stops[selected].place)}
                 >
                   Directions to this stop <ArrowUpRight size={16} />
                 </a>
@@ -294,10 +296,10 @@ export default function Itinerary({
               ? "The line follows a routed path in itinerary order."
               : "No route line means travel is an estimate, not a verified walking path."}
           </p>
-          {plan.googleMapsUrl && (
+          {routeUrl && (
             <a
               className="map-directions"
-              href={plan.googleMapsUrl}
+              href={routeUrl}
               target="_blank"
               rel="noreferrer"
             >
@@ -319,10 +321,10 @@ export default function Itinerary({
         </p>
       </details>
       <div className="action-bar">
-        {plan.googleMapsUrl && (
+        {routeUrl && (
           <a
             className="secondary"
-            href={plan.googleMapsUrl}
+            href={routeUrl}
             target="_blank"
             rel="noreferrer"
           >

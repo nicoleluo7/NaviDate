@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { decodePolyline } from "../src/lib/maps/polyline";
-import { buildGoogleMapsRouteUrl } from "../src/lib/maps/googleMapsUrl";
+import { buildGoogleMapsRouteUrl, routeUrlForPlan } from "../src/lib/maps/googleMapsUrl";
 import { parseGeminiDatePlans } from "../src/lib/integrations/gemini";
 import { categoryFrom } from "../src/lib/maps/places";
 
@@ -24,11 +24,80 @@ describe("Google Maps helpers", () => {
       ],
       transport: "walk",
     });
+    const params = new URL(url!).searchParams;
     expect(url).toContain("https://www.google.com/maps/dir/?");
-    expect(url).toContain("origin=42.4505%2C-76.4862");
-    expect(url).toContain("destination=place_id%3AChIJStopTwo");
-    expect(url).toContain("waypoints=place_id%3AChIJStopOne");
-    expect(url).toContain("travelmode=walking");
+    expect(params.get("origin")).toBe("Johnson Museum, Ithaca, NY");
+    expect(params.get("destination")).toBe("Gimme Coffee, Ithaca, NY");
+    expect(params.get("destination_place_id")).toBe("ChIJStopTwo");
+    expect(params.get("waypoints")).toBe("place_id:ChIJStopOne");
+    expect(params.get("travelmode")).toBe("walking");
+    expect(url).not.toContain("42.4505");
+  });
+
+  it("builds a route link from a plan that was saved without one", () => {
+    const url = routeUrlForPlan({
+      start: { name: "Arts Quad", lat: 42.45, lng: -76.48 },
+      stops: [
+        {
+          place: {
+            name: "Collegetown Bagels",
+            coordinates: { lat: 42.44, lng: -76.49 },
+          },
+        },
+        {
+          place: {
+            name: "Hound and Mare",
+            address: "118 N. Aurora Street",
+            coordinates: { lat: 42.441, lng: -76.5 },
+            googlePlaceId: "ChIJHound",
+          },
+        },
+      ],
+      legs: [{ mode: "walk", toName: "Hound and Mare" }],
+    });
+    const params = new URL(url!).searchParams;
+    expect(params.get("destination")).toBe(
+      "Hound and Mare, 118 N. Aurora Street, Ithaca, NY",
+    );
+    expect(params.get("destination_place_id")).toBe("ChIJHound");
+    expect(params.get("waypoints")).toBe("Collegetown Bagels, Ithaca, NY");
+    expect(params.get("travelmode")).toBe("walking");
+  });
+
+  it("replaces a coordinate link so mobile maps shows place names", () => {
+    const url = routeUrlForPlan({
+      googleMapsUrl:
+        "https://www.google.com/maps/dir/?api=1&origin=42.4505%2C-76.4862&destination=42.4407%2C-76.4963&travelmode=walking",
+      start: { name: "Johnson Museum of Art", lat: 42.4505, lng: -76.4862 },
+      stops: [
+        {
+          place: {
+            name: "Gimme! Coffee · Cayuga Street",
+            address: "506 W State St",
+            coordinates: { lat: 42.4449, lng: -76.4998 },
+          },
+        },
+        {
+          place: {
+            name: "Hound and Mare",
+            address: "118 N. Aurora Street",
+            coordinates: { lat: 42.4407, lng: -76.4963 },
+          },
+        },
+      ],
+      legs: [
+        { mode: "walk", toName: "Gimme! Coffee · Cayuga Street" },
+        { mode: "walk", toName: "Hound and Mare" },
+        { mode: "walk", toName: "Johnson Museum of Art" },
+      ],
+    });
+    const params = new URL(url!).searchParams;
+    expect(params.get("origin")).toBe("Johnson Museum of Art, Ithaca, NY");
+    expect(params.get("destination")).toBe("Johnson Museum of Art, Ithaca, NY");
+    expect(params.get("waypoints")).toBe(
+      "Gimme! Coffee · Cayuga Street, 506 W State St, Ithaca, NY|Hound and Mare, 118 N. Aurora Street, Ithaca, NY",
+    );
+    expect(url).not.toContain("42.4505");
   });
 
   it("keeps itinerary order and maps bus to transit", () => {
@@ -42,9 +111,13 @@ describe("Google Maps helpers", () => {
       transport: "bus",
       returnToStart: true,
     });
-    expect(url).toContain("travelmode=transit");
-    expect(url).toContain("waypoints=42.451%2C-76.481%7C42.452%2C-76.482%7C42.453%2C-76.483");
-    expect(url).toContain("destination=42.45%2C-76.48");
+    const params = new URL(url!).searchParams;
+    expect(params.get("travelmode")).toBe("transit");
+    expect(params.get("waypoints")).toBe(
+      "One, Ithaca, NY|Two, Ithaca, NY|Three, Ithaca, NY",
+    );
+    expect(params.get("destination")).toBe("Start, Ithaca, NY");
+    expect(url).not.toContain("42.451");
   });
 
   it("decodes an encoded polyline into coordinates", () => {

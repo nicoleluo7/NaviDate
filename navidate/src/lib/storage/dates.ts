@@ -1,7 +1,7 @@
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import type { Criteria, Plan, SavedDate } from "@/types";
 import { getStorage, type Storage } from ".";
-import { buildGoogleMapsRouteUrl } from "@/lib/maps/googleMapsUrl";
+import { buildGoogleMapsRouteUrl, routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 export const randomId = () => randomBytes(24).toString("base64url");
 export const hash = (text: string) =>
   createHash("sha256").update(text).digest("hex");
@@ -27,7 +27,12 @@ export async function saveDate(
   return record;
 }
 export function publicPlan(plan: Plan): Plan {
-  if (!plan.start.private) return plan;
+  if (!plan.start.private) {
+    const googleMapsUrl = routeUrlForPlan(plan);
+    return googleMapsUrl && googleMapsUrl !== plan.googleMapsUrl
+      ? { ...plan, googleMapsUrl }
+      : plan;
+  }
   const safe = structuredClone(plan),
     point = safe.stops[0].place.coordinates;
   safe.start = {
@@ -55,6 +60,7 @@ export function publicPlan(plan: Plan): Plan {
     ? buildGoogleMapsRouteUrl({
         start: {
           name: remaining[0].name,
+          address: remaining[0].address,
           lat: remaining[0].coordinates.lat,
           lng: remaining[0].coordinates.lng,
           googlePlaceId: remaining[0].googlePlaceId,
@@ -63,6 +69,7 @@ export function publicPlan(plan: Plan): Plan {
           remaining.length > 1
             ? remaining.slice(1).map((place) => ({
                 name: place.name,
+                address: place.address,
                 lat: place.coordinates.lat,
                 lng: place.coordinates.lng,
                 googlePlaceId: place.googlePlaceId,
@@ -70,6 +77,7 @@ export function publicPlan(plan: Plan): Plan {
             : [
                 {
                   name: remaining[0].name,
+                  address: remaining[0].address,
                   lat: remaining[0].coordinates.lat,
                   lng: remaining[0].coordinates.lng,
                   googlePlaceId: remaining[0].googlePlaceId,

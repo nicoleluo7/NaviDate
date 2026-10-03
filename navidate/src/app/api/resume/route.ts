@@ -3,6 +3,7 @@ import { criteriaSchema, type SavedDate } from "@/types";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
 import { getStorage } from "@/lib/storage";
 import { hash, isOwner, randomId } from "@/lib/storage/dates";
+import { routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import type { Draft } from "../plan/route";
 export async function POST(req: Request) {
   try {
@@ -30,17 +31,20 @@ export async function POST(req: Request) {
         "This date is read-only. Open its share page to view it, or plan a new date.",
       );
     const criteria = criteriaSchema.parse(saved.criteria),
-      draftId = randomId();
+      draftId = randomId(),
+      plan = saved.plan.googleMapsUrl
+        ? saved.plan
+        : { ...saved.plan, googleMapsUrl: routeUrlForPlan(saved.plan) };
     await store.put("draft:" + draftId, {
       ownerHash: hash(token),
       criteria,
-      plans: [saved.plan],
+      plans: [plan],
       expires: Date.now() + 3600000,
     } satisfies Draft);
     return Response.json({
       saved: { shareId: id, url: "/date/" + id },
       criteria,
-      plan: saved.plan,
+      plan,
       draftId,
     });
   } catch (e) {

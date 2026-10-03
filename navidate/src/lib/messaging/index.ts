@@ -9,6 +9,7 @@ import { landmarks } from "@/lib/data";
 import { getStorage, type Storage } from "@/lib/storage";
 import { hash, saveDate } from "@/lib/storage/dates";
 import { displayTime } from "@/lib/planner/time";
+import { routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import { generate } from "@/lib/planner/service";
 import { interpret } from "@/lib/integrations/xai";
 import { answerWithGemini, introduceWithGemini, type ChatTurn } from "@/lib/integrations/gemini";
@@ -52,6 +53,7 @@ export type Pair = {
   providerId?: string;
 };
 export function itineraryText(plan: Plan, url: string) {
+  const maps = routeUrlForPlan(plan);
   return [
     `Navidate · ${plan.title}`,
     `${displayTime(plan.startsAt)} → ${displayTime(plan.endsAt)}`,
@@ -62,7 +64,7 @@ export function itineraryText(plan: Plan, url: string) {
     ),
     plan.weather.summary,
     ...plan.warnings,
-    plan.googleMapsUrl ? `Google Maps route: ${plan.googleMapsUrl}` : "",
+    maps ? `Google Maps route: ${maps}` : "",
     url,
   ].join("\n");
 }
@@ -166,6 +168,9 @@ export async function handleIncoming(
               /* The local intro already includes the link. */
             }
           response = intro;
+          const maps = routeUrlForPlan(saved.plan);
+          if (maps && !response.includes(maps))
+            response = `${response}\nGoogle Maps route: ${maps}`;
           await store.put(
             conversationKey,
             withTurn(

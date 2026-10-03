@@ -256,6 +256,7 @@ export async function schedule(
       start: c.start,
       stops: sequence.map((place) => ({
         name: place.name,
+        address: place.address,
         lat: place.coordinates.lat,
         lng: place.coordinates.lng,
         googlePlaceId: place.googlePlaceId,
