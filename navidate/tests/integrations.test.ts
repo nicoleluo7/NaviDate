@@ -65,3 +65,17 @@ it("uses local plans when AI times out", async () => {
   expect(r.plans.length).toBeGreaterThan(0);
   expect(r.notices.join(" ")).toContain("AI suggestions are unavailable");
 });
+it("falls back to the local planner when Gemini fails", async () => {
+  vi.stubEnv("DISABLE_EXTERNAL_APIS", "false");
+  vi.stubEnv("GEMINI_API_KEY", "fictional-gemini-key");
+  vi.stubEnv("GOOGLE_MAPS_API_KEY", "fictional-maps-key");
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => {
+      throw new Error("offline");
+    }),
+  );
+  const r = await generate({ ...c(), date: "2026-10-02" });
+  expect(r.plans.length).toBeGreaterThan(0);
+  expect(r.notices.join(" ")).toMatch(/unavailable|local planner/i);
+});

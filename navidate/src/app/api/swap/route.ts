@@ -3,6 +3,7 @@ import type { Draft } from "../plan/route";
 import { getStorage } from "@/lib/storage";
 import { isOwner } from "@/lib/storage/dates";
 import { replaceStop } from "@/lib/planner";
+import { createPlannerRouter } from "@/lib/maps/routes";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
 export async function POST(req: Request) {
   try {
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
       input.planId,
       input.index,
       draft.criteria,
+      { router: createPlannerRouter(draft.criteria.transport) },
     );
     if (!replaced || !("plan" in replaced))
       throw new HttpError(

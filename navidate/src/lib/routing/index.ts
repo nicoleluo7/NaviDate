@@ -5,8 +5,8 @@ import type { Point } from "@/types";
 import type { WalkEstimate, WalkLookup } from "@/lib/transit";
 export type WalkingRouter = {
   route(
-    from: Point & { id?: string },
-    to: Point & { id?: string },
+    from: Point & { id?: string; googlePlaceId?: string },
+    to: Point & { id?: string; googlePlaceId?: string },
   ): Promise<WalkEstimate | null>;
 };
 export function distance(a: Point, b: Point) {

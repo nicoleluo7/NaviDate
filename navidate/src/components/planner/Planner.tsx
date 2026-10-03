@@ -68,7 +68,8 @@ export default function Planner({
     [saved, setSaved] = useState<{ url: string; shareId: string } | null>(null),
     [text, setText] = useState(""),
     [hint, setHint] = useState(""),
-    [dirty, setDirty] = useState(false);
+    [dirty, setDirty] = useState(false),
+    [planStatus, setPlanStatus] = useState("Finding date ideas…");
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     let active = true;
@@ -102,6 +103,20 @@ export default function Planner({
       active = false;
     };
   }, []);
+  useEffect(() => {
+    if (busy !== "plan") return;
+    const messages = [
+      "Finding date ideas…",
+      "Checking places…",
+      "Building your route…",
+    ];
+    let i = 0;
+    const timer = window.setInterval(() => {
+      i = (i + 1) % messages.length;
+      setPlanStatus(messages[i]);
+    }, 1400);
+    return () => window.clearInterval(timer);
+  }, [busy]);
   function update<K extends keyof Criteria>(key: K, value: Criteria[K]) {
     setCriteria((c) => ({ ...c, [key]: value }));
   }
@@ -118,6 +133,7 @@ export default function Planner({
   async function generate() {
     setBusy("plan");
     setError("");
+    setPlanStatus("Finding date ideas…");
     try {
       const r = await request("/api/plan", { criteria, seed });
       setResult(r);
@@ -643,7 +659,7 @@ export default function Planner({
                   <Heart size={14} /> A thoughtful date starts here.
                 </p>
                 <Button type="submit" className="primary" isDisabled={!!busy}>
-                  {busy === "plan" ? "Finding your date…" : "Find our date"}
+                  {busy === "plan" ? planStatus : "Find our date"}
                   {busy === "plan" ? (
                     <RefreshCw className="spin" size={18} />
                   ) : (
@@ -675,7 +691,7 @@ export default function Planner({
               </h2>
               <p>
                 {result.ai
-                  ? "AI suggested ideas; the planner checked the schedule."
+                  ? "AI planned with real Google Maps places where available. The scheduler still checks time and budget."
                   : "Made with our local planner and curated places."}
               </p>
             </div>

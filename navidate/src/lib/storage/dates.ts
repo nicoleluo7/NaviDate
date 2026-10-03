@@ -1,6 +1,7 @@
 import { randomBytes, createHash, timingSafeEqual } from "node:crypto";
 import type { Criteria, Plan, SavedDate } from "@/types";
 import { getStorage, type Storage } from ".";
+import { buildGoogleMapsRouteUrl } from "@/lib/maps/googleMapsUrl";
 export const randomId = () => randomBytes(24).toString("base64url");
 export const hash = (text: string) =>
   createHash("sha256").update(text).digest("hex");
@@ -43,10 +44,39 @@ export function publicPlan(plan: Plan): Plan {
           fromName: i === 0 ? "Private start" : leg.fromName,
           toName: i === 0 ? leg.toName : "Private return",
           geometry: undefined,
+          encodedPolyline: undefined,
           bus: undefined,
           label: "Private travel segment hidden",
         }
       : leg,
   );
+  const remaining = safe.stops.map((s) => s.place);
+  safe.googleMapsUrl = remaining.length
+    ? buildGoogleMapsRouteUrl({
+        start: {
+          name: remaining[0].name,
+          lat: remaining[0].coordinates.lat,
+          lng: remaining[0].coordinates.lng,
+          googlePlaceId: remaining[0].googlePlaceId,
+        },
+        stops:
+          remaining.length > 1
+            ? remaining.slice(1).map((place) => ({
+                name: place.name,
+                lat: place.coordinates.lat,
+                lng: place.coordinates.lng,
+                googlePlaceId: place.googlePlaceId,
+              }))
+            : [
+                {
+                  name: remaining[0].name,
+                  lat: remaining[0].coordinates.lat,
+                  lng: remaining[0].coordinates.lng,
+                  googlePlaceId: remaining[0].googlePlaceId,
+                },
+              ],
+        transport: plan.legs.some((leg) => leg.mode === "bus") ? "bus" : "walk",
+      })
+    : undefined;
   return safe;
 }

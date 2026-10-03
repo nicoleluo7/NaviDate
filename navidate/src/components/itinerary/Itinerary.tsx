@@ -70,6 +70,7 @@ export default function Itinerary({
     ),
     plan.weather.summary,
     ...plan.warnings,
+    plan.googleMapsUrl ?? "",
     savedUrl ?? "",
   ].join("\n");
   async function pair() {
@@ -288,9 +289,21 @@ export default function Itinerary({
             )}
           </div>
           <p className="map-note">
-            {plan.suitability}. No route line means travel is an estimate, not a
-            verified walking path.
+            {plan.suitability}.{" "}
+            {plan.legs.some((leg) => leg.geometry?.length || leg.encodedPolyline)
+              ? "The line follows a routed path in itinerary order."
+              : "No route line means travel is an estimate, not a verified walking path."}
           </p>
+          {plan.googleMapsUrl && (
+            <a
+              className="map-directions"
+              href={plan.googleMapsUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open route in Google Maps <ArrowUpRight size={16} />
+            </a>
+          )}
         </div>
       </div>
       <details className="practical">
@@ -306,6 +319,17 @@ export default function Itinerary({
         </p>
       </details>
       <div className="action-bar">
+        {plan.googleMapsUrl && (
+          <a
+            className="secondary"
+            href={plan.googleMapsUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Open route in Google Maps
+            <ArrowUpRight size={17} />
+          </a>
+        )}
         {onSave && (
           <Button className="primary" onPress={onSave} isDisabled={busy}>
             <Heart size={17} />

@@ -55,6 +55,7 @@ export type WalkEstimate = {
   minutes: number;
   km: number;
   geometry?: Point[];
+  encodedPolyline?: string;
   label: string;
 };
 export type WalkLookup = (

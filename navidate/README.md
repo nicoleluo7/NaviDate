@@ -1,6 +1,6 @@
 # Navidate
 
-**Turn “What should we do?” into a date.** A single TypeScript application for Cornell and Ithaca, built for BigRed//Hacks. Next.js, React, Tailwind, Leaflet, Zod, SQLite, optional Supabase, xAI and Photon Spectrum.
+**Turn “What should we do?” into a date.** A single TypeScript application for Cornell and Ithaca, built for BigRed//Hacks. Next.js, React, Tailwind, Leaflet (fallback map), Google Maps, Zod, SQLite, optional Supabase, Gemini, xAI and Photon Spectrum.
 
 ## Run locally
 
@@ -44,7 +44,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Vitest uses fictional fixtures and blocks external APIs. Playwright covers the form, results, Leaflet markers, persistence, public share URL, unauthorized editing, impossible constraints, and a 375px mobile viewport. It uses a local server and mocked tile responses. Tests never consume xAI credits or send real iMessages. Browser screenshots are in ignored `test-results/`.
+Vitest uses fictional fixtures and blocks external APIs. Playwright covers the form, results, map markers, persistence, public share URL, unauthorized editing, impossible constraints, and a 375px mobile viewport. It uses a local server and mocked tile responses. Tests never consume xAI credits or send real iMessages. Browser screenshots are in ignored `test-results/`.
 
 The validator prints missing verification dates and unknown hours as warnings, not invented values. Schema failures, duplicate IDs, invalid coordinates, broken references, nonmonotonic stop times, invalid calendars and direction mismatches fail validation.
 
@@ -57,7 +57,8 @@ The validator prints missing verification dates and unknown hours as warnings, n
 | Prices         | Estimated spending for two; not current menus or guaranteed totals. No reservations or purchases.                                                                                                        |
 | Dietary needs  | Stored and supplied to AI; no dietary guarantees. Venue tags are empty until manually verified. Users must confirm ingredients/cross-contact.                                                            |
 | Walking        | Dijkstra over a small curated estimate graph, with conservative times at 65 m/min. **Not field-verified. No fabricated route lines.** No automatic arbitrary-point snapping beyond 30m of a known place. |
-| Maps           | Client-only Leaflet and standard OSM raster tiles with visible attribution. No offline prefetching. Public tiles have no uptime guarantee.                                                               |
+| Maps           | Google Maps JavaScript API when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set, with pins and a route polyline from the Routes API. Leaflet + OSM tiles remain the fallback when that key is missing. Attribution is shown. |
+| Gemini         | Optional date planning with Maps grounding. Suggested stops are resolved through Places API (New) before they appear on a plan. If Gemini or Places fails, the local planner is used and a notice is shown. |
 | Bus            | Direct-trip engine implemented. Real schedule files are empty, so real bus results are disabled and walking is used. Fictional schedules are confined to tests. No real-time tracking.                   |
 | Weather        | Open-Meteo hourly forecast for the selected date and time within its 16-day window. Otherwise “Forecast unavailable.” API failure never blocks planning.                                                                            |
 | xAI            | Optional interpretation, venue-ID suggestions and wording of validated results. Local planning works without it. No live xAI call was made during implementation.                                        |
@@ -73,6 +74,21 @@ The app cannot verify street accessibility, temporary closures, slopes, transit 
 3. Restart the web server and worker. The website's optional text-to-form input appears when a key is configured.
 
 Uses the documented `POST https://api.x.ai/v1/chat/completions` endpoint (still supported but labeled legacy in current docs), JSON output, Zod validation, a 12-second timeout, 1,200 output-token cap and **no automatic retry**. A planning request uses at most two sequential calls (candidate suggestions, then wording of valid results). Interpretation is one additional explicit call. Default shared durable quota: 30 attempts/day; `XAI_DAILY_CALL_LIMIT` can lower it and is capped at 100. This is an application request cap, not a dollar guarantee; check your account budget separately. The model never controls cost arithmetic, hours, scheduling or ownership. Unknown IDs and malformed responses fall back to local planning.
+
+## Gemini + Google Maps setup
+
+Planning still works without these keys. When they are present, `/api/plan` asks Gemini to propose a date, verifies each stop with Places, then builds walking or transit legs with the Routes API.
+
+1. In Google AI Studio / Gemini API, create `GEMINI_API_KEY`. Set `GEMINI_MODEL` to a Flash model that supports Maps grounding (default `gemini-2.5-flash`).
+2. In Google Cloud, enable **Maps JavaScript API**, **Places API (New)**, and **Routes API**. Billing must be enabled if Google requires it for those APIs.
+3. Create two API keys:
+   - **Browser key** → `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`. Restrict to HTTP referrers (`http://localhost:3000/*` for local use) and to the Maps JavaScript API.
+   - **Server key** → `GOOGLE_MAPS_API_KEY`. Restrict to Places API (New) and Routes API. Do not put this key in `NEXT_PUBLIC_*`.
+4. Copy them into `.env.local` and restart `npm run dev`.
+
+Gemini keys stay server-side. If Gemini, Places, or Routes fail, Navidate falls back to the local Cornell/Ithaca planner and shows a notice. The itinerary includes an **Open route in Google Maps** link (`plan.googleMapsUrl`) that messaging can reuse.
+
+Grounding with Google Maps is requested on the Gemini `generateContent` call (`tools: [{ googleMaps: {} }]`) with the user’s start coordinates. Place IDs from grounding are reused when present; otherwise Places Text Search resolves the name near Ithaca. Model-generated coordinates are not trusted when Google data is available.
 
 ## Photon / Spectrum setup — Stable documentation
 

@@ -62,6 +62,7 @@ export function itineraryText(plan: Plan, url: string) {
     ),
     plan.weather.summary,
     ...plan.warnings,
+    plan.googleMapsUrl ? `Google Maps route: ${plan.googleMapsUrl}` : "",
     url,
   ].join("\n");
 }

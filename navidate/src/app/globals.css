@@ -876,7 +876,9 @@ footer small {
   background: #e9eedf;
   isolation: isolate;
 }
-.leaflet-map {
+.leaflet-map,
+.google-map,
+.itinerary-map {
   height: 440px;
   width: 100%;
   z-index: 0;
@@ -1033,7 +1035,8 @@ footer small {
 .picker {
   margin: 10px 0 20px;
 }
-.picker .leaflet-map {
+.picker .leaflet-map,
+.picker .google-map {
   height: 270px;
 }
 .picker p {
@@ -1324,7 +1327,9 @@ footer small {
   .mobile-hidden {
     display: none;
   }
-  .leaflet-map {
+  .leaflet-map,
+  .google-map,
+  .itinerary-map {
     height: 370px;
   }
   .timeline-step {
@@ -1632,6 +1637,16 @@ a:focus-visible {
   font-size: 13px;
   font-weight: 600;
 }
+.map-overview-inline {
+  margin-left: 10px;
+  border: 0;
+  background: none;
+  color: var(--coral);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0;
+}
 .leaflet-control-zoom a {
   width: 42px !important;
   height: 42px !important;
@@ -1646,6 +1661,12 @@ a:focus-visible {
 .map-pin {
   background: transparent;
   border: none;
+}
+button.map-pin {
+  width: 44px;
+  height: 48px;
+  padding: 0;
+  cursor: pointer;
 }
 .pin-body {
   display: grid;

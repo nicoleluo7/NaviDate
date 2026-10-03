@@ -65,6 +65,8 @@ export const placeSchema = z.object({
   openingHours: hoursSchema.nullable(),
   websiteUrl: z.url(),
   sourceUrl: z.url(),
+  googlePlaceId: z.string().max(200).optional(),
+  googleMapsUri: z.url().optional(),
   verifiedAt: z.iso.date().nullable(),
   verificationStatus: z.enum([
     "source-reviewed",
@@ -111,6 +113,7 @@ export type Leg = {
   cost: number;
   label: string;
   geometry?: Point[];
+  encodedPolyline?: string;
   bus?: {
     route: string;
     tripId: string;
@@ -142,6 +145,7 @@ export type Plan = {
   warnings: string[];
   weather: Weather;
   suitability: string;
+  googleMapsUrl?: string;
 };
 export type PlanResult = {
   plans: Plan[];

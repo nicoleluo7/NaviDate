@@ -35,6 +35,8 @@ export function answerAboutDate(plan: Plan, url: string, text: string) {
     return `Estimated $${plan.cost} for two.`;
   if (/weather|rain|forecast/.test(q)) return plan.weather.summary;
   if (/\blink\b|url|share/.test(q)) return url;
+  if (/google maps|maps route|directions|open route/.test(q))
+    return plan.googleMapsUrl ?? url;
   if (/where|stop|itinerary|going|places|plan/.test(q))
     return [
       plan.title,

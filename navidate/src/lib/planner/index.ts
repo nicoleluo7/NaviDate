@@ -23,6 +23,7 @@ import {
   weatherForWindow,
   unavailableWeather,
 } from "@/lib/integrations/weather";
+import { buildGoogleMapsRouteUrl } from "@/lib/maps/googleMapsUrl";
 export type PlannerOptions = {
   places?: Place[];
   router?: WalkingRouter;
@@ -73,6 +74,7 @@ export async function schedule(
       id: p.id,
       name: p.name,
       private: false,
+      googlePlaceId: p.googlePlaceId,
     })),
     ...(c.returnToStart ? [c.start] : []),
   ]) {
@@ -144,6 +146,7 @@ export async function schedule(
         cost: 0,
         label: walking.label,
         geometry: walking.geometry,
+        encodedPolyline: walking.encodedPolyline,
       };
     } else
       return reject(
@@ -249,6 +252,17 @@ export async function schedule(
         ? "Outdoor stops · weather caution"
         : "Outdoor stops · weather dependent"
       : "Indoor activities · outdoor travel",
+    googleMapsUrl: buildGoogleMapsRouteUrl({
+      start: c.start,
+      stops: sequence.map((place) => ({
+        name: place.name,
+        lat: place.coordinates.lat,
+        lng: place.coordinates.lng,
+        googlePlaceId: place.googlePlaceId,
+      })),
+      transport: c.transport,
+      returnToStart: c.returnToStart,
+    }),
   };
 }
 export async function planDates(

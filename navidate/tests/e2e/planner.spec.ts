@@ -44,8 +44,8 @@ test("plans, maps, saves, shares and protects editing", async ({
   await expect(
     page.getByRole("region", { name: "Itinerary map" }),
   ).toBeVisible();
-  await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
-  await page.locator(".leaflet-marker-icon").filter({ hasText: "2" }).click();
+  await expect(page.locator("[data-stop-index]").first()).toBeVisible();
+  await page.locator("[data-stop-index='1']").click();
   await expect(page.locator(".map-stop")).toContainText("STOP 2");
   await expect(page.locator(".pin-selected")).toHaveCount(1);
   await page.getByRole("button", { name: "Show all stops on the map" }).click();
