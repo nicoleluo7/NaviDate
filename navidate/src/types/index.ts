@@ -21,6 +21,7 @@ export const criteriaSchema = z.object({
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   duration: z.number().int().min(30).max(720),
   budget: z.number().min(0).max(1000),
+  restaurantId: z.string().min(1).max(200).optional(),
   dateType: z
     .enum(["any", "food", "coffee", "dessert", "outdoors"])
     .default("any"),

@@ -9,7 +9,8 @@ Use **Node 24** (the repository includes `.nvmrc`). Run these commands from `nav
 ```bash
 nvm use
 npm ci
-cp .env.example .env.local
+# First-time setup only: keep your existing .env.local if you have one.
+cp -n .env.example .env.local
 npm run dev
 ```
 
@@ -44,51 +45,61 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Vitest uses fictional fixtures and blocks external APIs. Playwright covers the form, results, map markers, persistence, public share URL, unauthorized editing, impossible constraints, and a 375px mobile viewport. It uses a local server and mocked tile responses. Tests never consume xAI credits or send real iMessages. Browser screenshots are in ignored `test-results/`.
+Vitest uses fictional fixtures and blocks external APIs. Playwright covers the form, results, map markers, persistence, public share URL, unauthorized editing, impossible constraints, and a 375px mobile viewport. It starts an isolated server on port 3100 with a separate build directory, disabled external providers and mocked tile responses. Tests never consume xAI credits or send real iMessages. Browser screenshots are in ignored `test-results/`.
 
 The validator prints missing verification dates and unknown hours as warnings, not invented values. Schema failures, duplicate IDs, invalid coordinates, broken references, nonmonotonic stop times, invalid calendars and direction mismatches fail validation.
 
 ## What is real, estimated, and unavailable
 
-| Area           | Current behavior                                                                                                                                                                                         |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venues         | 26 real Cornell/Ithaca places. Source links included. Coordinates and costs are approximate. `source-reviewed` means the listing was reviewed, not every detail independently verified.                  |
-| Hours          | Johnson Museum published weekly hours and October 13, 2026 closure are entered. Other hours are unknown, explicitly shown as unverified. Results with unknown hours are conditional suggestions.         |
-| Prices         | Estimated spending for two; not current menus or guaranteed totals. No reservations or purchases.                                                                                                        |
-| Dietary needs  | Stored and supplied to AI; no dietary guarantees. Venue tags are empty until manually verified. Users must confirm ingredients/cross-contact.                                                            |
-| Walking        | Dijkstra over a small curated estimate graph, with conservative times at 65 m/min. **Not field-verified. No fabricated route lines.** No automatic arbitrary-point snapping beyond 30m of a known place. |
-| Maps           | Google Maps JavaScript API when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set, with pins and a route polyline from the Routes API. Leaflet + OSM tiles remain the fallback when that key is missing. Attribution is shown. |
-| Gemini         | Optional date planning with Maps grounding. Suggested stops are resolved through Places API (New) before they appear on a plan. If Gemini or Places fails, the local planner is used and a notice is shown. |
-| Bus            | Direct-trip engine implemented. Real schedule files are empty, so real bus results are disabled and walking is used. Fictional schedules are confined to tests. No real-time tracking.                   |
-| Weather        | Open-Meteo hourly forecast for the selected date and time within its 16-day window. Otherwise “Forecast unavailable.” API failure never blocks planning.                                                                            |
-| xAI            | Optional interpretation, venue-ID suggestions and wording of validated results. Local planning works without it. No live xAI call was made during implementation.                                        |
-| Photon         | Stable Spectrum SDK worker, inbound planning, follow-ups, pairing and delivery-attempt state implemented. Requires a user-activated project and line; no live delivery tested.                           |
-| Supabase / ORS | Optional adapters implemented; no live account or key was configured or tested.                                                                                                                          |
+| Area           | Current behavior                                                                                                                                                                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Venues         | Live discovery from Google Places (up to 60 nearby results across food and activity categories per request). The 26-place JSON catalog is used only in explicitly labeled local mode. No provider promises an exhaustive listing of every place. |
+| Hours          | Google regular opening periods are checked against each entire activity, including overnight periods. Unknown hours remain labeled; holiday changes and admission are not guaranteed. Local mode uses curated hours where available.             |
+| Prices         | Estimated spending for two; not current menus or guaranteed totals. No reservations or purchases.                                                                                                                                                |
+| Dietary needs  | Stored and supplied to AI; no dietary guarantees. Venue tags are empty until manually verified. Users must confirm ingredients/cross-contact.                                                                                                    |
+| Walking        | Google walking route duration, distance and actual provider geometry for live plans, including GPS starts. Missing routes reject a live candidate. Local mode uses a small estimate graph without fabricated route lines.                        |
+| Maps           | Google Maps JavaScript API when `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` is set, with pins and a route polyline from the Routes API. Leaflet + OSM tiles remain the fallback when that key is missing. Attribution is shown.                            |
+| Gemini         | Chooses ordered combinations from discovered Place IDs using structured output. Code checks constraints. Live failures show a retryable error, never silently substitute local recommendations.                                                  |
+| Bus            | Direct-trip engine implemented. Real schedule files are empty, so real bus results are disabled and walking is used. Fictional schedules are confined to tests. No real-time tracking.                                                           |
+| Weather        | Open-Meteo hourly forecast for the selected date and time within its 16-day window. Otherwise “Forecast unavailable.” API failure never blocks planning.                                                                                         |
+| xAI            | Navi’s realtime voice conversation and optional text interpretation. Gemini alone selects live date combinations. Browser tokens expire; the permanent key stays server-side.                                                                    |
+| Photon         | Stable Spectrum SDK worker, inbound planning, follow-ups, pairing and delivery-attempt state implemented. Requires a user-activated project and line; no live delivery tested.                                                                   |
+| Supabase / ORS | Optional adapters implemented; no live account or key was configured or tested.                                                                                                                                                                  |
 
 The app cannot verify street accessibility, temporary closures, slopes, transit changes or holiday exceptions that have not been entered. The graph needs an on-foot route audit before use as verified navigation. Outdoor activities are weather-dependent. Hourly forecasts cover the full date window, including midnight crossings. Rain, snow, strong wind, freezing temperatures and heat favor indoor stops; forecast storms exclude outdoor activities. Walking remains weather-dependent. Saved dates retain a timestamped forecast snapshot; regenerate to refresh it.
 
-## xAI text setup
+## Navi voice and text setup
 
-1. Create a server API key in your existing xAI account; use existing credits only.
-2. Set `XAI_API_KEY` and `XAI_MODEL` in `.env.local`. The verified model default is `grok-4.7`; change it to another model available to your account if needed.
-3. Restart the web server and worker. The website's optional text-to-form input appears when a key is configured.
+Set `XAI_API_KEY` in `navidate/.env.local`. `XAI_VOICE_MODEL` defaults to `grok-voice-latest`; `XAI_MODEL` is for optional typed interpretation. Restart the dev server after changes.
 
-Uses the documented `POST https://api.x.ai/v1/chat/completions` endpoint (still supported but labeled legacy in current docs), JSON output, Zod validation, a 12-second timeout, 1,200 output-token cap and **no automatic retry**. A planning request uses at most two sequential calls (candidate suggestions, then wording of valid results). Interpretation is one additional explicit call. Default shared durable quota: 30 attempts/day; `XAI_DAILY_CALL_LIMIT` can lower it and is capped at 100. This is an application request cap, not a dollar guarantee; check your account budget separately. The model never controls cost arithmetic, hours, scheduling or ownership. Unknown IDs and malformed responses fall back to local planning.
+Tap **Talk to Navi** to explicitly allow microphone access. Navi uses the app logo and asks for start location, New York date/time, duration, budget for two, vibe and transport. She summarizes those details and asks for confirmation before submitting them to the same Gemini planner as the form. Partial, invalid, unknown-location and DST-ambiguous handoffs are rejected. Microphone denial, disconnection, stop and unmount release audio resources. The visible transcript is kept only in component memory; raw audio is sent to xAI and is not stored by Navidate.
+
+The server issues a 60-second ephemeral connection token with `/v1/realtime/client_secrets`. The browser connects to xAI's documented realtime WebSocket, captures PCM audio with AudioWorklet, plays the response and handles a validated `submit_requirements` tool. No permanent API key reaches the browser. Default application caps: `XAI_VOICE_DAILY_SESSION_LIMIT=10` token attempts per day and three minutes per browser conversation. These are app safeguards, not provider-side spending guarantees. Text interpretation retains `XAI_DAILY_CALL_LIMIT=30`.
+
+Microphone and GPS require **HTTPS or localhost**. A phone opening `http://192.168…:3000` cannot use them; choose a landmark/map point or use a secure origin. No tunnel or deployment is created automatically.
+
+With the configured dev server running, test voice without using a real microphone or spending credits:
+
+```bash
+npm run test:voice
+```
+
+These two Playwright tests mock microphone, xAI WebSocket, token and planning requests. They verify an incomplete handoff followed by a valid one, duplicate tool events, resource cleanup and denied microphone permission. Real speech comprehension/playback still needs a human microphone test.
 
 ## Gemini + Google Maps setup
 
-Planning still works without these keys. When they are present, `/api/plan` asks Gemini to propose a date, verifies each stop with Places, then builds walking or transit legs with the Routes API.
+1. Set `GEMINI_API_KEY` and an available structured-output model in `GEMINI_MODEL` (default `gemini-2.5-flash`; the configured `gemini-3.5-flash-lite` was live-tested).
+2. Enable **Maps JavaScript API**, **Places API (New)** and **Routes API** in your billing-enabled Google project. This project does not activate services, attach a payment card or change your account limits.
+3. Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` to a browser key restricted to your web referrers and Maps JavaScript API. Set `GOOGLE_MAPS_API_KEY` to a separate server key restricted to Places API (New) and Routes API. The server never falls back to the browser key.
+4. Optionally set `NEXT_PUBLIC_GOOGLE_MAP_ID`; advanced markers use Google's `DEMO_MAP_ID` for local demos. Restart the app after changing browser settings.
 
-1. In Google AI Studio / Gemini API, create `GEMINI_API_KEY`. Set `GEMINI_MODEL` to a Flash model that supports Maps grounding (default `gemini-2.5-flash`).
-2. In Google Cloud, enable **Maps JavaScript API**, **Places API (New)**, and **Routes API**. Billing must be enabled if Google requires it for those APIs.
-3. Create two API keys:
-   - **Browser key** → `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`. Restrict to HTTP referrers (`http://localhost:3000/*` for local use) and to the Maps JavaScript API.
-   - **Server key** → `GOOGLE_MAPS_API_KEY`. Restrict to Places API (New) and Routes API. Do not put this key in `NEXT_PUBLIC_*`.
-4. Copy them into `.env.local` and restart `npm run dev`.
+The live pipeline makes two bounded Nearby Search requests (food and complementary activities), merges/deduplicates operational places within Ithaca, filters structured preferences, then asks Gemini for up to six candidate sequences. It rejects unknown IDs and duplicate stops. There are at most two sequential Gemini calls: initial recommendations and one repair using schedule rejection reasons if none fit. `GEMINI_DAILY_CALL_LIMIT` defaults to 30 planning attempts per day (at most 100). Routing is cached within a request and capped at 24 directed legs. No route matrix over the entire city is requested.
 
-Gemini keys stay server-side. If Gemini, Places, or Routes fail, Navidate falls back to the local Cornell/Ithaca planner and shows a notice. The itinerary includes an **Open route in Google Maps** link (`plan.googleMapsUrl`) that messaging can reuse.
+Gemini chooses order, activity descriptions and estimated activity lengths. It cannot replace provider coordinates or lower the estimated cost to make a candidate pass. Costs are category/price-level budget allowances for two, not verified menu prices; activity times remain estimates. Regular hours, available duration, walking distance, budget, weather, and known bus schedules are checked in code. Swaps rediscover places, ask Gemini for an alternative, preserve other stops and recalculate the full itinerary. Saved weather is a snapshot; regenerate for refreshed weather.
 
-Grounding with Google Maps is requested on the Gemini `generateContent` call (`tools: [{ googleMaps: {} }]`) with the user’s start coordinates. Place IDs from grounding are reused when present; otherwise Places Text Search resolves the name near Ithaca. Model-generated coordinates are not trusted when Google data is available.
+Live provider failures display an error with the form preserved. Unconfigured providers or `DISABLE_EXTERNAL_APIS=true` use clearly labeled local suggestions. Buses still require manually entered verified schedules: Google transit durations are never mislabeled as walking or assigned a zero fare. The map renders only provider route geometry; it never draws invented walking lines.
+
+Live verification completed with the existing keys: nearby discovery returned 38 places (34 with regular hours), Gemini generated feasible combinations, Google Routes returned geometry and durations, and the mobile Google Map loaded/selectable markers. xAI accepted an ephemeral token and Navi's voice/tool session configuration. No real iMessage or microphone conversation was performed by the automated checks.
 
 ## Photon / Spectrum setup — Stable documentation
 
@@ -169,3 +180,8 @@ The expanded list includes three Gimme! locations, Moosewood, Viva, Bickering Tw
 The form now uses React Aria Components for keyboard-accessible buttons, dropdowns, a calendar popover, and an AM/PM time field with quarter-hour suggestions. Any exact minute can still be typed. Escape dismisses menus and restores focus. The warm cream/coral theme lives in `src/app/controls.css`. The user-supplied two-pin heart logo is retained unchanged in `public/navidate-logo.png`.
 
 Weather uses the [Open-Meteo forecast API](https://open-meteo.com/en/docs), with no API key. Wet-weather ranking starts at a 60% precipitation chance, 0.5 mm precipitation per hour, or any snow. These are planning heuristics, not safety guarantees. Missing hourly coverage and API failures show “Forecast unavailable” and allow planning to continue.
+
+### Restaurant selection and Navi’s voice
+Food searches reserve a separate Google Places request for restaurants so cafés cannot crowd them out. **Browse restaurants** searches near the starting point and downtown Ithaca, lets you filter by name, and pins a chosen restaurant into the planning request. This bounded list is not every restaurant in Ithaca. Prices remain estimates; feasibility checks still enforce hours, budget and travel.
+
+Navi uses Ara with a gentle, unhurried speaking instruction. The logo reacts to output audio amplitude, and interruptions stop playback. Reduced-motion mode keeps the logo still. Voice appearance and handoff are tested with mocked audio; the subjective voice quality needs a real listening check.

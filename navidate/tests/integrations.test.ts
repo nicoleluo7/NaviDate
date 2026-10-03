@@ -51,7 +51,7 @@ it("does not invent or fetch forecasts outside coverage", async () => {
   );
   expect(fetch).not.toHaveBeenCalled();
 });
-it("uses local plans when AI times out", async () => {
+it("uses labeled local plans when recommendation providers are unconfigured", async () => {
   vi.stubEnv("DISABLE_EXTERNAL_APIS", "false");
   vi.stubEnv("XAI_API_KEY", "fictional-test-key");
   vi.stubGlobal(
@@ -63,9 +63,9 @@ it("uses local plans when AI times out", async () => {
   const r = await generate({ ...c(), date: "2026-10-02" });
   expect(r.ai).toBe(false);
   expect(r.plans.length).toBeGreaterThan(0);
-  expect(r.notices.join(" ")).toContain("AI suggestions are unavailable");
+  expect(r.notices.join(" ")).toContain("Local suggestions");
 });
-it("falls back to the local planner when Gemini fails", async () => {
+it("reports provider failures instead of silently substituting hardcoded recommendations", async () => {
   vi.stubEnv("DISABLE_EXTERNAL_APIS", "false");
   vi.stubEnv("GEMINI_API_KEY", "fictional-gemini-key");
   vi.stubEnv("GOOGLE_MAPS_API_KEY", "fictional-maps-key");
@@ -76,6 +76,7 @@ it("falls back to the local planner when Gemini fails", async () => {
     }),
   );
   const r = await generate({ ...c(), date: "2026-10-02" });
-  expect(r.plans.length).toBeGreaterThan(0);
-  expect(r.notices.join(" ")).toMatch(/unavailable|local planner/i);
+  expect(r.plans).toHaveLength(0);
+  expect(r.error).toBeTruthy();
+  expect(r.ai).toBe(false);
 });

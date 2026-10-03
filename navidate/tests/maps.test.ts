@@ -1,6 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { decodePolyline } from "../src/lib/maps/polyline";
-import { buildGoogleMapsRouteUrl, routeUrlForPlan } from "../src/lib/maps/googleMapsUrl";
+import {
+  buildGoogleMapsRouteUrl,
+  routeUrlForPlan,
+} from "../src/lib/maps/googleMapsUrl";
 import { parseGeminiDatePlans } from "../src/lib/integrations/gemini";
 import { categoryFrom } from "../src/lib/maps/places";
 
@@ -29,11 +32,32 @@ describe("Google Maps helpers", () => {
     expect(params.get("origin")).toBe("Johnson Museum, Ithaca, NY");
     expect(params.get("destination")).toBe("Gimme Coffee, Ithaca, NY");
     expect(params.get("destination_place_id")).toBe("ChIJStopTwo");
-    expect(params.get("waypoints")).toBe("place_id:ChIJStopOne");
+    expect(params.get("waypoints")).toBe("Hound and Mare, Ithaca, NY");
+    expect(params.get("waypoint_place_ids")).toBe("ChIJStopOne");
+    expect(decodeURIComponent(url!)).not.toContain("place_id:");
     expect(params.get("travelmode")).toBe("walking");
     expect(url).not.toContain("42.4505");
   });
 
+  it("keeps waypoint IDs aligned and omits them for mixed known/unknown IDs", () => {
+    const make = (second?: string) =>
+      new URL(
+        buildGoogleMapsRouteUrl({
+          start: { name: "Ho Plaza" },
+          stops: [
+            { name: "First", googlePlaceId: "id-one" },
+            { name: "Second", googlePlaceId: second },
+            { name: "Libe Slope" },
+          ],
+          transport: "walk",
+        })!,
+      ).searchParams;
+    expect(make("id-two").get("waypoint_place_ids")).toBe("id-one|id-two");
+    expect(make().get("waypoint_place_ids")).toBeNull();
+    expect(make().get("waypoints")).toBe(
+      "First, Ithaca, NY|Second, Ithaca, NY",
+    );
+  });
   it("builds a route link from a plan that was saved without one", () => {
     const url = routeUrlForPlan({
       start: { name: "Arts Quad", lat: 42.45, lng: -76.48 },

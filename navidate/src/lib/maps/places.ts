@@ -89,20 +89,31 @@ export async function searchPlace(
   query: string,
   near: { lat: number; lng: number },
 ) {
-  const body = await mapsFetch("https://places.googleapis.com/v1/places:searchText", {
-    method: "POST",
-    body: JSON.stringify({
-      textQuery: query,
-      maxResultCount: 3,
-      locationBias: {
-        circle: {
-          center: { latitude: near.lat, longitude: near.lng },
-          radius: 12000,
-        },
+  const body = await mapsFetch(
+    "https://places.googleapis.com/v1/places:searchText",
+    {
+      method: "POST",
+      headers: {
+        "X-Goog-FieldMask": fields
+          .split(",")
+          .map((f) => `places.${f}`)
+          .join(","),
       },
-    }),
-  });
-  const parsed = z.object({ places: z.array(placeResult).optional() }).parse(body);
+      body: JSON.stringify({
+        textQuery: query,
+        maxResultCount: 3,
+        locationBias: {
+          circle: {
+            center: { latitude: near.lat, longitude: near.lng },
+            radius: 12000,
+          },
+        },
+      }),
+    },
+  );
+  const parsed = z
+    .object({ places: z.array(placeResult).optional() })
+    .parse(body);
   for (const place of parsed.places ?? []) {
     const resolved = toResolved(place, query);
     if (resolved) return resolved;

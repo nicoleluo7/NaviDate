@@ -1,28 +1,29 @@
 import type { Point } from "@/types";
-
 export function decodePolyline(encoded: string): Point[] {
+  if (encoded.length > 200000) throw new Error("Route geometry too large");
   const points: Point[] = [];
-  let index = 0,
+  let i = 0,
     lat = 0,
     lng = 0;
-  while (index < encoded.length) {
+  const next = () => {
     let result = 0,
       shift = 0,
-      byte: number;
+      b: number;
     do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 31) << shift;
+      if (i >= encoded.length || shift > 30)
+        throw new Error("Invalid route geometry");
+      b = encoded.charCodeAt(i++) - 63;
+      if (b < 0 || b > 63) throw new Error("Invalid route geometry");
+      result |= (b & 31) << shift;
       shift += 5;
-    } while (byte >= 32);
-    lat += result & 1 ? ~(result >> 1) : result >> 1;
-    result = 0;
-    shift = 0;
-    do {
-      byte = encoded.charCodeAt(index++) - 63;
-      result |= (byte & 31) << shift;
-      shift += 5;
-    } while (byte >= 32);
-    lng += result & 1 ? ~(result >> 1) : result >> 1;
+    } while (b >= 32);
+    return result & 1 ? ~(result >> 1) : result >> 1;
+  };
+  while (i < encoded.length) {
+    lat += next();
+    lng += next();
+    if (Math.abs(lat) > 9000000 || Math.abs(lng) > 18000000)
+      throw new Error("Invalid coordinates");
     points.push({ lat: lat / 1e5, lng: lng / 1e5 });
   }
   return points;

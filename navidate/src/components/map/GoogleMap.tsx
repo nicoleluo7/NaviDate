@@ -15,12 +15,16 @@ type Props = {
   point?: Point;
 };
 
-type Pin = { marker: google.maps.Marker; stopIndex?: number };
+type Pin = {
+  marker: google.maps.marker.AdvancedMarkerElement;
+  element: HTMLDivElement;
+  stopIndex?: number;
+};
 
 let mapsConfigured = false;
 function loadMaps(key: string) {
   if (!mapsConfigured) {
-    setOptions({ key, v: "weekly" });
+    setOptions({ key, v: "quarterly" });
     mapsConfigured = true;
   }
   return importLibrary("maps");
@@ -43,8 +47,8 @@ export default function GoogleMapView({
   const callbacks = useRef({ onSelect, onClear, onPick });
   const selection = useRef(selected);
   const [status, setStatus] = useState(
-      process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? "loading" : "error",
-    );
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY ? "loading" : "error",
+  );
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -58,12 +62,24 @@ export default function GoogleMapView({
     if (!key) return;
     let cancelled = false;
     const listeners: google.maps.MapsEventListener[] = [];
+    const timeout = setTimeout(() => {
+      if (!cancelled) setStatus("error");
+    }, 15000);
+    let resize: ResizeObserver | undefined;
     void loadMaps(key)
-      .then((maps) => {
+      .then(async (maps) => {
+        const { AdvancedMarkerElement } = (await importLibrary(
+          "marker",
+        )) as google.maps.MarkerLibrary;
         if (cancelled || !container.current) return;
         const instance = new maps.Map(container.current, {
           center: { lat: 42.446, lng: -76.486 },
           zoom: 14,
+          mapId: process.env.NEXT_PUBLIC_GOOGLE_MAP_ID || "DEMO_MAP_ID",
+          mapTypeControl: false,
+          streetViewControl: false,
+          fullscreenControl: false,
+          gestureHandling: "cooperative",
         });
         map.current = instance;
         const bounds = new google.maps.LatLngBounds();
@@ -77,20 +93,21 @@ export default function GoogleMapView({
           stopIndex?: number,
           onClick?: () => void,
         ) => {
-          const marker = new google.maps.Marker({
+          const element = document.createElement("div");
+          element.className = "google-date-pin";
+          if (stopIndex != null) element.dataset.stopIndex = String(stopIndex);
+          element.textContent = label ?? "•";
+          const marker = new AdvancedMarkerElement({
             map: instance,
             position,
             title,
-            label: label
-              ? { text: label, color: "white", fontWeight: "700" }
-              : undefined,
+            content: element,
           });
-          if (onClick)
-            listeners.push(marker.addListener("click", onClick));
-          pins.current.push({ marker, stopIndex });
+          if (onClick) listeners.push(marker.addListener("click", onClick));
+          pins.current.push({ marker, element, stopIndex });
         };
         if (plan) {
-          if (!plan.start.private) {
+          if (plan.start.name !== "Private starting point hidden") {
             addMarker(
               new google.maps.LatLng(plan.start.lat, plan.start.lng),
               "Starting point: " + plan.start.name,
@@ -114,16 +131,30 @@ export default function GoogleMapView({
           for (const leg of plan.legs) {
             const path =
               leg.geometry ??
-              (leg.encodedPolyline
-                ? decodePolyline(leg.encodedPolyline)
-                : []);
+              (leg.encodedPolyline ? decodePolyline(leg.encodedPolyline) : []);
             if (!path.length) continue;
             const line = new maps.Polyline({
               map: instance,
               path,
-              strokeColor: "#4285F4",
+              strokeColor: leg.mode === "bus" ? "#386e72" : "#bc422f",
               strokeOpacity: 0.9,
               strokeWeight: 5,
+              ...(leg.mode === "walk"
+                ? {
+                    strokeOpacity: 0,
+                    icons: [
+                      {
+                        icon: {
+                          path: "M 0,-1 0,1",
+                          strokeOpacity: 0.9,
+                          scale: 3,
+                        },
+                        offset: "0",
+                        repeat: "14px",
+                      },
+                    ],
+                  }
+                : {}),
             });
             lines.current.push(line);
             path.forEach((p) => addPoint(p.lat, p.lng));
@@ -151,16 +182,29 @@ export default function GoogleMapView({
             addPoint(point.lat, point.lng);
           }
           listeners.push(
-            instance.addListener("click", (event: google.maps.MapMouseEvent) => {
-              const loc = event.latLng;
-              if (loc)
-                callbacks.current.onPick?.({ lat: loc.lat(), lng: loc.lng() });
-            }),
+            instance.addListener(
+              "click",
+              (event: google.maps.MapMouseEvent) => {
+                const loc = event.latLng;
+                if (loc)
+                  callbacks.current.onPick?.({
+                    lat: loc.lat(),
+                    lng: loc.lng(),
+                  });
+              },
+            ),
           );
         }
         overview.current = bounds.isEmpty() ? null : bounds;
-        if (overview.current)
-          instance.fitBounds(overview.current, 45);
+        if (overview.current) instance.fitBounds(overview.current, 45);
+        clearTimeout(timeout);
+        resize = new ResizeObserver(() => {
+          if (map.current && overview.current) {
+            google.maps.event.trigger(map.current, "resize");
+            map.current.fitBounds(overview.current, 45);
+          }
+        });
+        resize.observe(container.current);
         setStatus("ready");
       })
       .catch(() => {
@@ -168,8 +212,10 @@ export default function GoogleMapView({
       });
     return () => {
       cancelled = true;
+      clearTimeout(timeout);
+      resize?.disconnect();
       listeners.forEach((listener) => listener.remove());
-      pins.current.forEach((pin) => pin.marker.setMap(null));
+      pins.current.forEach((pin) => (pin.marker.map = null));
       pins.current = [];
       lines.current.forEach((line) => line.setMap(null));
       lines.current = [];
@@ -181,7 +227,9 @@ export default function GoogleMapView({
     pins.current.forEach((pin) => {
       if (pin.stopIndex == null) return;
       const on = pin.stopIndex === selected;
-      pin.marker.setZIndex(on ? 1000 : pin.stopIndex);
+      pin.marker.zIndex = on ? 1000 : pin.stopIndex;
+      pin.element.classList.toggle("is-selected", on);
+      pin.element.classList.toggle("pin-selected", on);
     });
   }, [selected, plan, status]);
 

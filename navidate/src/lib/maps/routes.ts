@@ -1,50 +1,32 @@
 import { z } from "zod";
 import type { Point } from "@/types";
-import { createWalkingRouter, type WalkingRouter } from "@/lib/routing";
+import {
+  createWalkingRouter,
+  type WalkingRouter,
+  distance,
+} from "@/lib/routing";
 import type { WalkEstimate } from "@/lib/transit";
 import { googleMapsServerKey, normalizePlaceId } from "./config";
 import { decodePolyline } from "./polyline";
-
 const routeSchema = z.object({
   routes: z
     .array(
       z.object({
-        duration: z.string().optional(),
-        distanceMeters: z.number().optional(),
-        polyline: z.object({ encodedPolyline: z.string().optional() }).optional(),
-        legs: z
-          .array(
-            z.object({
-              duration: z.string().optional(),
-              distanceMeters: z.number().optional(),
-              polyline: z
-                .object({ encodedPolyline: z.string().optional() })
-                .optional(),
-            }),
-          )
-          .optional(),
+        duration: z.string().regex(/^\d+(?:\.\d+)?s$/),
+        distanceMeters: z.number().nonnegative(),
+        polyline: z.object({ encodedPolyline: z.string().min(1) }),
       }),
     )
     .optional(),
 });
-
-function seconds(value?: string) {
-  const match = value?.match(/^(\d+(?:\.\d+)?)s$/);
-  return match ? Number(match[1]) : 0;
-}
-
-function waypoint(point: Point & { googlePlaceId?: string; id?: string }) {
-  if (point.googlePlaceId)
-    return { placeId: normalizePlaceId(point.googlePlaceId) };
-  return {
-    location: { latLng: { latitude: point.lat, longitude: point.lng } },
-  };
-}
-
+const waypoint = (point: Point & { googlePlaceId?: string }) =>
+  point.googlePlaceId
+    ? { placeId: normalizePlaceId(point.googlePlaceId) }
+    : { location: { latLng: { latitude: point.lat, longitude: point.lng } } };
 export async function computeRoute(
   origin: Point & { googlePlaceId?: string },
   destination: Point & { googlePlaceId?: string },
-  travelMode: "WALK" | "TRANSIT",
+  travelMode: "WALK",
 ) {
   const key = googleMapsServerKey();
   if (!key) return null;
@@ -56,7 +38,7 @@ export async function computeRoute(
         "Content-Type": "application/json",
         "X-Goog-Api-Key": key,
         "X-Goog-FieldMask":
-          "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.legs.duration,routes.legs.distanceMeters,routes.legs.polyline.encodedPolyline",
+          "routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline",
       },
       body: JSON.stringify({
         origin: waypoint(origin),
@@ -73,68 +55,48 @@ export async function computeRoute(
   if (!response.ok) return null;
   const route = routeSchema.parse(await response.json()).routes?.[0];
   if (!route) return null;
-  const encoded =
-    route.legs?.[0]?.polyline?.encodedPolyline ||
-    route.polyline?.encodedPolyline;
-  const meters =
-    route.legs?.[0]?.distanceMeters ?? route.distanceMeters ?? 0;
-  const duration = seconds(route.legs?.[0]?.duration ?? route.duration);
+  const duration = Number(route.duration.slice(0, -1)),
+    geometry = decodePolyline(route.polyline.encodedPolyline);
+  if (!duration || !route.distanceMeters || geometry.length < 2) return null;
+  // Reject corrupted or unrelated geometry, instead of plotting a misleading path.
+  if (
+    distance(geometry[0], origin) > 0.5 ||
+    distance(geometry.at(-1)!, destination) > 0.5
+  )
+    return null;
   return {
-    minutes: Math.max(1, Math.ceil(duration / 60)),
-    km: meters / 1000,
-    encodedPolyline: encoded,
-    geometry: encoded ? decodePolyline(encoded) : undefined,
+    minutes: Math.ceil(duration / 60),
+    km: route.distanceMeters / 1000,
+    geometry,
+    encodedPolyline: route.polyline.encodedPolyline,
   };
 }
-
-function estimate(
-  result: NonNullable<Awaited<ReturnType<typeof computeRoute>>>,
-  mode: "WALK" | "TRANSIT",
-): WalkEstimate {
-  return {
-    minutes: result.minutes,
-    km: result.km,
-    geometry: result.geometry,
-    encodedPolyline: result.encodedPolyline,
-    label:
-      mode === "TRANSIT"
-        ? "Google Maps transit route"
-        : "Google Maps walking route",
-  };
-}
-
-export function createGoogleRouter(
-  transport: "walk" | "bus",
-): WalkingRouter {
-  const fallback = createWalkingRouter();
+export function createGoogleRouter(): WalkingRouter {
   const cache = new Map<string, Promise<WalkEstimate | null>>();
+  let calls = 0;
   return {
     route(from, to) {
-      const key = JSON.stringify([from, to, transport]);
+      if (distance(from, to) < 0.01)
+        return Promise.resolve({ minutes: 0, km: 0, label: "Same location" });
+      const key = JSON.stringify([from.lat, from.lng, to.lat, to.lng]);
       if (cache.has(key)) return cache.get(key)!;
       const pending = (async () => {
-        const modes: ("WALK" | "TRANSIT")[] =
-          transport === "bus" ? ["TRANSIT", "WALK"] : ["WALK"];
-        for (const mode of modes) {
-          try {
-            const result = await computeRoute(from, to, mode);
-            if (result) return estimate(result, mode);
-          } catch {
-            /* Try the next mode or the local graph. */
-          }
+        if (calls++ >= 24) return null;
+        try {
+          const result = await computeRoute(from, to, "WALK");
+          return result
+            ? { ...result, label: "Google Maps · estimated walking time" }
+            : null;
+        } catch {
+          return null;
         }
-        return fallback.route(from, to);
       })();
       cache.set(key, pending);
       return pending;
     },
   };
 }
-
-export function createPlannerRouter(
-  transport: "walk" | "bus" = "walk",
-): WalkingRouter {
-  return googleMapsServerKey()
-    ? createGoogleRouter(transport)
-    : createWalkingRouter();
+export function createPlannerRouter(): WalkingRouter {
+  // Scheduled bus planning remains in the transit engine, with fares and waits.
+  return googleMapsServerKey() ? createGoogleRouter() : createWalkingRouter();
 }
