@@ -6,7 +6,7 @@
 
 **0:55 — The plan:** Select an option. Point out activity times, travel included in total duration, opening-hours uncertainty and costs for two. Select a stop and its Leaflet marker. There are no invented path lines. Try another place for a stop; the schedule is recalculated.
 
-**1:30 — Sharing:** Save, copy the share link and open it in a private browser. Show the read-only view and the creator edit restriction. Switch the browser to 375px to show the timeline/map tabs.
+**1:30 — Sharing:** Save, copy the share link and open it in a private browser. Show the read-only view. Switch the browser to 375px to show the timeline/map tabs.
 
 **2:00 — iMessage:** Only if Spectrum is already activated and live-tested: create a pairing code and send it to the connected agent. Show the actual reply and share URL; then send “make it cheaper.” Explain that the same planner and storage power both interfaces. A phone needs a reachable APP_URL; do not pretend localhost is externally hosted.
 

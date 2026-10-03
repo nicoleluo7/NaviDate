@@ -26,7 +26,7 @@ No deployment or external publication has been performed. The optional providers
 
 ## Try the complete flow
 
-Choose Johnson Museum or Cornell Arts Quad, October 2, 2026 at 13:00 New York time, 3 hours, $50, any setting, and walking. Generate, select a plan, click stops and map markers, try another place for a stop, and save. The creator can reopen `/edit/[shareId]` in the same browser. Everyone else gets a read-only `/date/[shareId]` link.
+Choose Johnson Museum or Cornell Arts Quad, October 2, 2026 at 13:00 New York time, 3 hours, $50, any setting, and walking. Generate, select a plan, click stops and map markers, try another place for a stop, and save. The share link at `/date/[shareId]` is read-only.
 
 The creator credential is an HTTP-only, SameSite=Strict cookie, separate from the share ID. Clearing cookies loses editing access; the MVP has no recovery or account system. Saved dates do not expire automatically; drafts expire after one hour. Custom starting points are redacted from public responses. Public links are bearer view links: anyone with one can view it.
 

@@ -17,7 +17,7 @@ export async function GET(
 // Editing uses authenticated creator drafts and /api/save. Public links confer no mutation capability.
 export async function PATCH() {
   return Response.json(
-    { error: "Read-only itinerary. Use the creator editing experience." },
+    { error: "Read-only itinerary." },
     { status: 403 },
   );
 }

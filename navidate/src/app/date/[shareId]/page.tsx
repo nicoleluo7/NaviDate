@@ -38,9 +38,6 @@ export default async function Shared({
           plan={publicPlan(record.plan)}
           savedUrl={`${process.env.APP_URL ?? "http://localhost:3000"}/date/${shareId}`}
         />
-        <p className="saved-note">
-          <a href={"/edit/" + shareId}>Creator? Open your editing page ↗</a>
-        </p>
       </main>
     </>
   );

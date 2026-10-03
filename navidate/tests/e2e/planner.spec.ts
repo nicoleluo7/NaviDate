@@ -62,11 +62,6 @@ test("plans, maps, saves, shares and protects editing", async ({
   await expect(page.getByText("Read-only shared itinerary.")).toBeVisible();
   const id = new URL(share!).pathname.split("/").at(-1);
   const other = await browser.newContext();
-  const visitor = await other.newPage();
-  await visitor.goto(`/edit/${id}`);
-  await expect(
-    visitor.getByRole("heading", { name: "This date is read-only." }),
-  ).toBeVisible();
   const denied = await other.request.patch(`/api/date/${id}`, {
     data: { title: "changed" },
   });

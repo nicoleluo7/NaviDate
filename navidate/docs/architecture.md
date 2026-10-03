@@ -20,7 +20,7 @@ Temporal resolves all wall-clock input in America/New_York. Nonexistent and repe
 
 ## Ownership and privacy
 
-Generating a draft issues an HTTP-only creator cookie. Draft ownership is checked before swap/save; saving only accepts a server-issued plan ID, not client-authored plan data. Private edit tokens never appear in URLs. `/edit/[shareId]` requires the original cookie. Public APIs and pages contain only a sanitized plan. Precise private starts and initial/return geometry are redacted. No conversation, owner hash or phone number is exposed.
+Generating a draft issues an HTTP-only creator cookie. Draft ownership is checked before swap/save; saving only accepts a server-issued plan ID, not client-authored plan data. Private edit tokens never appear in URLs. Public APIs and pages contain only a sanitized plan. Precise private starts and initial/return geometry are redacted. No conversation, owner hash or phone number is exposed.
 
 Same-origin mutations are checked, cookies use SameSite=Strict, and production cookies are Secure. Public mutation inputs are Zod-validated and limited to 16KB. A durable global 40-mutation-per-minute limit suits one hackathon instance; a per-user/IP distributed limiter and record retention/cleanup would be appropriate before public operation. xAI additionally has a shared durable daily attempt cap. The local database contains private criteria and should be treated as application data.
 

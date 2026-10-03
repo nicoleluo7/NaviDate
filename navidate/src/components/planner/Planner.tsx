@@ -45,19 +45,13 @@ const initial: Criteria = {
   preferences: "",
 };
 export default function Planner({
-  initialCriteria,
-  editingShareId,
   photon = false,
   ai = false,
 }: {
-  initialCriteria?: Criteria;
-  editingShareId?: string;
   photon?: boolean;
   ai?: boolean;
 }) {
-  const [criteria, setCriteria] = useState<Criteria>(
-      initialCriteria ?? initial,
-    ),
+  const [criteria, setCriteria] = useState<Criteria>(initial),
     [result, setResult] = useState<(PlanResult & { draftId: string }) | null>(
       null,
     ),
@@ -115,7 +109,6 @@ export default function Planner({
       const d = await request("/api/save", {
         draftId: result.draftId,
         planId: selected.id,
-        shareId: editingShareId,
       });
       setSaved({ url: location.origin + d.url, shareId: d.shareId });
     } catch (e) {
@@ -126,7 +119,7 @@ export default function Planner({
   }
   async function swap(index: number) {
     if (!selected || !result) return;
-    const shareId = saved?.shareId ?? editingShareId;
+    const shareId = saved?.shareId;
     const draftId = result.draftId;
     setBusy("swap");
     setError("");
@@ -227,8 +220,7 @@ export default function Planner({
         </nav>
       </header>
       <main>
-        {!editingShareId && (
-          <section className="hero">
+        <section className="hero">
             <div className="hero-copy">
               <div className="location-tag">
                 <span /> CORNELL & ITHACA, NY
@@ -309,19 +301,10 @@ export default function Planner({
               </div>
             </div>
           </section>
-        )}
         <section id="planner" className="planner-section">
           <div className="section-intro">
-            <span className="eyebrow">
-              {editingShareId
-                ? "YOUR DATE, YOUR WAY"
-                : "LET’S MAKE A LITTLE PLAN"}
-            </span>
-            <h2>
-              {editingShareId
-                ? "Give your date a new direction."
-                : "What’s your kind of date?"}
-            </h2>
+            <span className="eyebrow">LET’S MAKE A LITTLE PLAN</span>
+            <h2>What’s your kind of date?</h2>
             <p>
               You bring the company. We’ll help with the where, when, and how.
             </p>
@@ -729,8 +712,7 @@ export default function Planner({
         {saved && (
           <p className="saved-note" role="status">
             Your date is saved.{" "}
-            <a href={saved.url}>Open read-only share page ↗</a> ·{" "}
-            <a href={"/edit/" + saved.shareId}>Creator editing page ↗</a>
+            <a href={saved.url}>Open read-only share page ↗</a>
           </p>
         )}
         {!result && (

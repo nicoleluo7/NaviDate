@@ -34,7 +34,6 @@ export async function POST(req: Request) {
     return Response.json({
       shareId: saved.shareId,
       url: "/date/" + saved.shareId,
-      editUrl: "/edit/" + saved.shareId,
     });
   } catch (e) {
     return failure(e);
