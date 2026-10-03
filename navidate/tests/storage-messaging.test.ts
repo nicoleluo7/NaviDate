@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalStorage } from "../src/lib/storage";
 import { handleIncoming, messagesLink, parseLocal } from "../src/lib/messaging";
+import { answerAboutDate } from "../src/lib/messaging/questions";
 import { hash, isOwner, publicPlan } from "../src/lib/storage/dates";
 import { criteriaSchema, type Plan } from "../src/types";
 it("persists across closing and reopening the local adapter", async () => {
@@ -81,6 +82,73 @@ it("builds an iMessage link with the pair code filled in", () => {
   expect(messagesLink("+14155951440", "4F5F8F1D4520D3E1")).toBe(
     "sms:+14155951440&body=pair%204F5F8F1D4520D3E1",
   );
+});
+it("answers basic questions about a paired date", async () => {
+  const plan = {
+    title: "Coffee",
+    startsAt: "2026-10-03T17:00:00.000Z",
+    endsAt: "2026-10-03T19:00:00.000Z",
+    duration: 120,
+    cost: 40,
+    walkKm: 1.2,
+    weather: { available: true, summary: "Clear and mild.", source: "test" },
+    stops: [
+      {
+        place: { name: "Hound and Mare" },
+        arrival: "2026-10-03T17:00:00.000Z",
+      },
+    ],
+    warnings: [],
+  } as unknown as Plan;
+  expect(answerAboutDate(plan, "http://localhost/date/abc", "how much?")).toBe(
+    "Estimated $40 for two.",
+  );
+  expect(
+    answerAboutDate(plan, "http://localhost/date/abc", "where are we going?"),
+  ).toContain("Hound and Mare");
+  const store = new LocalStorage(":memory:"),
+    send = vi.fn(async (_text: string) => "provider-id");
+  await store.put("date:abc", {
+    shareId: "abc",
+    ownerHash: "owner",
+    criteria: {},
+    plan,
+    createdAt: "2026-10-03T00:00:00.000Z",
+  });
+  await store.put("conversation:" + hash(["local", "space", "me"].join(":")), {
+    criteria: {},
+    shareId: "abc",
+    revision: 0,
+  });
+  await handleIncoming(
+    {
+      id: "q1",
+      spaceId: "space",
+      senderId: "me",
+      platform: "local",
+      text: "what's the weather?",
+      own: false,
+      direct: true,
+    },
+    { send },
+    store,
+  );
+  expect(send).toHaveBeenCalledWith("Clear and mild.");
+  await handleIncoming(
+    {
+      id: "q2",
+      spaceId: "space",
+      senderId: "nobody",
+      platform: "local",
+      text: "what time?",
+      own: false,
+      direct: true,
+    },
+    { send },
+    store,
+  );
+  expect(send.mock.calls.at(-1)?.[0]).toContain("Send to myself");
+  store.close();
 });
 it("parses complete typed criteria locally and applies follow-up changes", () => {
   const c = parseLocal(

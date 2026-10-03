@@ -11,6 +11,13 @@ import { hash, saveDate } from "@/lib/storage/dates";
 import { displayTime } from "@/lib/planner/time";
 import { generate } from "@/lib/planner/service";
 import { interpret } from "@/lib/integrations/xai";
+import { answerWithGemini } from "@/lib/integrations/gemini";
+import {
+  answerAboutDate,
+  isPlannerCommand,
+  limitedAnswer,
+  questionHelp,
+} from "@/lib/messaging/questions";
 export type Incoming = {
   id: string;
   spaceId: string;
@@ -143,10 +150,11 @@ export async function handleIncoming(
             shareId: saved.shareId,
             revision: 0,
           });
-          response = itineraryText(
-            saved.plan,
-            `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
-          );
+          response =
+            itineraryText(
+              saved.plan,
+              `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
+            ) + `\n${questionHelp}`;
         }
       }
     } else {
@@ -154,56 +162,78 @@ export async function handleIncoming(
         criteria: {},
         revision: 0,
       };
-      let criteria = parseLocal(event.text, conversation.criteria),
-        question: string | undefined;
-      if (
-        process.env.XAI_API_KEY &&
-        process.env.DISABLE_EXTERNAL_APIS !== "true"
-      )
-        try {
-          const interpreted = await interpret(event.text, criteria);
-          criteria = interpreted.criteria;
-          question = interpreted.question;
-        } catch {
-          /* The explicit field format remains available. */
-        }
-      const parsed = criteriaSchema.safeParse(criteria);
-      if (!parsed.success) {
-        await store.put(conversationKey, { ...conversation, criteria });
-        const missing = [
-          ...new Set(parsed.error.issues.map((i) => i.path[0])),
-        ].join(", ");
-        response = `${question ?? `Please provide: ${missing}.`}\nUse this format (edit each value): start=arts-quad; date=2026-10-03; time=13:00; duration=180; budget=50; vibe=Cozy; transport=walk\nStarting landmarks: ${landmarks.map((l) => l.id).join(", ")}. Budget is for two; all times are New York.`;
-      } else {
-        await store.put(conversationKey, {
-          ...conversation,
-          criteria: parsed.data,
-        });
-        const result = await generate(parsed.data, {
-          seed: conversation.revision + 1,
-        });
-        if (!result.plans.length)
+      const saved = conversation.shareId
+        ? await store.get<SavedDate>("date:" + conversation.shareId)
+        : null;
+      if (!isPlannerCommand(event.text)) {
+        const url = `${process.env.APP_URL ?? "http://localhost:3000"}/date/${conversation.shareId ?? ""}`;
+        if (!saved)
           response =
-            result.error ??
-            "No feasible itinerary. Try more time or a supported landmark.";
+            "I don’t have a date in this chat yet. Save one on the website, then use Send to myself.";
         else {
-          const saved = await saveDate(
-            parsed.data,
-            result.plans[0],
-            hash(conversationKey),
-            store,
-          );
+          const local = answerAboutDate(saved.plan, url, event.text);
+          const fallback = limitedAnswer(saved.plan.title);
+          if (local) response = local;
+          else if (process.env.GEMINI_API_KEY)
+            try {
+              response = await answerWithGemini(saved.plan, url, event.text);
+            } catch {
+              response = fallback;
+            }
+          else response = fallback;
+        }
+      } else {
+        let criteria = parseLocal(event.text, conversation.criteria),
+          question: string | undefined;
+        if (
+          process.env.XAI_API_KEY &&
+          process.env.DISABLE_EXTERNAL_APIS !== "true"
+        )
+          try {
+            const interpreted = await interpret(event.text, criteria);
+            criteria = interpreted.criteria;
+            question = interpreted.question;
+          } catch {
+            /* The explicit field format remains available. */
+          }
+        const parsed = criteriaSchema.safeParse(criteria);
+        if (!parsed.success) {
+          await store.put(conversationKey, { ...conversation, criteria });
+          const missing = [
+            ...new Set(parsed.error.issues.map((i) => i.path[0])),
+          ].join(", ");
+          response = `${question ?? `Please provide: ${missing}.`}\nUse this format (edit each value): start=arts-quad; date=2026-10-03; time=13:00; duration=180; budget=50; vibe=Cozy; transport=walk\nStarting landmarks: ${landmarks.map((l) => l.id).join(", ")}. Budget is for two; all times are New York.`;
+        } else {
           await store.put(conversationKey, {
+            ...conversation,
             criteria: parsed.data,
-            shareId: saved.shareId,
-            revision: conversation.revision + 1,
           });
-          response =
-            itineraryText(
-              saved.plan,
-              `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
-            ) +
-            "\nReply: make it cheaper, make it indoors, start time 14:00, or regenerate.";
+          const result = await generate(parsed.data, {
+            seed: conversation.revision + 1,
+          });
+          if (!result.plans.length)
+            response =
+              result.error ??
+              "No feasible itinerary. Try more time or a supported landmark.";
+          else {
+            const saved = await saveDate(
+              parsed.data,
+              result.plans[0],
+              hash(conversationKey),
+              store,
+            );
+            await store.put(conversationKey, {
+              criteria: parsed.data,
+              shareId: saved.shareId,
+              revision: conversation.revision + 1,
+            });
+            response =
+              itineraryText(
+                saved.plan,
+                `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
+              ) +
+              "\nReply: make it cheaper, make it indoors, start time 14:00, or regenerate.";
+          }
         }
       }
     }
