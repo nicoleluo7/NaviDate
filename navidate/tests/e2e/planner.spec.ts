@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { setDate, selectOption } from "./fields";
 test("plans, maps, saves, shares and protects editing", async ({
   page,
   browser,
@@ -23,7 +24,7 @@ test("plans, maps, saves, shares and protects editing", async ({
     path: `test-results/home-${test.info().project.name}.png`,
     fullPage: true,
   });
-  await page.getByLabel("Date", { exact: true }).fill("2026-10-02");
+  await setDate(page, "2026-10-02");
   const planResponse = page.waitForResponse(
     (r) => r.url().endsWith("/api/plan") && r.request().method() === "POST",
   );
@@ -39,21 +40,28 @@ test("plans, maps, saves, shares and protects editing", async ({
     page.getByRole("region", { name: "Selected itinerary" }),
   ).toBeVisible();
   if (isMobile)
-    await page.getByRole("tab", { name: "Map", exact: true }).click();
+    await page.getByRole("button", { name: "Map", exact: true }).click();
   await expect(
     page.getByRole("region", { name: "Itinerary map" }),
   ).toBeVisible();
   await expect(page.locator(".leaflet-marker-icon").first()).toBeVisible();
+  await page.locator(".leaflet-marker-icon").filter({ hasText: "2" }).click();
+  await expect(page.locator(".map-stop")).toContainText("STOP 2");
+  await expect(page.locator(".pin-selected")).toHaveCount(1);
+  await page.getByRole("button", { name: "Show all stops on the map" }).click();
+  await expect(page.locator(".map-stop")).toContainText("Every stop");
+  await expect(page.locator(".pin-selected")).toHaveCount(0);
+
   await page.screenshot({
     path: `test-results/itinerary-${test.info().project.name}.png`,
     fullPage: true,
   });
   if (isMobile)
-    await page.getByRole("tab", { name: "Timeline", exact: true }).click();
+    await page.getByRole("button", { name: "Timeline", exact: true }).click();
   await page
     .getByRole("button", { name: "Save this date", exact: true })
     .click();
-  await expect(page.getByText("Your date is saved.")).toBeVisible();
+  await expect(page.getByText(/Your date is saved\./)).toBeVisible();
   const share = await page
     .getByRole("link", { name: "Open read-only share page" })
     .getAttribute("href");
@@ -81,10 +89,14 @@ test("preserves inputs after an impossible budget and duration", async ({
   page,
 }) => {
   await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: "Find our date", exact: true }),
+  ).toBeEnabled();
   await page.getByLabel("Total budget for two").fill("0");
-  await page.getByLabel("Time together").selectOption("60");
+  await expect(page.getByLabel("Total budget for two")).toHaveValue("0");
+  await selectOption(page, "Time together", "60 minutes");
   await page.locator(".preferences summary").click();
-  await page.getByLabel("Indoor or outdoor?").selectOption("indoor");
+  await selectOption(page, "Indoor or outdoor?", "Indoor activities");
   await page
     .getByRole("button", { name: "Find our date", exact: true })
     .click();

@@ -1,4 +1,5 @@
 "use client";
+import { Button } from "react-aria-components";
 import { useState } from "react";
 import {
   ArrowUpRight,
@@ -19,6 +20,9 @@ export default function Itinerary({
   plan,
   onSwap,
   onSave,
+  saveLabel = "Save this date",
+  saving = false,
+  dirty = false,
   busy = false,
   savedUrl,
   shareId,
@@ -29,6 +33,9 @@ export default function Itinerary({
   onSwap?: (index: number) => void;
   onSave?: () => void;
   busy?: boolean;
+  saving?: boolean;
+  dirty?: boolean;
+  saveLabel?: string;
   savedUrl?: string;
   shareId?: string;
   canPair?: boolean;
@@ -120,21 +127,16 @@ export default function Itinerary({
           {plan.weather.summary}
         </span>
       </div>
-      <div className="mobile-tabs" role="tablist" aria-label="Itinerary view">
-        <button
-          role="tab"
-          aria-selected={tab === "timeline"}
-          onClick={() => setTab("timeline")}
+      <div className="mobile-tabs" role="group" aria-label="Itinerary view">
+        <Button
+          aria-pressed={tab === "timeline"}
+          onPress={() => setTab("timeline")}
         >
           Timeline
-        </button>
-        <button
-          role="tab"
-          aria-selected={tab === "map"}
-          onClick={() => setTab("map")}
-        >
+        </Button>
+        <Button aria-pressed={tab === "map"} onPress={() => setTab("map")}>
           Map
-        </button>
+        </Button>
       </div>
       <div className="itinerary-grid">
         <div className={`timeline ${tab === "map" ? "mobile-hidden" : ""}`}>
@@ -168,9 +170,9 @@ export default function Itinerary({
               <article
                 className={`stop-card ${selected === i ? "selected" : ""}`}
               >
-                <button
+                <Button
                   className="stop-select"
-                  onClick={() => choose(i)}
+                  onPress={() => choose(i)}
                   aria-pressed={selected === i}
                   aria-label={
                     selected === i
@@ -185,7 +187,7 @@ export default function Itinerary({
                     </span>
                     <h3>{s.place.name}</h3>
                   </div>
-                </button>
+                </Button>
                 <p>{s.place.description}</p>
                 <div className="stop-meta">
                   <span>{displayTime(s.arrival)}</span>
@@ -214,10 +216,10 @@ export default function Itinerary({
                     Venue source <ArrowUpRight size={14} />
                   </a>
                   {onSwap && (
-                    <button disabled={busy} onClick={() => onSwap(i)}>
+                    <Button isDisabled={busy} onPress={() => onSwap(i)}>
                       <RefreshCw size={14} />
                       Try another place
-                    </button>
+                    </Button>
                   )}
                 </div>
               </article>
@@ -252,13 +254,31 @@ export default function Itinerary({
               <>
                 <span className="eyebrow">WHOLE ROUTE</span>
                 <h3>Every stop</h3>
-                <p>Click a stop to look closer. Click the map to zoom back out.</p>
+                <p>
+                  Select a numbered pin to see the place. Show all stops to get
+                  your bearings.
+                </p>
               </>
             ) : (
               <>
                 <span className="eyebrow">STOP {selected + 1}</span>
                 <h3>{plan.stops[selected]?.place.name}</h3>
                 <p>{plan.stops[selected]?.place.address}</p>
+                <p>
+                  {displayTime(plan.stops[selected].arrival)} ·{" "}
+                  {plan.stops[selected].place.typicalDurationMinutes} minutes ·{" "}
+                  {plan.stops[selected].place.estimatedCostForTwo
+                    ? `Est. $${plan.stops[selected].place.estimatedCostForTwo} for two`
+                    : "Free"}
+                </p>
+                <a
+                  className="map-directions"
+                  target="_blank"
+                  rel="noreferrer"
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${plan.stops[selected].place.coordinates.lat},${plan.stops[selected].place.coordinates.lng}&travelmode=walking`}
+                >
+                  Directions to this stop <ArrowUpRight size={16} />
+                </a>
               </>
             )}
           </div>
@@ -282,30 +302,34 @@ export default function Itinerary({
       </details>
       <div className="action-bar">
         {onSave && (
-          <button className="primary" onClick={onSave} disabled={busy}>
+          <Button className="primary" onPress={onSave} isDisabled={busy}>
             <Heart size={17} />
-            {busy ? "Saving…" : "Save this date"}
-          </button>
+            {saving ? "Saving…" : saveLabel}
+          </Button>
         )}
         {savedUrl && (
-          <button className="primary" onClick={() => copy(savedUrl)}>
+          <Button
+            className={onSave ? "secondary" : "primary"}
+            onPress={() => copy(savedUrl)}
+            isDisabled={dirty || busy}
+          >
             <Copy size={17} />
             Copy share link
-          </button>
+          </Button>
         )}
-        <button className="secondary" onClick={() => copy(summary)}>
+        <Button className="secondary" onPress={() => copy(summary)}>
           <Copy size={17} />
           Copy itinerary
-        </button>
+        </Button>
         {canPair && (
-          <button
+          <Button
             className="secondary"
-            onClick={pair}
-            disabled={!photon || !shareId}
+            onPress={pair}
+            isDisabled={!photon || !shareId || dirty || busy}
           >
             <MessageCircle size={17} />
             Send to myself
-          </button>
+          </Button>
         )}
       </div>
       {canPair && !photon && (
@@ -320,7 +344,7 @@ export default function Itinerary({
         <div className="notice" role="status">
           {notice}
           {pairCode && (
-            <button onClick={checkPair}>Check pairing status</button>
+            <Button onPress={checkPair}>Check pairing status</Button>
           )}
         </div>
       )}

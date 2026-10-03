@@ -24,6 +24,7 @@ export default function Map({
   const container = useRef<HTMLDivElement>(null),
     map = useRef<L.Map | null>(null),
     markers = useRef<L.Marker[]>([]),
+    selection = useRef(selected),
     overview = useRef<L.LatLngBounds | null>(null),
     pendingFocus = useRef<L.LatLng | "route" | null>(null),
     callbacks = useRef({ onSelect, onClear, onPick });
@@ -31,14 +32,17 @@ export default function Map({
     [attempt, setAttempt] = useState(0);
   useEffect(() => {
     callbacks.current = { onSelect, onClear, onPick };
-  }, [onSelect, onClear, onPick]);
+    selection.current = selected;
+  }, [onSelect, onClear, onPick, selected]);
   useEffect(() => {
     if (!container.current) return;
-    const m = L.map(container.current, { scrollWheelZoom: false }).setView(
-      [42.446, -76.486],
-      14,
-    );
+    const m = L.map(container.current, {
+      scrollWheelZoom: false,
+      zoomControl: false,
+    }).setView([42.446, -76.486], 14);
     map.current = m;
+    L.control.zoom({ position: "bottomright" }).addTo(m);
+    L.control.scale({ imperial: false, position: "bottomleft" }).addTo(m);
     const tile = L.tileLayer(
       process.env.NEXT_PUBLIC_MAP_TILE_URL ||
         "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -55,10 +59,11 @@ export default function Map({
     tile.on("tileerror", () => setStatus("error"));
     const icon = (text: string, start = false) =>
       L.divIcon({
-        className: `pin ${start ? "pin-start" : ""}`,
-        html: `<span>${text}</span>`,
-        iconSize: [34, 34],
-        iconAnchor: [17, 34],
+        className: `map-pin ${start ? "map-pin-start" : ""} ${text === "B" ? "map-pin-bus" : ""}`,
+        html: `<span class="pin-body"><span>${text === "S" ? "↗" : text}</span></span>`,
+        iconSize: [44, 48],
+        iconAnchor: [22, 46],
+        tooltipAnchor: [0, -42],
       });
     const bounds: L.LatLngExpression[] = [];
     markers.current = [];
@@ -66,7 +71,8 @@ export default function Map({
       if (!plan.start.private) {
         L.marker([plan.start.lat, plan.start.lng], {
           icon: icon("S", true),
-          title: "Starting point",
+          title: "Starting point: " + plan.start.name,
+          alt: "Starting point: " + plan.start.name,
         })
           .addTo(m)
           .bindTooltip("Starting point");
@@ -82,10 +88,12 @@ export default function Map({
         }).addTo(m);
         const text = document.createElement("span");
         text.textContent = s.place.name;
-        marker.bindTooltip(text).on("click", (e) => {
-          L.DomEvent.stopPropagation(e);
-          callbacks.current.onSelect?.(i);
-        });
+        marker
+          .bindTooltip(text, { direction: "top", className: "venue-tooltip" })
+          .on("click", (e) => {
+            L.DomEvent.stopPropagation(e);
+            callbacks.current.onSelect?.(i);
+          });
         markers.current.push(marker);
       });
       for (const leg of plan.legs) {
@@ -137,7 +145,8 @@ export default function Map({
     const showRoute = () => {
       if (!overview.current) return;
       const options = { padding: [45, 45] as [number, number], maxZoom: 16 };
-      if (reduceMotion()) m.fitBounds(overview.current, { ...options, animate: false });
+      if (reduceMotion())
+        m.fitBounds(overview.current, { ...options, animate: false });
       else m.flyToBounds(overview.current, { ...options, duration: 0.5 });
     };
     const showStop = (target: L.LatLng) => {
@@ -146,8 +155,13 @@ export default function Map({
     };
     const observer = new ResizeObserver(() => {
       m.invalidateSize();
-      const target = pendingFocus.current;
-      if (!target || !container.current?.offsetWidth) return;
+      const target =
+        pendingFocus.current ??
+        (selection.current == null
+          ? "route"
+          : markers.current[selection.current]?.getLatLng()) ??
+        "route";
+      if (!container.current?.offsetWidth) return;
       pendingFocus.current = null;
       if (target === "route") showRoute();
       else showStop(target);
@@ -163,6 +177,7 @@ export default function Map({
     markers.current.forEach((marker, i) => {
       const on = i === selected;
       marker.getElement()?.classList.toggle("pin-selected", on);
+      marker.setZIndexOffset(on ? 1000 : 0);
       if (on) marker.openTooltip();
       else marker.closeTooltip();
     });
@@ -182,7 +197,11 @@ export default function Map({
       const options = { padding: [45, 45] as [number, number], maxZoom: 16 };
       if (reduce)
         map.current.fitBounds(overview.current, { ...options, animate: false });
-      else map.current.flyToBounds(overview.current, { ...options, duration: 0.5 });
+      else
+        map.current.flyToBounds(overview.current, {
+          ...options,
+          duration: 0.5,
+        });
       return;
     }
     const target = marker.getLatLng();
@@ -196,7 +215,7 @@ export default function Map({
     ).matches;
     if (reduce) map.current.setView(target, 17, { animate: false });
     else map.current.flyTo(target, 17, { duration: 0.5 });
-  }, [focus, selected]);
+  }, [focus, selected, plan, attempt]);
   return (
     <div className="map-shell">
       <div
@@ -207,6 +226,23 @@ export default function Map({
           plan ? "Itinerary map" : "Choose a starting point on the map"
         }
       />
+      {plan && (
+        <button
+          className="map-overview"
+          onClick={() => {
+            callbacks.current.onClear?.();
+            if (map.current && overview.current)
+              map.current.fitBounds(overview.current, {
+                padding: [50, 50],
+                maxZoom: 16,
+                animate: false,
+              });
+          }}
+          aria-label="Show all stops on the map"
+        >
+          ↗ Show all stops
+        </button>
+      )}
       {status === "loading" && (
         <div className="map-status">Loading map tiles…</div>
       )}
@@ -226,7 +262,7 @@ export default function Map({
       <div className="map-caption">
         <span className="coral-dot" />{" "}
         {plan
-          ? "Numbered stops · walking estimates unless route shown"
+          ? "↗ Start · Numbered stops · Tap a pin to explore"
           : "Tap a landmark or choose a point"}
         <span className="map-north">N ↑</span>
       </div>

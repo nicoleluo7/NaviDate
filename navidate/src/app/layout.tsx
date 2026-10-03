@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
+import "./controls.css";
 export const metadata: Metadata = {
   title: "Navidate · A little closer",
   description:

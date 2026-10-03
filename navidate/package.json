@@ -16,6 +16,7 @@
     "format": "prettier --write src scripts tests docs README.md"
   },
   "dependencies": {
+    "@internationalized/date": "^3.12.4",
     "@js-temporal/polyfill": "^0.5.1",
     "@spectrum-ts/core": "^12.10.1",
     "@spectrum-ts/imessage": "^12.10.1",
@@ -25,6 +26,7 @@
     "lucide-react": "^1.50.0",
     "next": "16.3.8",
     "react": "19.2.8",
+    "react-aria-components": "^1.21.1",
     "react-dom": "19.2.8",
     "zod": "^4.6.5"
   },

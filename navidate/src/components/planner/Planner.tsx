@@ -1,6 +1,9 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { Button } from "react-aria-components";
+import { DateField, StartTimeField, SelectField } from "@/components/ui/Fields";
+import BrandMark from "@/components/BrandMark";
+import { useEffect, useState } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -11,6 +14,7 @@ import {
   Bus,
   Clock,
   Wallet,
+  Utensils,
   Sparkles,
   ChevronDown,
   LocateFixed,
@@ -36,6 +40,7 @@ const initial: Criteria = {
   time: "13:00",
   duration: 180,
   budget: 50,
+  dateType: "any",
   vibe: "Cozy",
   transport: "walk",
   dietary: [],
@@ -56,13 +61,47 @@ export default function Planner({
       null,
     ),
     [selected, setSelected] = useState<Plan | null>(null),
-    [busy, setBusy] = useState(""),
+    [busy, setBusy] = useState("resume"),
     [error, setError] = useState(""),
     [mapPicker, setMapPicker] = useState(false),
     [seed, setSeed] = useState(0),
     [saved, setSaved] = useState<{ url: string; shareId: string } | null>(null),
     [text, setText] = useState(""),
-    [hint, setHint] = useState("");
+    [hint, setHint] = useState(""),
+    [dirty, setDirty] = useState(false);
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    let active = true;
+    (query.has("new")
+      ? Promise.resolve({ saved: null })
+      : request("/api/resume", { shareId: query.get("date") ?? undefined })
+    )
+      .then((d) => {
+        if (!active || !d.saved) return;
+        setCriteria(d.criteria);
+        setResult({
+          plans: [d.plan],
+          draftId: d.draftId,
+          notices: [],
+          ai: false,
+        });
+        setSelected(d.plan);
+        setSaved({ ...d.saved, url: location.origin + d.saved.url });
+        setDirty(false);
+        setHint(
+          "Your saved date is ready to edit. Changes keep the same share link.",
+        );
+      })
+      .catch((e) => {
+        if (active) setError(e.message);
+      })
+      .finally(() => {
+        if (active) setBusy("");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
   function update<K extends keyof Criteria>(key: K, value: Criteria[K]) {
     setCriteria((c) => ({ ...c, [key]: value }));
   }
@@ -79,10 +118,10 @@ export default function Planner({
   async function generate() {
     setBusy("plan");
     setError("");
-    setSaved(null);
     try {
       const r = await request("/api/plan", { criteria, seed });
       setResult(r);
+      setDirty(true);
       setSelected(null);
       setSeed((s) => s + 1);
       setTimeout(
@@ -109,8 +148,11 @@ export default function Planner({
       const d = await request("/api/save", {
         draftId: result.draftId,
         planId: selected.id,
+        shareId: saved?.shareId,
       });
       setSaved({ url: location.origin + d.url, shareId: d.shareId });
+      setDirty(false);
+      history.replaceState(null, "", "/?date=" + d.shareId);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not save.");
     } finally {
@@ -130,6 +172,7 @@ export default function Planner({
         index,
       });
       setSelected(d.plan);
+      setDirty(true);
       setResult((r) => {
         if (!r) return r;
         const match = r.plans.findIndex((p) => p === selected);
@@ -140,10 +183,7 @@ export default function Planner({
         plans[at] = d.plan;
         return { ...r, plans };
       });
-      if (!shareId) {
-        setSaved(null);
-        return;
-      }
+      if (!shareId) return;
       try {
         const published = await request("/api/save", {
           draftId,
@@ -154,9 +194,11 @@ export default function Planner({
           url: location.origin + published.url,
           shareId: published.shareId,
         });
-      } catch (e) {
-        setSaved(null);
-        throw e;
+        setDirty(false);
+      } catch {
+        throw new Error(
+          "Your change is ready, but could not be saved. Choose Retry save to update the same share link.",
+        );
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not replace this stop.");
@@ -209,8 +251,8 @@ export default function Planner({
     <>
       <header className="site-header">
         <Link className="logo" href="/">
-          <Navigation fill="currentColor" size={25} />
-          navidate<span>✳</span>
+          <BrandMark size={34} />
+          navidate
         </Link>
         <nav>
           <a href="#how">How it works</a>
@@ -221,86 +263,82 @@ export default function Planner({
       </header>
       <main>
         <section className="hero">
-            <div className="hero-copy">
-              <div className="location-tag">
-                <span /> CORNELL & ITHACA, NY
-              </div>
-              <h1>
-                Less planning.
-                <br />
-                More <em>butterflies.</em>
-              </h1>
-              <p>
-                Turn “What should we do?” into a date.
-                <br />A few favorites, a little adventure, and a plan
-                <br className="desktop-break" /> that gets you there together.
-              </p>
-              <a href="#planner" className="primary">
-                Find your next date <ArrowRight size={18} />
-              </a>
-              <div className="hero-footnote">
-                <Heart size={14} /> Made for two. No account needed.
-              </div>
+          <div className="hero-copy">
+            <div className="location-tag">
+              <span /> CORNELL & ITHACA, NY
             </div>
-            <div
-              className="hero-art"
-              aria-label="An illustrated date with coffee, a stroll, and something sweet"
-            >
-              <div className="art-label">THE BEST WAY IS TOGETHER ↗</div>
-              <svg
-                className="art-route"
-                viewBox="0 0 460 390"
-                aria-hidden="true"
-              >
-                <path
-                  d="M90 85 C400 -10 425 170 260 200 S70 245 155 325"
-                  fill="none"
-                  stroke="#9baca0"
-                  strokeWidth="2"
-                  strokeDasharray="6 7"
-                />
-                <circle cx="90" cy="85" r="6" fill="#e66b55" />
-                <circle cx="155" cy="325" r="6" fill="#e66b55" />
-              </svg>
-              <div className="art-ticket ticket-one">
-                <span className="art-icon">
-                  <Coffee size={34} />
-                </span>
-                <div>
-                  <small>FIRST, A LITTLE</small>
-                  <strong>Coffee & conversation</strong>
-                  <span>Just your kind of cozy.</span>
-                </div>
-                <span className="ticket-num">01</span>
-              </div>
-              <div className="art-ticket ticket-two">
-                <span className="art-icon green">
-                  <Trees size={34} />
-                </span>
-                <div>
-                  <small>THEN, THE SCENIC ROUTE</small>
-                  <strong>Take the long way</strong>
-                  <span>Good views. Better company.</span>
-                </div>
-                <span className="ticket-num">02</span>
-              </div>
-              <div className="art-ticket ticket-three">
-                <Heart size={25} />
-                <span>
-                  Somewhere new.
-                  <br />
-                  <strong>Someone you like.</strong>
-                </span>
-              </div>
-              <div className="art-stamp">
-                a little
-                <br />
-                <strong>♥</strong>
-                <br />
-                closer
-              </div>
+            <h1>
+              Less planning.
+              <br />
+              More <em>butterflies.</em>
+            </h1>
+            <p>
+              Turn “What should we do?” into a date.
+              <br />A few favorites, a little adventure, and a plan
+              <br className="desktop-break" /> that gets you there together.
+            </p>
+            <a href="#planner" className="primary">
+              Find your next date <ArrowRight size={18} />
+            </a>
+            <div className="hero-footnote">
+              <Heart size={14} /> Made for two. No account needed.
             </div>
-          </section>
+          </div>
+          <div
+            className="hero-art"
+            aria-label="An illustrated date with coffee, a stroll, and something sweet"
+          >
+            <div className="art-label">THE BEST WAY IS TOGETHER ↗</div>
+            <svg className="art-route" viewBox="0 0 460 390" aria-hidden="true">
+              <path
+                d="M90 85 C400 -10 425 170 260 200 S70 245 155 325"
+                fill="none"
+                stroke="#9baca0"
+                strokeWidth="2"
+                strokeDasharray="6 7"
+              />
+              <circle cx="90" cy="85" r="6" fill="#e66b55" />
+              <circle cx="155" cy="325" r="6" fill="#e66b55" />
+            </svg>
+            <div className="art-ticket ticket-one">
+              <span className="art-icon">
+                <Coffee size={34} />
+              </span>
+              <div>
+                <small>FIRST, A LITTLE</small>
+                <strong>Coffee & conversation</strong>
+                <span>Just your kind of cozy.</span>
+              </div>
+              <span className="ticket-num">01</span>
+            </div>
+            <div className="art-ticket ticket-two">
+              <span className="art-icon green">
+                <Trees size={34} />
+              </span>
+              <div>
+                <small>THEN, THE SCENIC ROUTE</small>
+                <strong>Take the long way</strong>
+                <span>Good views. Better company.</span>
+              </div>
+              <span className="ticket-num">02</span>
+            </div>
+            <div className="art-ticket ticket-three">
+              <Heart size={25} />
+              <span>
+                Somewhere new.
+                <br />
+                <strong>Someone you like.</strong>
+              </span>
+            </div>
+            <div className="art-stamp">
+              a little
+              <br />
+              <strong>♥</strong>
+              <br />
+              closer
+            </div>
+          </div>
+        </section>
         <section id="planner" className="planner-section">
           <div className="section-intro">
             <span className="eyebrow">LET’S MAKE A LITTLE PLAN</span>
@@ -321,96 +359,80 @@ export default function Planner({
                     maxLength={1000}
                     placeholder="A cozy afternoon near Cornell, under $50…"
                   />
-                  <button
+                  <Button
                     className="secondary"
                     type="button"
-                    disabled={!!busy || !text}
-                    onClick={interpret}
+                    isDisabled={!!busy || !text}
+                    onPress={interpret}
                   >
                     <Sparkles size={16} />
                     Fill my preferences
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
+            {busy === "resume" && (
+              <p role="status" className="notice">
+                Checking for your saved date…
+              </p>
+            )}
             <form
+              inert={busy === "resume"}
               onSubmit={(e) => {
                 e.preventDefault();
                 void generate();
               }}
             >
               <div className="form-grid">
-                <label className="wide">
-                  <span>
-                    <MapPin size={16} />
-                    Where are we starting?
-                  </span>
-                  <select
+                <div className="wide">
+                  <SelectField
+                    label="Where are we starting?"
+                    icon={<MapPin size={16} />}
                     value={criteria.start.id ?? "custom"}
-                    onChange={(e) => {
-                      const l = landmarks.find((x) => x.id === e.target.value);
-                      if (l) update("start", l);
+                    options={[
+                      ...landmarks.map((l) => ({ id: l.id, name: l.name })),
+                      ...(!criteria.start.id
+                        ? [{ id: "custom", name: criteria.start.name }]
+                        : []),
+                    ]}
+                    onChange={(id) => {
+                      const landmark = landmarks.find((l) => l.id === id);
+                      if (landmark) update("start", landmark);
                     }}
-                  >
-                    {landmarks.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                    {!criteria.start.id && (
-                      <option value="custom">{criteria.start.name}</option>
-                    )}
-                  </select>
+                  />
                   <div className="location-actions">
-                    <button
+                    <Button
                       type="button"
-                      onClick={() => setMapPicker((m) => !m)}
+                      onPress={() => setMapPicker((m) => !m)}
                     >
                       Choose on map
-                    </button>
-                    <button type="button" onClick={locate}>
+                    </Button>
+                    <Button type="button" onPress={locate}>
                       <LocateFixed size={13} />
                       Use my location
-                    </button>
+                    </Button>
                   </div>
-                </label>
-                <label>
-                  <span>Date</span>
-                  <input
-                    type="date"
-                    value={criteria.date}
-                    required
-                    onChange={(e) => update("date", e.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>
-                    Start time <small>New York</small>
-                  </span>
-                  <input
-                    type="time"
-                    value={criteria.time}
-                    required
-                    onChange={(e) => update("time", e.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>
-                    <Clock size={16} />
-                    Time together
-                  </span>
-                  <select
-                    value={criteria.duration}
-                    onChange={(e) => update("duration", Number(e.target.value))}
-                  >
-                    {[60, 90, 120, 180, 240, 360, 480].map((n) => (
-                      <option key={n} value={n}>
-                        {n < 120 ? `${n} minutes` : `${n / 60} hours`}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
+                </div>
+                <DateField
+                  value={criteria.date}
+                  onChange={(value) => update("date", value)}
+                />
+                <StartTimeField
+                  value={criteria.time}
+                  onChange={(value) => update("time", value)}
+                />
+                <SelectField
+                  className="duration-field"
+                  label="Time together"
+                  icon={<Clock size={16} />}
+                  value={String(criteria.duration)}
+                  onChange={(value) => update("duration", Number(value))}
+                  options={[60, 90, 120, 180, 240, 360, 480].map((n) => ({
+                    id: String(n),
+                    name: n < 120 ? `${n} minutes` : `${n / 60} hours`,
+                  }))}
+                />
+                <label className="budget-field">
                   <span>
                     <Wallet size={16} />
                     Total budget for two
@@ -458,6 +480,35 @@ export default function Planner({
                   </p>
                 </div>
               )}
+              <fieldset className="vibes date-types">
+                <legend>What kind of date?</legend>
+                <p className="field-help">
+                  Choose your main activity. We’ll find a little something to go
+                  with it.
+                </p>
+                <div>
+                  {(
+                    [
+                      ["any", "Surprise me", Sparkles],
+                      ["food", "Food", Utensils],
+                      ["coffee", "Coffee", Coffee],
+                      ["dessert", "Something sweet", Heart],
+                      ["outdoors", "Outdoors", Trees],
+                    ] as const
+                  ).map(([value, label, Icon]) => (
+                    <Button
+                      key={value}
+                      type="button"
+                      aria-pressed={criteria.dateType === value}
+                      className={criteria.dateType === value ? "active" : ""}
+                      onPress={() => update("dateType", value)}
+                    >
+                      <Icon size={18} />
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </fieldset>
               <fieldset className="vibes">
                 <legend>Set the mood</legend>
                 <div>
@@ -470,12 +521,12 @@ export default function Planner({
                       "Creative",
                     ] as const
                   ).map((v, i) => (
-                    <button
+                    <Button
                       type="button"
                       className={criteria.vibe === v ? "active" : ""}
                       key={v}
                       aria-pressed={criteria.vibe === v}
-                      onClick={() => update("vibe", v)}
+                      onPress={() => update("vibe", v)}
                     >
                       {i === 0 ? (
                         <Coffee size={17} />
@@ -489,7 +540,7 @@ export default function Planner({
                         <Palette size={17} />
                       )}{" "}
                       {v}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </fieldset>
@@ -497,12 +548,12 @@ export default function Planner({
                 <span>Getting around</span>
                 <div>
                   {(["walk", "bus"] as const).map((t) => (
-                    <button
+                    <Button
                       type="button"
                       key={t}
                       className={criteria.transport === t ? "active" : ""}
                       aria-pressed={criteria.transport === t}
-                      onClick={() => update("transport", t)}
+                      onPress={() => update("transport", t)}
                     >
                       {t === "walk" ? (
                         <Footprints size={17} />
@@ -510,7 +561,7 @@ export default function Planner({
                         <Bus size={17} />
                       )}{" "}
                       {t === "walk" ? "Walking" : "Walking + bus"}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
@@ -519,19 +570,18 @@ export default function Planner({
                   A few more preferences <ChevronDown size={17} />
                 </summary>
                 <div className="form-grid">
-                  <label>
-                    <span>Indoor or outdoor?</span>
-                    <select
-                      value={criteria.setting}
-                      onChange={(e) =>
-                        update("setting", e.target.value as Criteria["setting"])
-                      }
-                    >
-                      <option value="any">A little of either</option>
-                      <option value="indoor">Indoor activities</option>
-                      <option value="outdoor">Outdoor activities</option>
-                    </select>
-                  </label>
+                  <SelectField
+                    label="Indoor or outdoor?"
+                    value={criteria.setting}
+                    onChange={(value) =>
+                      update("setting", value as Criteria["setting"])
+                    }
+                    options={[
+                      { id: "any", name: "A little of either" },
+                      { id: "indoor", name: "Indoor activities" },
+                      { id: "outdoor", name: "Outdoor activities" },
+                    ]}
+                  />
                   <label>
                     <span>Maximum walking (km)</span>
                     <input
@@ -592,14 +642,14 @@ export default function Planner({
                 <p>
                   <Heart size={14} /> A thoughtful date starts here.
                 </p>
-                <button type="submit" className="primary" disabled={!!busy}>
+                <Button type="submit" className="primary" isDisabled={!!busy}>
                   {busy === "plan" ? "Finding your date…" : "Find our date"}
                   {busy === "plan" ? (
                     <RefreshCw className="spin" size={18} />
                   ) : (
                     <ArrowRight size={18} />
                   )}
-                </button>
+                </Button>
               </div>
             </form>
             {hint && (
@@ -637,12 +687,14 @@ export default function Planner({
             ))}
             <div className="plan-cards">
               {result.plans.map((p, i) => (
-                <button
+                <Button
                   className={`plan-card ${selected?.id === p.id ? "chosen" : ""}`}
                   key={`${i}-${p.id}`}
-                  onClick={() => {
+                  isDisabled={!!busy}
+                  aria-pressed={selected?.id === p.id}
+                  onPress={() => {
                     setSelected(p);
-                    setSaved(null);
+                    setDirty(true);
                   }}
                 >
                   <div className={`plan-art art-${i}`}>
@@ -681,27 +733,53 @@ export default function Planner({
                       <ArrowRight size={17} />
                     </div>
                   </div>
-                </button>
+                </Button>
               ))}
             </div>
           </section>
         )}
         {selected && (
           <div className="action-bar">
+            <Button
+              className="secondary"
+              isDisabled={!!busy}
+              onPress={() => {
+                setCriteria(initial);
+                setResult(null);
+                setSelected(null);
+                setSaved(null);
+                setDirty(false);
+                setError("");
+                setHint("");
+                history.replaceState(null, "", "/?new=1");
+                document.getElementById("planner")?.scrollIntoView();
+              }}
+            >
+              Plan a new date
+            </Button>
             <a className="secondary" href="#planner">
               Edit preferences ↑
             </a>
-            <button className="secondary" disabled={!!busy} onClick={generate}>
+            <Button
+              className="secondary"
+              isDisabled={!!busy}
+              onPress={generate}
+            >
               <RefreshCw size={16} />
               Regenerate
-            </button>
+            </Button>
           </div>
         )}
         {selected && (
           <Itinerary
             plan={selected}
             onSwap={swap}
-            onSave={saved ? undefined : save}
+            onSave={!saved || dirty ? save : undefined}
+            saveLabel={
+              saved ? (error ? "Retry save" : "Save changes") : "Save this date"
+            }
+            saving={busy === "save"}
+            dirty={dirty}
             busy={!!busy}
             savedUrl={saved?.url}
             shareId={saved?.shareId}
@@ -711,7 +789,9 @@ export default function Planner({
         )}
         {saved && (
           <p className="saved-note" role="status">
-            Your date is saved.{" "}
+            {dirty
+              ? "You have unsaved changes. The share page still shows your last saved version."
+              : "Your date is saved. You can return here to edit it in this browser."}{" "}
             <a href={saved.url}>Open read-only share page ↗</a>
           </p>
         )}
@@ -737,7 +817,7 @@ export default function Planner({
       </main>
       <footer>
         <Link className="logo" href="/">
-          <Navigation size={19} />
+          <BrandMark size={26} />
           navidate
         </Link>
         <span>Made with a little love in Ithaca.</span>

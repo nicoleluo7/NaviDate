@@ -123,7 +123,9 @@ describe("deterministic scheduling", () => {
       criteria,
       { router, places: [places[2], extra] },
     );
-    expect(replaced?.plan.stops.map((s) => s.place.id)).toEqual([
+    if (!replaced || !("plan" in replaced))
+      throw new Error("Expected a replacement plan");
+    expect(replaced.plan.stops.map((s) => s.place.id)).toEqual([
       "fictional-a",
       "fictional-d",
     ]);
@@ -272,4 +274,49 @@ it("includes direct bus fares, waiting and walking in the complete plan budget",
     },
   );
   expect(rejected).toBeNull();
+});
+
+describe("date types", () => {
+  const coffee = { ...places[0], category: "café" as const };
+  const food = { ...places[1], category: "food" as const };
+  it("requires the requested activity, while allowing a complementary stop", async () => {
+    for (const [dateType, category] of [
+      ["coffee", "café"],
+      ["food", "food"],
+    ] as const) {
+      const result = await planDates(
+        { ...criteria, dateType },
+        { places: [coffee, food, places[2]], router },
+      );
+      expect(result.plans.length).toBeGreaterThan(0);
+      expect(
+        result.plans.every((p) =>
+          p.stops.some((s) => s.place.category === category),
+        ),
+      ).toBe(true);
+    }
+  });
+  it("explains when the requested activity is unavailable", async () => {
+    const result = await planDates(
+      { ...criteria, dateType: "coffee" },
+      { places, router },
+    );
+    expect(result.plans).toHaveLength(0);
+    expect(result.error).toContain("date type");
+  });
+  it("cannot swap away the only requested coffee stop", async () => {
+    const c = { ...criteria, dateType: "coffee" as const };
+    const plan = await schedule(c, [coffee, places[1]], { router });
+    expect(
+      await replaceStop([plan!], plan!.id, 0, c, {
+        router,
+        places: [places[2]],
+      }),
+    ).toBeNull();
+  });
+  it("keeps old saved criteria compatible", () => {
+    const old: Partial<Criteria> = { ...criteria };
+    delete old.dateType;
+    expect(criteriaSchema.parse(old).dateType).toBe("any");
+  });
 });

@@ -37,3 +37,7 @@ Supabase, ORS, xAI and Photon compile against documented interfaces, but no live
 ## Dependency audit
 
 The lockfile pins stable releases. A compatible OpenTelemetry core override (2.11.0) removes the Spectrum dependency's inherited runtime advisory. `npm audit --omit=dev` reports zero vulnerabilities at verification. The full audit still reports five inherited high-severity findings in the Next.js ESLint toolchain (`braces` / `micromatch` / `fast-glob`). npm's proposed fix downgrades the Next.js lint configuration to a different major, so it was not applied. No patched stable `braces` version was available from the registry at verification. These packages run in local lint tooling, not the app's production request path; revisit when upstream releases a compatible fix.
+
+### Resuming and updating saved dates
+
+`creator:last:<owner hash>` stores a pointer to the most recently saved itinerary. `/api/resume` verifies the HTTP-only creator credential before returning private criteria and issues a new one-hour draft. `/?date=<public ID>` selects an itinerary for authorized editing; the query parameter carries no authority. `/api/save` rechecks ownership for updates, and the client retains the share ID after an automatic-save failure. Date types are checked in scheduling, which also covers swaps and messaging-generated plans.

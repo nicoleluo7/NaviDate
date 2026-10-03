@@ -30,6 +30,16 @@ export type PlannerOptions = {
   allowDemo?: boolean;
   onReject?: (reason: string) => void;
 };
+export function matchesDateType(place: Place, type: Criteria["dateType"]) {
+  return (
+    !type ||
+    type === "any" ||
+    (type === "coffee" && place.category === "café") ||
+    (type === "food" && place.category === "food") ||
+    (type === "dessert" && place.category === "dessert") ||
+    (type === "outdoors" && place.indoorOutdoor === "outdoor")
+  );
+}
 export async function schedule(
   c: Criteria,
   sequence: Place[],
@@ -41,6 +51,10 @@ export async function schedule(
     options.onReject?.(reason);
     return null;
   };
+  if (!sequence.some((p) => matchesDateType(p, c.dateType)))
+    return reject(
+      "No available stop matches this date type. Try Surprise me, a different start time, or a higher budget.",
+    );
   const start = localTime(c.date, c.time);
   let now = start,
     cost = 0,
@@ -234,6 +248,8 @@ export async function planDates(
     )
     .sort(
       (a, b) =>
+        Number(matchesDateType(b, c.dateType)) -
+          Number(matchesDateType(a, c.dateType)) ||
         distance(a.coordinates, c.start) - distance(b.coordinates, c.start),
     )
     .slice(0, 12);

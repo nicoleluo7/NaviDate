@@ -1,0 +1,408 @@
+/* React Aria primitives use the same palette in fields, portals, and actions. */
+.brand-mark {
+  mix-blend-mode: multiply;
+  overflow: hidden;
+}
+.logo .brand-mark {
+  width: 42px;
+  height: 42px;
+}
+footer .logo .brand-mark {
+  width: 32px;
+  height: 32px;
+}
+button {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.primary,
+.secondary,
+.nav-cta {
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 11px 19px;
+  font-weight: 600;
+  transition:
+    background-color 0.16s,
+    border-color 0.16s,
+    box-shadow 0.16s;
+}
+.primary {
+  background: #b84230;
+  box-shadow: 0 3px 8px #b8423014;
+  border: 1px solid transparent;
+}
+.primary:hover:not(:disabled),
+.primary[data-hovered] {
+  background: #a63929;
+  filter: none;
+}
+.secondary,
+.nav-cta {
+  background: #fffdf8;
+  border: 1px solid #dedfd5;
+  box-shadow: none;
+}
+.secondary[data-hovered],
+.nav-cta:hover {
+  background: #f3f1e9;
+  filter: none;
+}
+button[data-pressed]:not(.plan-card):not(.stop-select) {
+  box-shadow: inset 0 1px 3px #283b3312;
+}
+button[data-focus-visible],
+.field-control[data-focus-visible] {
+  outline: 2px solid #56776a;
+  outline-offset: 3px;
+}
+.vibes button,
+.transport-row button {
+  border-radius: 14px;
+  border-color: #e2e3db;
+  background: #fffdf8;
+  padding: 11px 15px;
+  font-weight: 500;
+}
+.vibes button.active,
+.transport-row button.active {
+  color: #943b2b;
+  background: #fae9e3;
+  border-color: #dcaa9b;
+  box-shadow: none;
+}
+.vibes button[data-hovered],
+.transport-row button[data-hovered] {
+  background: #f6efe7;
+  filter: none;
+}
+.location-actions button {
+  text-decoration: none;
+  padding: 6px 9px;
+  border-radius: 10px;
+  background: #f1f3eb;
+  color: #45604e;
+  font-weight: 500;
+}
+.location-actions button[data-hovered] {
+  background: #e8ecdf;
+}
+.location-actions {
+  gap: 8px;
+  margin-top: 9px;
+}
+.soft-field {
+  min-width: 0;
+}
+.field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.field-label small {
+  font-size: 12px;
+  font-weight: 400;
+  color: #677368;
+}
+.field-label svg {
+  flex-shrink: 0;
+}
+.field-control {
+  width: 100%;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #d9ddd2;
+  border-radius: 14px;
+  background: #fffdf8;
+  color: var(--ink);
+  padding: 5px 12px;
+  text-align: left;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.4;
+  box-shadow: 0 1px 2px #283b3303;
+}
+.field-control[data-hovered] {
+  background: #faf8f1;
+  filter: none;
+}
+.field-control[data-focus-within],
+.field-control[data-pressed] {
+  border-color: #789181;
+  box-shadow: 0 0 0 3px #45604e10;
+}
+.select-trigger {
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+.select-trigger > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger svg {
+  flex-shrink: 0;
+  color: #73806f;
+}
+.segmented-control {
+  gap: 0;
+  padding: 2px 4px 2px 10px;
+}
+.segment-input {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  min-width: 0;
+  padding: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.date-segment {
+  padding: 3px 1px;
+  outline: none;
+  border-radius: 5px;
+  white-space: nowrap;
+  font-size: 15px;
+}
+.date-segment[data-type="literal"] {
+  color: #899081;
+  padding: 0 1px;
+}
+.date-segment[data-type="dayPeriod"] {
+  margin-left: 3px;
+  font-size: 13px;
+}
+.date-segment[data-focused] {
+  background: #f7e2d9;
+  color: #943b2b;
+}
+.date-segment[data-placeholder] {
+  color: #7e8577;
+}
+.field-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 42px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #637b68;
+  padding: 0;
+}
+.field-icon-button[data-hovered],
+.field-icon-button[data-pressed] {
+  background: #eff1e7;
+  filter: none;
+}
+.field-error {
+  font-size: 12px;
+  color: #a63929;
+  margin-top: 6px;
+}
+.soft-field[data-invalid] .field-control {
+  border-color: #b84230;
+}
+.field-popover {
+  z-index: 2000;
+  box-sizing: border-box;
+  background: #fffdf8;
+  color: #283b33;
+  border: 1px solid #e1e3d9;
+  border-radius: 18px;
+  box-shadow:
+    0 12px 36px #283b331c,
+    0 2px 8px #283b3308;
+  max-width: calc(100vw - 24px);
+  max-height: min(var(--available-height), 430px);
+  overflow: auto;
+  outline: none;
+  font:
+    15px/1.45 Arial,
+    Helvetica,
+    sans-serif;
+}
+.select-popover {
+  min-width: var(--trigger-width);
+  padding: 6px;
+}
+.option-list {
+  outline: none;
+  max-height: 310px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #d4d9cc transparent;
+}
+.field-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  min-height: 46px;
+  border-radius: 11px;
+  outline: none;
+  cursor: pointer;
+  color: #344b3f;
+  font-size: 14px;
+}
+.field-option svg {
+  flex-shrink: 0;
+}
+.field-option[data-focused] {
+  background: #edf0e6;
+}
+.field-option[data-selected] {
+  background: #fae9e3;
+  color: #943b2b;
+}
+.field-option[data-focus-visible] {
+  outline: 2px solid #678472;
+  outline-offset: -2px;
+}
+.picker-dialog {
+  outline: none;
+  padding: 14px;
+}
+.calendar-popover {
+  width: 336px;
+}
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.calendar-header h2,
+.time-popover h2 {
+  font:
+    600 16px/1.4 Arial,
+    Helvetica,
+    sans-serif;
+  letter-spacing: 0;
+}
+.soft-calendar table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 3px;
+  table-layout: fixed;
+}
+.soft-calendar th {
+  font-size: 11px;
+  color: #74816f;
+  font-weight: 500;
+  text-align: center;
+  padding: 7px 0;
+}
+.soft-calendar td {
+  padding: 0;
+  text-align: center;
+}
+.calendar-day {
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  outline: none;
+}
+.calendar-day[data-hovered] {
+  background: #edf0e6;
+}
+.calendar-day[data-selected] {
+  color: white;
+  background: #b84230;
+}
+.calendar-day[data-today]:not([data-selected]) {
+  box-shadow: inset 0 0 0 1px #c3cdbb;
+  color: #45604e;
+}
+.calendar-day[data-focus-visible] {
+  outline: 2px solid #56776a;
+  outline-offset: -2px;
+}
+.calendar-day[data-outside-month] {
+  color: #a7ad9f;
+}
+.calendar-day[data-disabled],
+.calendar-day[data-unavailable] {
+  opacity: 0.4;
+  cursor: default;
+}
+.picker-note {
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6d7868;
+  margin: 10px 0 2px;
+}
+.calendar-popover .picker-note {
+  text-align: center;
+  border-top: 1px solid #eceee3;
+  padding-top: 12px;
+}
+.time-popover {
+  width: 260px;
+}
+.time-options {
+  max-height: 248px;
+  margin-top: 12px;
+}
+.time-options .field-option {
+  font-variant-numeric: tabular-nums;
+}
+@media (min-width: 901px) {
+  .form-grid > .duration-field,
+  .form-grid > .budget-field {
+    grid-column: span 2;
+  }
+}
+@media (max-width: 900px) {
+  .form-grid > .soft-field > .field-label,
+  .form-grid > .soft-field > .react-aria-TimeField > .field-label,
+  .form-grid > .wide .field-label {
+    min-height: 44px;
+    align-items: end;
+  }
+}
+@media (max-width: 440px) {
+  .form-grid > .date-field,
+  .form-grid > .soft-field:has(.react-aria-TimeField) {
+    grid-column: span 2;
+  }
+  .vibes button,
+  .transport-row button {
+    padding: 10px 12px;
+  }
+  .field-label {
+    flex-wrap: wrap;
+  }
+  .location-actions button {
+    font-size: 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .primary,
+  .secondary,
+  .nav-cta {
+    transition: none;
+  }
+}
+
+.money-input input {
+  min-height: 50px;
+  border-radius: 14px;
+  background: #fffdf8;
+  border-color: #d9ddd2;
+  font-size: 15px;
+  font-weight: 500;
+}

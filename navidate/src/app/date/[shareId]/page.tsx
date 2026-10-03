@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Navigation } from "lucide-react";
+import BrandMark from "@/components/BrandMark";
+import { session } from "@/lib/api";
+import { isOwner } from "@/lib/storage/dates";
 import type { SavedDate } from "@/types";
 import { getStorage } from "@/lib/storage";
 import { publicPlan } from "@/lib/storage/dates";
@@ -22,10 +24,10 @@ export default async function Shared({
     <>
       <header className="site-header">
         <Link href="/" className="logo">
-          <Navigation />
+          <BrandMark />
           navidate
         </Link>
-        <Link href="/" className="nav-cta">
+        <Link href="/?new=1" className="nav-cta">
           Plan your own date ↗
         </Link>
       </header>
@@ -34,6 +36,13 @@ export default async function Shared({
           A date to look forward to.{" "}
           <strong>Read-only shared itinerary.</strong>
         </p>
+        {isOwner(record, await session()) && (
+          <p className="share-banner">
+            <Link className="secondary" href={`/?date=${shareId}`}>
+              Edit this date
+            </Link>
+          </p>
+        )}
         <Itinerary
           plan={publicPlan(record.plan)}
           savedUrl={`${process.env.APP_URL ?? "http://localhost:3000"}/date/${shareId}`}

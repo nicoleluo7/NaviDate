@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { SavedDate } from "@/types";
 import type { Draft } from "../plan/route";
 import { getStorage } from "@/lib/storage";
-import { isOwner, saveDate } from "@/lib/storage/dates";
+import { isOwner, saveDate, hash } from "@/lib/storage/dates";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
 export async function POST(req: Request) {
   try {
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
       saved = { ...old, criteria: draft.criteria, plan };
       await store.put("date:" + saved.shareId, saved);
     } else saved = await saveDate(draft.criteria, plan, token, store);
+    await store.put("creator:last:" + hash(token), saved.shareId);
     return Response.json({
       shareId: saved.shareId,
       url: "/date/" + saved.shareId,

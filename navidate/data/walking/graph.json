@@ -78,6 +78,71 @@
       "from": "commons",
       "to": "greenstar",
       "meters": 396
+    },
+    {
+      "to": "gimme-cayuga",
+      "meters": 850,
+      "from": "commons"
+    },
+    {
+      "to": "gimme-state",
+      "meters": 850,
+      "from": "commons"
+    },
+    {
+      "to": "gimme-bowers",
+      "meters": 650,
+      "from": "ho-plaza"
+    },
+    {
+      "to": "moosewood",
+      "meters": 450,
+      "from": "commons"
+    },
+    {
+      "to": "viva",
+      "meters": 180,
+      "from": "commons"
+    },
+    {
+      "to": "bickering",
+      "meters": 300,
+      "from": "commons"
+    },
+    {
+      "to": "purity",
+      "meters": 950,
+      "from": "gimme-cayuga"
+    },
+    {
+      "to": "ithaca-bakery",
+      "meters": 400,
+      "from": "purity"
+    },
+    {
+      "to": "saigon",
+      "meters": 180,
+      "from": "gimme-state"
+    },
+    {
+      "to": "ithaca-bakery",
+      "meters": 800,
+      "from": "saigon"
+    },
+    {
+      "to": "dewitt-park",
+      "meters": 550,
+      "from": "commons"
+    },
+    {
+      "to": "gimme-cayuga",
+      "meters": 500,
+      "from": "dewitt-park"
+    },
+    {
+      "to": "moosewood",
+      "meters": 200,
+      "from": "dewitt-park"
     }
   ]
 }

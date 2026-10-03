@@ -33,5 +33,26 @@
     "lat": 42.4399,
     "lng": -76.4969,
     "private": false
+  },
+  {
+    "id": "dewitt-park",
+    "name": "DeWitt Park",
+    "lat": 42.4428,
+    "lng": -76.4989,
+    "private": false
+  },
+  {
+    "id": "purity",
+    "name": "Purity Ice Cream",
+    "lat": 42.446,
+    "lng": -76.5075,
+    "private": false
+  },
+  {
+    "id": "gimme-bowers",
+    "name": "Gimme! Coffee \u00b7 Bowers CIS",
+    "lat": 42.4441,
+    "lng": -76.4805,
+    "private": false
   }
 ]

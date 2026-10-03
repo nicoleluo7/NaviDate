@@ -21,6 +21,9 @@ export const criteriaSchema = z.object({
   time: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   duration: z.number().int().min(30).max(720),
   budget: z.number().min(0).max(1000),
+  dateType: z
+    .enum(["any", "food", "coffee", "dessert", "outdoors"])
+    .default("any"),
   vibe: vibeSchema,
   transport: z.enum(["walk", "bus"]),
   dietary: z

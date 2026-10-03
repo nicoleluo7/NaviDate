@@ -52,7 +52,7 @@ The validator prints missing verification dates and unknown hours as warnings, n
 
 | Area           | Current behavior                                                                                                                                                                                         |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Venues         | 16 real Cornell/Ithaca places. Source links included. Coordinates and costs are approximate. `source-reviewed` means the listing was reviewed, not every detail independently verified.                  |
+| Venues         | 26 real Cornell/Ithaca places. Source links included. Coordinates and costs are approximate. `source-reviewed` means the listing was reviewed, not every detail independently verified.                  |
 | Hours          | Johnson Museum published weekly hours and October 13, 2026 closure are entered. Other hours are unknown, explicitly shown as unverified. Results with unknown hours are conditional suggestions.         |
 | Prices         | Estimated spending for two; not current menus or guaranteed totals. No reservations or purchases.                                                                                                        |
 | Dietary needs  | Stored and supplied to AI; no dietary guarantees. Venue tags are empty until manually verified. Users must confirm ingredients/cross-contact.                                                            |
@@ -139,3 +139,13 @@ For manually entered buses, fill:
 All transit records include `sourceUrl`, `verifiedAt`, `demo`. Use `demo:false` only for verified service. Stops must connect to supported graph nodes (within 30m of the corresponding known place), or extend the walking lookup first. Each trip's times must strictly increase; hours through `47:59` represent service-day times after midnight. A boarding buffer of five minutes is applied. Direct trips only, no transfers. Fare estimates are for two riders; no Cornell affiliation is assumed. No route shape is supplied, so no bus line is drawn. Fictional examples live in `tests/fixtures/transit.json` and are never loaded as real schedules.
 
 Run `npm run validate:data` after changes, and planner tests before the demo. See [architecture and assumptions](docs/architecture.md), [team work split](docs/team.md), [demo script](docs/demo.md), and [documentation sources](docs/sources.md).
+
+### October 3 UI and editing update
+
+Choose Food, Coffee, Something sweet, Outdoors, or Surprise me. A specific date type requires at least one matching stop; complementary activities can still appear. The same requirement applies to swaps. Existing saved criteria default to Surprise me.
+
+The homepage restores your most recently saved date in the same browser. Its creator-only “Edit this date” action also returns to the homepage. Reloading creates a fresh editing draft; public share IDs never grant edit access. Use “Plan a new date” for a separate itinerary. Successful swaps update the existing share URL automatically; failed saves keep the association and offer Retry save. Unsaved edits themselves are not recovered after a reload—only the last successfully saved version is restored. Clearing the creator cookie still loses editing access.
+
+The expanded list includes three Gimme! locations, Moosewood, Viva, Bickering Twins, Purity, Ithaca Bakery, Saigon Kitchen, and DeWitt Park. New coordinates, durations, prices and walking connectivity are estimates. Reviewed opening hours are recorded only where clear; unknown or conflicting hours remain null. No new walking geometry is claimed.
+
+The form now uses React Aria Components for keyboard-accessible buttons, dropdowns, a calendar popover, and an AM/PM time field with quarter-hour suggestions. Any exact minute can still be typed. Escape dismisses menus and restores focus. The warm cream/coral theme lives in `src/app/controls.css`. The user-supplied two-pin heart logo is retained unchanged in `public/navidate-logo.png`.

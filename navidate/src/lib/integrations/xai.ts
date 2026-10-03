@@ -97,7 +97,7 @@ export async function interpret(
 ) {
   const data = await request(
     extracted,
-    "Extract only explicitly provided date criteria. Do not fill missing required fields. Use startId from landmarks. If ambiguous, include one focused question. time is HH:mm, budget is total dollars for two, duration is minutes. Output fields date,time,duration,budget,vibe,transport,setting,preferences,startId,question as applicable.",
+    "Extract only explicitly provided date criteria. Do not fill missing required fields. Use startId from landmarks. If ambiguous, include one focused question. time is HH:mm, budget is total dollars for two, duration is minutes. dateType is any, food, coffee, dessert, or outdoors. Output fields date,time,duration,budget,dateType,vibe,transport,setting,preferences,startId,question as applicable.",
     {
       text,
       existing,

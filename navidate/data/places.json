@@ -74,7 +74,7 @@
       "lng": -76.4838
     },
     "address": "Arts Quad, Cornell",
-    "description": "A slow stroll among Cornell\u2019s historic buildings.",
+    "description": "A slow stroll among Cornell’s historic buildings.",
     "vibeTags": [
       "Romantic",
       "Casual",
@@ -216,7 +216,7 @@
   {
     "id": "alley-cat",
     "name": "Alley Cat Cafe",
-    "category": "caf\u00e9",
+    "category": "café",
     "coordinates": {
       "lat": 42.4402,
       "lng": -76.4992
@@ -240,7 +240,7 @@
   {
     "id": "bank",
     "name": "Bank Coffee",
-    "category": "caf\u00e9",
+    "category": "café",
     "coordinates": {
       "lat": 42.4396,
       "lng": -76.4976
@@ -263,14 +263,14 @@
   },
   {
     "id": "dewitt",
-    "name": "Caf\u00e9 DeWitt",
+    "name": "Café DeWitt",
     "category": "food",
     "coordinates": {
       "lat": 42.4416,
       "lng": -76.4991
     },
     "address": "215 N. Cayuga Street",
-    "description": "Make time for a relaxed caf\u00e9 meal in DeWitt Mall.",
+    "description": "Make time for a relaxed café meal in DeWitt Mall.",
     "vibeTags": [
       "Cozy",
       "Casual"
@@ -287,7 +287,7 @@
   },
   {
     "id": "ctb",
-    "name": "Collegetown Bagels \u00b7 City Centre",
+    "name": "Collegetown Bagels · City Centre",
     "category": "food",
     "coordinates": {
       "lat": 42.4397,
@@ -359,7 +359,7 @@
   },
   {
     "id": "rosie",
-    "name": "Rosie\u2019s Cafe & Parlor",
+    "name": "Rosie’s Cafe & Parlor",
     "category": "dessert",
     "coordinates": {
       "lat": 42.4411,
@@ -407,7 +407,7 @@
   },
   {
     "id": "greenstar",
-    "name": "GreenStar \u00b7 DeWitt Mall",
+    "name": "GreenStar · DeWitt Mall",
     "category": "food",
     "coordinates": {
       "lat": 42.4415,
@@ -427,6 +427,464 @@
     "websiteUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
     "sourceUrl": "https://www.downtownithaca.com/directory/cafe-coffeeshops/",
     "verifiedAt": "2026-10-02",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "gimme-cayuga",
+    "name": "Gimme! Coffee · Cayuga Street",
+    "category": "café",
+    "coordinates": {
+      "lat": 42.4449,
+      "lng": -76.4998
+    },
+    "address": "430 N Cayuga Street",
+    "description": "Settle in with coffee and time to catch up.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 16,
+    "typicalDurationMinutes": 35,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "2": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "3": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "4": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "5": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "6": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "7": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "sourceUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "gimme-state",
+    "name": "Gimme! Coffee · State Street",
+    "category": "café",
+    "coordinates": {
+      "lat": 42.4395,
+      "lng": -76.5048
+    },
+    "address": "506 W State Street",
+    "description": "A coffee break on the west side of downtown.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 16,
+    "typicalDurationMinutes": 35,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "2": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "3": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "4": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "5": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "6": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ],
+        "7": [
+          [
+            "07:00",
+            "16:30"
+          ]
+        ]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "sourceUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "gimme-bowers",
+    "name": "Gimme! Coffee · Bowers CIS",
+    "category": "café",
+    "coordinates": {
+      "lat": 42.4441,
+      "lng": -76.4805
+    },
+    "address": "Hoy Road, Cornell University",
+    "description": "Meet for a weekday coffee on Cornell’s campus.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 16,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [
+          [
+            "08:00",
+            "16:00"
+          ]
+        ],
+        "2": [
+          [
+            "08:00",
+            "16:00"
+          ]
+        ],
+        "3": [
+          [
+            "08:00",
+            "16:00"
+          ]
+        ],
+        "4": [
+          [
+            "08:00",
+            "16:00"
+          ]
+        ],
+        "5": [
+          [
+            "08:00",
+            "16:00"
+          ]
+        ]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "sourceUrl": "https://gimmecoffee.com/pages/locations-hours",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "moosewood",
+    "name": "Moosewood Restaurant",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4415,
+      "lng": -76.4991
+    },
+    "address": "215 N Cayuga Street, DeWitt Building",
+    "description": "Make time for a vegetable-focused meal at an Ithaca institution.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 65,
+    "typicalDurationMinutes": 70,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://moosewood.com/",
+    "sourceUrl": "https://moosewood.com/",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "viva",
+    "name": "Viva Taqueria",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4397,
+      "lng": -76.4961
+    },
+    "address": "215 E State Street",
+    "description": "Share a relaxed meal at the corner of State and Aurora.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 40,
+    "typicalDurationMinutes": 55,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.vivataqueria.com/contact",
+    "sourceUrl": "https://www.vivataqueria.com/contact",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "bickering",
+    "name": "Bickering Twins",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4399,
+      "lng": -76.4992
+    },
+    "address": "114 N Cayuga Street",
+    "description": "Slow down over a Latin American-inspired dinner downtown.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 60,
+    "typicalDurationMinutes": 70,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.bickeringtwins.com/about-us",
+    "sourceUrl": "https://www.bickeringtwins.com/about-us",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "purity",
+    "name": "Purity Ice Cream",
+    "category": "dessert",
+    "coordinates": {
+      "lat": 42.446,
+      "lng": -76.5075
+    },
+    "address": "700 Cascadilla Street",
+    "description": "Pick your flavors and take a sweet break together.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 20,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.purityicecream.com/",
+    "sourceUrl": "https://www.purityicecream.com/",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "ithaca-bakery",
+    "name": "Ithaca Bakery · Meadow Street",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.444,
+      "lng": -76.509
+    },
+    "address": "400 N Meadow Street",
+    "description": "A casual sandwich stop with a bakery treat to finish.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 35,
+    "typicalDurationMinutes": 45,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "2": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "3": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "4": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "5": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "6": [
+          [
+            "06:30",
+            "20:00"
+          ]
+        ],
+        "7": [
+          [
+            "06:30",
+            "19:00"
+          ]
+        ]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://www.ithacabakery.com/Locations.html",
+    "sourceUrl": "https://www.ithacabakery.com/Locations.html",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "saigon",
+    "name": "Saigon Kitchen",
+    "category": "food",
+    "coordinates": {
+      "lat": 42.4394,
+      "lng": -76.506
+    },
+    "address": "526 W State Street",
+    "description": "Make a warm bowl and an unhurried conversation the main event.",
+    "vibeTags": [
+      "Cozy",
+      "Casual"
+    ],
+    "indoorOutdoor": "indoor",
+    "estimatedCostForTwo": 45,
+    "typicalDurationMinutes": 60,
+    "dietaryTags": [],
+    "openingHours": {
+      "weekly": {
+        "1": [
+          [
+            "11:00",
+            "21:30"
+          ]
+        ],
+        "2": [
+          [
+            "11:00",
+            "21:30"
+          ]
+        ],
+        "3": [
+          [
+            "11:00",
+            "21:30"
+          ]
+        ],
+        "4": [
+          [
+            "11:00",
+            "21:30"
+          ]
+        ],
+        "5": [
+          [
+            "11:00",
+            "22:30"
+          ]
+        ],
+        "6": [
+          [
+            "11:00",
+            "22:30"
+          ]
+        ],
+        "7": [
+          [
+            "11:00",
+            "21:30"
+          ]
+        ]
+      },
+      "exceptions": {}
+    },
+    "websiteUrl": "https://www.saigonkitchenithaca.com/",
+    "sourceUrl": "https://www.saigonkitchenithaca.com/",
+    "verifiedAt": "2026-10-03",
+    "verificationStatus": "source-reviewed"
+  },
+  {
+    "id": "dewitt-park",
+    "name": "DeWitt Park",
+    "category": "park",
+    "coordinates": {
+      "lat": 42.4428,
+      "lng": -76.4989
+    },
+    "address": "N Cayuga Street at E Buffalo Street",
+    "description": "Find a quiet moment among the trees in downtown Ithaca.",
+    "vibeTags": [
+      "Romantic",
+      "Casual"
+    ],
+    "indoorOutdoor": "outdoor",
+    "estimatedCostForTwo": 0,
+    "typicalDurationMinutes": 30,
+    "dietaryTags": [],
+    "openingHours": null,
+    "websiteUrl": "https://www.cityofithacany.gov/214/Request-to-Use-a-City-Park",
+    "sourceUrl": "https://www.cityofithacany.gov/214/Request-to-Use-a-City-Park",
+    "verifiedAt": "2026-10-03",
     "verificationStatus": "source-reviewed"
   }
 ]
