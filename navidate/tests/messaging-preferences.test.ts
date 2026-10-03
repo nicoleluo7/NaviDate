@@ -209,7 +209,7 @@ it("rebuilds a stale Google route from stops when directions are requested", asy
   );
   const text = send.mock.calls[0][0];
   expect(decodeURIComponent(text)).not.toContain("place_id:");
-  expect(text).toContain("waypoint_place_ids=fixture-place-0");
+  expect(text).not.toContain("waypoint_place_ids");
   expect(text).toContain("waypoints=fictional-a");
 });
 

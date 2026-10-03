@@ -31,9 +31,9 @@ describe("Google Maps helpers", () => {
     expect(url).toContain("https://www.google.com/maps/dir/?");
     expect(params.get("origin")).toBe("Johnson Museum, Ithaca, NY");
     expect(params.get("destination")).toBe("Gimme Coffee, Ithaca, NY");
-    expect(params.get("destination_place_id")).toBe("ChIJStopTwo");
+    expect(params.get("destination_place_id")).toBeNull();
     expect(params.get("waypoints")).toBe("Hound and Mare, Ithaca, NY");
-    expect(params.get("waypoint_place_ids")).toBe("ChIJStopOne");
+    expect(params.get("waypoint_place_ids")).toBeNull();
     expect(decodeURIComponent(url!)).not.toContain("place_id:");
     expect(params.get("travelmode")).toBe("walking");
     expect(url).not.toContain("42.4505");
@@ -52,7 +52,7 @@ describe("Google Maps helpers", () => {
           transport: "walk",
         })!,
       ).searchParams;
-    expect(make("id-two").get("waypoint_place_ids")).toBe("id-one|id-two");
+    expect(make("id-two").get("waypoint_place_ids")).toBeNull();
     expect(make().get("waypoint_place_ids")).toBeNull();
     expect(make().get("waypoints")).toBe(
       "First, Ithaca, NY|Second, Ithaca, NY",
@@ -83,7 +83,7 @@ describe("Google Maps helpers", () => {
     expect(params.get("destination")).toBe(
       "Hound and Mare, 118 N. Aurora Street, Ithaca, NY",
     );
-    expect(params.get("destination_place_id")).toBe("ChIJHound");
+    expect(params.get("destination_place_id")).toBeNull();
     expect(params.get("waypoints")).toBe("Collegetown Bagels, Ithaca, NY");
     expect(params.get("travelmode")).toBe("walking");
   });
@@ -122,6 +122,28 @@ describe("Google Maps helpers", () => {
       "Gimme! Coffee · Cayuga Street, 506 W State St, Ithaca, NY|Hound and Mare, 118 N. Aurora Street, Ithaca, NY",
     );
     expect(url).not.toContain("42.4505");
+  });
+
+  it("uses the street address when a stop name is a raw place id", () => {
+    const url = buildGoogleMapsRouteUrl({
+      start: { name: "Beebe Lake", lat: 42.45, lng: -76.48 },
+      stops: [
+        {
+          name: "place_id:ChIJabcdefghijklmnopqrstuvwxyz",
+          address: "1 Libe Slope",
+          lat: 42.447,
+          lng: -76.484,
+        },
+        { name: "Paris Baguette", address: "123 Dryden Rd", lat: 42.44, lng: -76.48 },
+      ],
+      transport: "walk",
+    });
+    const params = new URL(url!).searchParams;
+    expect(params.get("waypoints")).toBe("1 Libe Slope, Ithaca, NY");
+    expect(decodeURIComponent(url!)).not.toContain("place_id:");
+    expect(params.get("destination")).toBe(
+      "Paris Baguette, 123 Dryden Rd, Ithaca, NY",
+    );
   });
 
   it("keeps itinerary order and maps bus to transit", () => {

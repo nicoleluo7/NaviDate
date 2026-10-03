@@ -14,7 +14,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import type { Plan } from "@/types";
-import { displayTime } from "@/lib/planner/time";
+import { approximateDuration, displayTime } from "@/lib/planner/time";
 import { directionsToPlace, routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import WeatherPanel from "./WeatherPanel";
 import MapLoader from "@/components/map/MapLoader";
@@ -45,10 +45,12 @@ export default function Itinerary({
 }) {
   const [selected, setSelected] = useState<number | null>(null),
     [focus, setFocus] = useState(0),
-    [tab, setTab] = useState("timeline"),
+    [tab, setTab] = useState("map"),
     [notice, setNotice] = useState(""),
     [pairCode, setPairCode] = useState(""),
-    [pairLink, setPairLink] = useState("");
+    [pairLink, setPairLink] = useState(""),
+    [phone, setPhone] = useState(""),
+    [pairing, setPairing] = useState(false);
   function choose(index: number) {
     setSelected((current) => (current === index ? null : index));
     setFocus((n) => n + 1);
@@ -76,11 +78,16 @@ export default function Itinerary({
     savedUrl ?? "",
   ].join("\n");
   async function pair() {
+    if (!phone.trim()) {
+      setNotice("Enter the phone number you use with iMessage.");
+      return;
+    }
+    setPairing(true);
     try {
       const r = await fetch("/api/pair", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shareId }),
+          body: JSON.stringify({ shareId, phone }),
         }),
         data = await r.json();
       if (!r.ok) throw new Error(data.error);
@@ -92,6 +99,8 @@ export default function Itinerary({
       setNotice(
         e instanceof Error ? e.message : "Could not create pairing code.",
       );
+    } finally {
+      setPairing(false);
     }
   }
   async function checkPair() {
@@ -114,6 +123,16 @@ export default function Itinerary({
           <p>
             {displayTime(plan.startsAt)} — {displayTime(plan.endsAt)}
           </p>
+          {routeUrl && (
+            <a
+              className="map-directions"
+              href={routeUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Open route in Google Maps <ArrowUpRight size={16} />
+            </a>
+          )}
         </div>
         <Heart className="heart-outline" size={34} />
       </div>
@@ -123,7 +142,7 @@ export default function Itinerary({
         </span>
         <span>
           <Clock size={17} />
-          {plan.duration} min
+          {approximateDuration(plan.duration)}
         </span>
         <span>
           <Footprints size={17} />
@@ -134,7 +153,6 @@ export default function Itinerary({
           {plan.weather.summary}
         </span>
       </div>
-      <WeatherPanel weather={plan.weather} />
       <div className="mobile-tabs" role="group" aria-label="Itinerary view">
         <Button
           aria-pressed={tab === "timeline"}
@@ -246,6 +264,7 @@ export default function Itinerary({
             <Heart size={16} /> A good date, well spent. Ends{" "}
             {displayTime(plan.endsAt)}
           </div>
+          <WeatherPanel weather={plan.weather} />
         </div>
         <div
           className={`map-column ${tab === "timeline" ? "mobile-hidden" : ""}`}
@@ -301,16 +320,6 @@ export default function Itinerary({
               ? "The line follows a routed path in itinerary order."
               : "No route line means travel is an estimate, not a verified walking path."}
           </p>
-          {routeUrl && (
-            <a
-              className="map-directions"
-              href={routeUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open route in Google Maps <ArrowUpRight size={16} />
-            </a>
-          )}
         </div>
       </div>
       <details className="practical">
@@ -325,6 +334,31 @@ export default function Itinerary({
           Opening hours can change on holidays.
         </p>
       </details>
+      {canPair && photon && shareId && (
+        <label className="pair-phone">
+          <span>Your iMessage number</span>
+          <input
+            type="tel"
+            name="imessage-phone"
+            autoComplete="tel"
+            inputMode="tel"
+            placeholder="+1 607 555 0100"
+            value={phone}
+            disabled={pairing || dirty || busy}
+            onChange={(event) => setPhone(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void pair();
+              }
+            }}
+          />
+          <small className="field-help">
+            We’ll register this number with Photon and open a text to the line
+            it assigns you. Press Send from that phone.
+          </small>
+        </label>
+      )}
       <div className="action-bar">
         {routeUrl && (
           <a
@@ -361,10 +395,12 @@ export default function Itinerary({
           <Button
             className="secondary"
             onPress={pair}
-            isDisabled={!photon || !shareId || dirty || busy}
+            isDisabled={
+              !photon || !shareId || !phone.trim() || dirty || busy || pairing
+            }
           >
             <MessageCircle size={17} />
-            Send to myself
+            {pairing ? "Opening Messages…" : "Send to myself"}
           </Button>
         )}
       </div>

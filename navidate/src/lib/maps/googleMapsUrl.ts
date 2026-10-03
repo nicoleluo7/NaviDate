@@ -10,20 +10,32 @@ export type RouteStop = {
   private?: boolean;
 };
 
+function namedPlace(point: RouteStop) {
+  const name = point.name?.trim() ?? "";
+  // A raw Places id is not a stop name. Maps shows it as "place_id:" plus the id.
+  if (/^(?:place_id:|places\/)/i.test(name)) return "";
+  return name;
+}
+
+function withCity(place: string) {
+  return /ithaca/i.test(place) ? place : `${place}, Ithaca, NY`;
+}
+
 export function mapsPlaceQuery(point: RouteStop) {
-  if (
+  const name = namedPlace(point);
+  const hidden =
     point.private ||
-    !point.name ||
-    point.name === "My location" ||
-    point.name === "Selected map point" ||
-    point.name === "Private starting point hidden"
-  ) {
+    name === "My location" ||
+    name === "Selected map point" ||
+    name === "Private starting point hidden";
+  if (!name || hidden) {
+    if (!hidden && point.address) return withCity(point.address);
     if (point.lat != null && point.lng != null)
       return `${point.lat},${point.lng}`;
   }
-  const place = [point.name, point.address].filter(Boolean).join(", ");
-  if (!place) return point.name;
-  return /ithaca/i.test(place) ? place : `${place}, Ithaca, NY`;
+  const place = [name, point.address].filter(Boolean).join(", ");
+  if (!place) return name;
+  return withCity(place);
 }
 
 export function buildGoogleMapsRouteUrl({
@@ -46,19 +58,8 @@ export function buildGoogleMapsRouteUrl({
     destination: mapsPlaceQuery(destinationPoint),
     travelmode: transport === "bus" ? "transit" : "walking",
   });
-  if (start.googlePlaceId) params.set("origin_place_id", start.googlePlaceId);
-  if (destinationPoint.googlePlaceId)
-    params.set("destination_place_id", destinationPoint.googlePlaceId);
-  if (middle.length) {
+  if (middle.length)
     params.set("waypoints", middle.map(mapsPlaceQuery).join("|"));
-    // IDs must align one-for-one with the human-readable waypoint list.
-    // For mixed curated/live stops, names remain the documented fallback.
-    if (middle.every((point) => point.googlePlaceId))
-      params.set(
-        "waypoint_place_ids",
-        middle.map((point) => point.googlePlaceId!).join("|"),
-      );
-  }
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
@@ -72,8 +73,6 @@ export function directionsToPlace(place: {
     destination: mapsPlaceQuery(place),
     travelmode: "walking",
   });
-  if (place.googlePlaceId)
-    params.set("destination_place_id", place.googlePlaceId);
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
@@ -84,13 +83,14 @@ export function routeUrlForPlan(plan: {
     place: {
       name: string;
       address?: string;
-      coordinates: { lat: number; lng: number };
+      coordinates?: { lat: number; lng: number };
       googlePlaceId?: string;
     };
   }[];
-  legs: { mode: string; toName: string }[];
+  legs?: { mode: string; toName: string }[];
 }) {
   if (!plan.stops.length) return plan.googleMapsUrl;
+  const legs = plan.legs ?? [];
   return (
     buildGoogleMapsRouteUrl({
       start: {
@@ -102,12 +102,11 @@ export function routeUrlForPlan(plan: {
       stops: plan.stops.map((stop) => ({
         name: stop.place.name,
         address: stop.place.address,
-        lat: stop.place.coordinates.lat,
-        lng: stop.place.coordinates.lng,
-        googlePlaceId: stop.place.googlePlaceId,
+        lat: stop.place.coordinates?.lat,
+        lng: stop.place.coordinates?.lng,
       })),
-      transport: plan.legs.some((leg) => leg.mode === "bus") ? "bus" : "walk",
-      returnToStart: plan.legs.at(-1)?.toName === plan.start.name,
+      transport: legs.some((leg) => leg.mode === "bus") ? "bus" : "walk",
+      returnToStart: legs.at(-1)?.toName === plan.start.name,
     }) ?? plan.googleMapsUrl
   );
 }

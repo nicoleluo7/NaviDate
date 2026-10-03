@@ -351,11 +351,8 @@ export default function NaviVoice({
         </div>
         <div>
           <span className="navi-eyebrow">YOUR DATE-PLANNING COMPANION</span>
-          <h3>A little inspiration, together.</h3>
-          <p>
-            Meet Navi. Tell her what you’re imagining, and she’ll help with the
-            details.
-          </p>
+          <h3>Talk it through</h3>
+          <p>Navi can fill in the form from a short conversation.</p>
         </div>
       </div>
       <Button
@@ -372,7 +369,7 @@ export default function NaviVoice({
       </Button>
       <p className="small muted">
         {enabled
-          ? "Microphone starts only when you tap. Audio goes to xAI; stopping releases the microphone. Up to 3 minutes per conversation."
+          ? "Tap to start. The microphone stops when you end the chat."
           : "Voice is unavailable. You can plan with the form below."}
       </p>
       {state !== "idle" && (

@@ -71,14 +71,41 @@ it("resolves there from the previous stop mentioned rather than refusing", () =>
     "Which stop",
   );
 });
-it("opens with readable paragraphs and the public website, not a giant Maps URL", () => {
+it("opens with the public itinerary and a named walking route", () => {
   vi.stubEnv("APP_URL", "http://localhost:3000");
   vi.stubEnv("PUBLIC_APP_URL", "https://navidate.us/");
-  const text = conversationalIntro(plan, `${publicAppUrl()}/date/fixture`);
+  const text = conversationalIntro(
+    {
+      ...plan,
+      start: { name: "Beebe Lake", lat: 42.45, lng: -76.48, private: false },
+      stops: [
+        {
+          place: {
+            name: "Libe Slope",
+            address: "Libe Slope",
+            coordinates: { lat: 42.447, lng: -76.484 },
+          },
+        },
+        {
+          place: {
+            name: "place_id:ChIJabcdefghijklmnopqrstuvwxyz",
+            address: "123 Dryden Rd",
+            coordinates: { lat: 42.44, lng: -76.48 },
+          },
+        },
+      ],
+    } as Plan,
+    `${publicAppUrl()}/date/fixture`,
+  );
+  const maps = text.match(/https:\/\/www\.google\.com\/maps\/dir\/\?\S+/)?.[0] ?? "";
   expect(text).toContain("https://navidate.us/date/fixture");
+  expect(maps).toContain("https://www.google.com/maps/dir/?");
+  const decoded = decodeURIComponent(maps.replace(/\+/g, " "));
+  expect(decoded).toContain("Libe Slope");
+  expect(decoded).toContain("123 Dryden Rd");
+  expect(decoded).not.toContain("place_id:");
   expect(text).toContain("\n\n");
   expect(text).not.toContain("localhost");
-  expect(text).not.toContain("maps/dir");
   expect(text).not.toContain("64–64");
 });
 it("requires cited provider sources instead of presenting ungrounded output as researched", () => {

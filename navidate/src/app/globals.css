@@ -520,6 +520,9 @@ legend {
   cursor: pointer;
   min-height: 35px;
 }
+.preferences:not([open]) > :not(summary) {
+  display: none;
+}
 .preferences[open] summary {
   margin-bottom: 20px;
 }
@@ -970,6 +973,14 @@ footer small {
 }
 .practical p {
   color: var(--muted);
+}
+.pair-phone {
+  max-width: 420px;
+  margin: 8px 0 4px;
+}
+.pair-phone .field-help {
+  display: block;
+  margin: 8px 0 0;
 }
 .action-bar {
   display: flex;

@@ -381,29 +381,6 @@ export default function Planner({
                 void generate(next);
               }}
             />
-            {ai && (
-              <div className="ai-input">
-                <label htmlFor="natural">Tell us what you have in mind</label>
-                <div>
-                  <input
-                    id="natural"
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    maxLength={1000}
-                    placeholder="A cozy afternoon near Cornell, under $50…"
-                  />
-                  <Button
-                    className="secondary"
-                    type="button"
-                    isDisabled={!!busy || !text}
-                    onPress={interpret}
-                  >
-                    <Sparkles size={16} />
-                    Fill my preferences
-                  </Button>
-                </div>
-              </div>
-            )}
             {busy === "resume" && (
               <p role="status" className="notice">
                 Checking for your saved date…
@@ -626,6 +603,31 @@ export default function Planner({
                 <summary>
                   A few more preferences <ChevronDown size={17} />
                 </summary>
+                {ai && (
+                  <div className="ai-input">
+                    <label htmlFor="natural">
+                      Or describe it in a sentence
+                    </label>
+                    <div>
+                      <input
+                        id="natural"
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        maxLength={1000}
+                        placeholder="A cozy afternoon near Cornell, under $50…"
+                      />
+                      <Button
+                        className="secondary"
+                        type="button"
+                        isDisabled={!!busy || !text}
+                        onPress={interpret}
+                      >
+                        <Sparkles size={16} />
+                        Fill my preferences
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="form-grid">
                   <SelectField
                     label="Indoor or outdoor?"

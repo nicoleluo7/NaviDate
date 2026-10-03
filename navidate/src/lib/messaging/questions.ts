@@ -6,6 +6,10 @@ export const questionHelp =
 export function limitedAnswer(title: string) {
   return `Happy to help with “${title}”. Want to change something, or hear more about a stop?`;
 }
+function walkingRoute(plan: Plan) {
+  if (!plan.start || !plan.stops?.length) return undefined;
+  return routeUrlForPlan(plan);
+}
 export function conversationalIntro(plan: Plan, url: string) {
   const names = plan.stops.map((stop) => stop.place.name);
   const route =
@@ -13,7 +17,11 @@ export function conversationalIntro(plan: Plan, url: string) {
       ? `You're heading to ${names[0] ?? "the first stop"}.`
       : `You're starting at ${names[0]}, then ${names.slice(1).join(", then ")}.`;
   const weather = plan.weather.summary.replace(/(\d+)–\1°F/g, "$1°F");
-  return `You’re all set — this sounds like a lovely way to spend some time together.\n\n${displayTime(plan.startsAt)} · ${approximateDuration(plan.duration)}\n${route}\nAround $${plan.cost} for the two of you. ${weather}\n\nYour itinerary and walking directions:\n${url}\n\nWant ideas for what to do or order when you get there? Just ask.`;
+  const maps = walkingRoute(plan);
+  const links = maps
+    ? `Your walking route:\n${maps}\n\nYour itinerary:\n${url}`
+    : `Your itinerary:\n${url}`;
+  return `You’re all set — this sounds like a lovely way to spend some time together.\n\n${displayTime(plan.startsAt)} · ${approximateDuration(plan.duration)}\n${route}\nAround $${plan.cost} for the two of you. ${weather}\n\n${links}\n\nWant ideas for what to do or order when you get there? Just ask.`;
 }
 export function isPlannerCommand(text: string) {
   return (

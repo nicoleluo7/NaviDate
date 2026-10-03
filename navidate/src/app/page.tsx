@@ -11,8 +11,7 @@ export default async function Home() {
       photon={
         !!(
           process.env.SPECTRUM_PROJECT_ID &&
-          process.env.SPECTRUM_PROJECT_SECRET &&
-          process.env.PHOTON_AGENT_ADDRESS
+          process.env.SPECTRUM_PROJECT_SECRET
         )
       }
     />
