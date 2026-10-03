@@ -13,7 +13,8 @@ export function eligiblePlaces(criteria: Criteria, places: Place[]) {
     end = start + criteria.duration * 60000;
   return places.filter(
     (p) =>
-      p.estimatedCostForTwo <= criteria.budget &&
+      (criteria.unrestricted?.includes("budget") ||
+        p.estimatedCostForTwo <= criteria.budget) &&
       (criteria.setting === "any" || criteria.setting === p.indoorOutdoor) &&
       Array.from(
         { length: Math.max(1, Math.ceil(criteria.duration / 10)) },
@@ -63,7 +64,7 @@ export function coherent(sequence: Place[], c: Criteria) {
     .slice(1)
     .reduce((sum, p, i) => sum + distance(points[i], p), 0);
   return (
-    km <= c.maxWalkKm &&
+    (c.unrestricted?.includes("distance") || km <= c.maxWalkKm) &&
     (km / 5) * 60 +
       sequence.reduce((sum, p) => sum + p.typicalDurationMinutes, 0) <=
       c.duration

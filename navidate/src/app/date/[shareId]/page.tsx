@@ -1,3 +1,4 @@
+import { publicAppUrl } from "@/lib/urls";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
@@ -45,7 +46,7 @@ export default async function Shared({
         )}
         <Itinerary
           plan={publicPlan(record.plan)}
-          savedUrl={`${process.env.APP_URL ?? "http://localhost:3000"}/date/${shareId}`}
+          savedUrl={`${publicAppUrl()}/date/${shareId}`}
         />
       </main>
     </>

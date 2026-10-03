@@ -11,13 +11,29 @@ import { hash, saveDate } from "@/lib/storage/dates";
 import { displayTime } from "@/lib/planner/time";
 import { routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import { generate } from "@/lib/planner/service";
-import { interpret } from "@/lib/integrations/xai";
-import { answerWithGemini, introduceWithGemini, type ChatTurn } from "@/lib/integrations/gemini";
+import {
+  flexibleCriteria,
+  naturalCriteria,
+  nextQuestion,
+  locationInvitation,
+  appUrl,
+  sharedCoordinates,
+} from "./preferences";
+import { geminiConfigured } from "@/lib/maps/config";
+import {
+  answerWithGemini,
+  interpretMessage,
+  researchVenueWithGemini,
+  type ChatTurn,
+} from "@/lib/integrations/gemini";
 import {
   answerAboutDate,
   conversationalIntro,
   isPlannerCommand,
   limitedAnswer,
+  isVenueQuestion,
+  venueFallback,
+  introductionAnswer,
 } from "@/lib/messaging/questions";
 export type Incoming = {
   id: string;
@@ -55,7 +71,7 @@ export type Pair = {
 export function itineraryText(plan: Plan, url: string) {
   const maps = routeUrlForPlan(plan);
   return [
-    `Navidate · ${plan.title}`,
+    plan.title,
     `${displayTime(plan.startsAt)} → ${displayTime(plan.endsAt)}`,
     `Estimated $${plan.cost} for two · ${plan.duration} min · ${plan.walkKm} km walking`,
     ...plan.stops.map(
@@ -159,18 +175,8 @@ export async function handleIncoming(
         if (!saved) response = "That itinerary is no longer available.";
         else {
           await store.put(pairKey, { ...pair, status: "sending" });
-          const url = `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`;
-          let intro = conversationalIntro(saved.plan, url);
-          if (process.env.GEMINI_API_KEY)
-            try {
-              intro = `${await introduceWithGemini(saved.plan, url)}\n${url}`;
-            } catch {
-              /* The local intro already includes the link. */
-            }
-          response = intro;
-          const maps = routeUrlForPlan(saved.plan);
-          if (maps && !response.includes(maps))
-            response = `${response}\nGoogle Maps route: ${maps}`;
+          const url = `${appUrl()}/date/${saved.shareId}`;
+          response = conversationalIntro(saved.plan, url);
           await store.put(
             conversationKey,
             withTurn(
@@ -193,91 +199,135 @@ export async function handleIncoming(
       const saved = conversation.shareId
         ? await store.get<SavedDate>("date:" + conversation.shareId)
         : null;
-      if (!isPlannerCommand(event.text)) {
-        const url = `${process.env.APP_URL ?? "http://localhost:3000"}/date/${conversation.shareId ?? ""}`;
-        if (!saved)
-          response =
-            "I don’t have a date in this chat yet. Save one on the website, then use Send to myself.";
-        else {
-          const fallback =
-            answerAboutDate(saved.plan, url, event.text) ??
-            limitedAnswer(saved.plan.title);
-          if (process.env.GEMINI_API_KEY)
-            try {
-              response = await answerWithGemini(
-                saved.plan,
-                url,
-                event.text,
-                conversation.history ?? [],
-              );
-            } catch {
-              response = fallback;
-            }
-          else response = fallback;
-          await store.put(
-            conversationKey,
-            withTurn(conversation, event.text, response),
+      const text = event.text.trim();
+      const introduction = introductionAnswer(text);
+      let criteria = naturalCriteria(
+        text,
+        parseLocal(text, conversation.criteria),
+      );
+      let intent: "plan" | "answer" | "location" | "greeting" =
+        isPlannerCommand(text) || !saved ? "plan" : "answer";
+      const coords = sharedCoordinates(text);
+      const locationRequest =
+        !coords &&
+        /(?:my|current|live) location|where am i|share.*location|maps\.app\.goo\.gl|maps\.apple\.com/i.test(
+          text,
+        );
+      if (locationRequest) intent = "location";
+      else if (coords) intent = "plan";
+      else if (saved && isVenueQuestion(text)) intent = "answer";
+      else if (!introduction && geminiConfigured()) {
+        try {
+          const interpreted = await interpretMessage(
+            text,
+            conversation.criteria,
+            conversation.history,
           );
+          criteria = naturalCriteria(
+            text,
+            parseLocal(text, interpreted.criteria),
+          );
+          intent = interpreted.intent;
+        } catch {
+          /* Natural local parsing still supports essentials and revisions. */
         }
-      } else {
-        let criteria = parseLocal(event.text, conversation.criteria),
-          question: string | undefined;
-        if (
-          process.env.XAI_API_KEY &&
-          process.env.DISABLE_EXTERNAL_APIS !== "true"
-        )
+      }
+      if (/(?:make it |something |a bit )?cheaper|less expensive/i.test(text)) {
+        criteria.budget = Math.max(
+          0,
+          (saved?.plan.cost ?? conversation.criteria.budget ?? 50) - 15,
+        );
+        criteria.unrestricted = criteria.unrestricted?.filter(
+          (p) => p !== "budget",
+        );
+        intent = "plan";
+      }
+      if (introduction) {
+        response = introduction;
+        criteria = conversation.criteria;
+      } else if (intent === "location") response = locationInvitation();
+      else if (saved && intent === "answer") {
+        criteria = conversation.criteria;
+        const url = `${appUrl()}/date/${saved.shareId}`;
+        const fallback =
+          answerAboutDate(saved.plan, url, text) ??
+          limitedAnswer(saved.plan.title);
+        if (/google maps|maps route|directions|open route/i.test(text))
+          response = `Here’s your walking route, with the stops in order:\n${routeUrlForPlan(saved.plan) ?? url}`;
+        else if (isVenueQuestion(text)) {
           try {
-            const interpreted = await interpret(event.text, criteria);
-            criteria = interpreted.criteria;
-            question = interpreted.question;
+            response = await researchVenueWithGemini(
+              saved.plan,
+              text,
+              conversation.history ?? [],
+            );
           } catch {
-            /* The explicit field format remains available. */
+            response = venueFallback(
+              saved.plan,
+              text,
+              conversation.history ?? [],
+            );
           }
-        const parsed = criteriaSchema.safeParse(criteria);
-        if (!parsed.success) {
-          await store.put(conversationKey, { ...conversation, criteria });
-          const missing = [
-            ...new Set(parsed.error.issues.map((i) => i.path[0])),
-          ].join(", ");
-          response = `${question ?? `Please provide: ${missing}.`}\nUse this format (edit each value): start=arts-quad; date=2026-10-03; time=13:00; duration=180; budget=50; vibe=Cozy; transport=walk\nStarting landmarks: ${landmarks.map((l) => l.id).join(", ")}. Budget is for two; all times are New York.`;
-        } else {
-          await store.put(conversationKey, {
-            ...conversation,
-            criteria: parsed.data,
-          });
-          const result = await generate(parsed.data, {
+        } else if (geminiConfigured()) {
+          try {
+            response = await answerWithGemini(
+              saved.plan,
+              url,
+              text,
+              conversation.history ?? [],
+            );
+          } catch {
+            response = fallback;
+          }
+        } else response = fallback;
+      } else if (saved && intent === "greeting") {
+        response =
+          "Hey, lovely to hear from you. Want to tweak your date, or start something new?";
+      } else {
+        await store.put(conversationKey, { ...conversation, criteria });
+        const defaults = flexibleCriteria(criteria),
+          question = nextQuestion(defaults);
+        if (question) response = question;
+        else {
+          const parsed = criteriaSchema.parse(defaults);
+          const result = await generate(parsed, {
             seed: conversation.revision + 1,
           });
           if (!result.plans.length)
-            response =
-              result.error ??
-              "No feasible itinerary. Try more time or a supported landmark.";
+            response = `I couldn’t find a good fit just yet. ${result.error ?? "Could you try a different start time or give the date a little more time?"}`;
           else {
-            const saved = await saveDate(
-              parsed.data,
+            const date = await saveDate(
+              parsed,
               result.plans[0],
               hash(conversationKey),
               store,
             );
-            await store.put(conversationKey, {
-              ...conversation,
-              criteria: parsed.data,
-              shareId: saved.shareId,
-              revision: conversation.revision + 1,
-            });
-            response =
-              itineraryText(
-                saved.plan,
-                `${process.env.APP_URL ?? "http://localhost:3000"}/date/${saved.shareId}`,
-              ) +
-              "\nReply: make it cheaper, make it indoors, start time 14:00, or regenerate.";
+            conversation.shareId = date.shareId;
+            conversation.revision++;
+            const assumptions = [
+              criteria.duration === undefined
+                ? "I’ve planned about three hours together."
+                : "",
+              parsed.unrestricted?.length
+                ? "I’ve left your unspecified preferences open and looked for sensible nearby options."
+                : "",
+            ]
+              .filter(Boolean)
+              .join(" ");
+            response = `Here’s an idea for the two of you. ${assumptions}\n\n${conversationalIntro(date.plan, `${appUrl()}/date/${date.shareId}`)}\n\nI can also make it cheaper, keep it indoors, or try a different time.`;
           }
         }
       }
+      await store.put(
+        conversationKey,
+        withTurn({ ...conversation, criteria }, text, response),
+      );
     }
-  } catch {
+  } catch (error) {
     response =
-      "I couldn’t finish that plan. Please send your request again. Your previous criteria are still saved.";
+      error instanceof Error && error.message.startsWith("That location")
+        ? error.message
+        : "Sorry, I couldn’t finish that just now. Want to try again? I’ve kept the details you already shared.";
   }
   // Record intent before delivery: duplicate events never retry an ambiguous send.
   await store.put(eventKey, { status: "sending", at: Date.now() });

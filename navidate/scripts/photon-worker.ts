@@ -23,12 +23,13 @@ async function main() {
       void app.stop().then(() => process.exit(0));
     });
   console.log(
-    "Navidate Spectrum worker connected. Incoming direct text messages only.",
+    "Navidate Spectrum worker connected. Listening for direct messages and shared map links.",
   );
   for await (const [space, message] of app.messages) {
     if (
       message.direction === "outbound" ||
-      message.content.type !== "text" ||
+      (message.content.type !== "text" &&
+        message.content.type !== "richlink") ||
       !message.sender
     )
       continue;
@@ -40,7 +41,10 @@ async function main() {
           spaceId: space.id,
           senderId: message.sender.id,
           platform: "imessage",
-          text: message.content.text,
+          text:
+            message.content.type === "text"
+              ? message.content.text
+              : message.content.url,
           own: message.sender.kind === "agent",
           direct: true,
         },

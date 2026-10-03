@@ -880,3 +880,35 @@ button[data-focus-visible],
     box-shadow: none;
   }
 }
+.location-share {
+  max-width: 480px;
+  margin: 8vh auto;
+  padding: 28px 22px;
+  text-align: center;
+}
+.location-share > a:first-child {
+  display: inline-flex;
+}
+.location-share h1 {
+  font-size: clamp(32px, 8vw, 46px);
+  margin: 22px 0 12px;
+}
+.location-share p {
+  line-height: 1.65;
+}
+.location-share .primary,
+.location-share .secondary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin: 12px 0;
+  text-decoration: none;
+}
+.location-result {
+  border: 1px solid #deded2;
+  border-radius: 20px;
+  padding: 16px;
+  margin: 22px 0;
+}

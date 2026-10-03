@@ -51,6 +51,10 @@ export async function schedule(
   sequence: Place[],
   options: PlannerOptions = {},
 ): Promise<Plan | null> {
+  const budgetLimit = c.unrestricted?.includes("budget") ? Infinity : c.budget;
+  const walkLimit = c.unrestricted?.includes("distance")
+    ? Infinity
+    : c.maxWalkKm;
   const router = options.router ?? createWalkingRouter(),
     busData = options.transit ?? transit;
   const reject = (reason: string) => {
@@ -63,7 +67,7 @@ export async function schedule(
     return reject(
       "This combination does not match your indoor/outdoor preference.",
     );
-  if (sequence.some((p) => p.estimatedCostForTwo > c.budget))
+  if (sequence.some((p) => p.estimatedCostForTwo > budgetLimit))
     return reject("An activity exceeds the budget for two.");
   if (!sequence.some((p) => matchesDateType(p, c.dateType)))
     return reject(
@@ -104,14 +108,14 @@ export async function schedule(
     const bus = buses.find(
       (b) =>
         (b.end < now + (walking?.minutes ?? Infinity) * 60000 ||
-          walkKm + (walking?.km ?? Infinity) > c.maxWalkKm) &&
+          walkKm + (walking?.km ?? Infinity) > walkLimit) &&
         cost +
           b.route.fareForTwo +
           sequence
             .slice(stops.length)
             .reduce((n, p) => n + p.estimatedCostForTwo, 0) <=
-          c.budget &&
-        walkKm + b.before.km + b.after.km <= c.maxWalkKm,
+          budgetLimit &&
+        walkKm + b.before.km + b.after.km <= walkLimit,
     );
     let leg: Leg;
     if (bus) {
@@ -179,7 +183,7 @@ export async function schedule(
     }
     from = { ...target, private: target.private ?? false };
   }
-  if (cost > c.budget)
+  if (cost > budgetLimit)
     return reject(
       `Budget: this combination needs an estimated $${cost} for two. Increase the budget or choose free activities.`,
     );
@@ -187,7 +191,7 @@ export async function schedule(
     return reject(
       `Duration: this combination needs ${(now - start) / 60000} minutes including travel. Add 45 minutes.`,
     );
-  if (walkKm > c.maxWalkKm)
+  if (walkKm > walkLimit)
     return reject(
       `Walking: this combination needs ${walkKm.toFixed(1)} km. Increase the walking limit or start closer.`,
     );
@@ -288,7 +292,8 @@ export async function planDates(
       (p) =>
         !options.exclude?.includes(p.id) &&
         (c.setting === "any" || p.indoorOutdoor === c.setting) &&
-        p.estimatedCostForTwo <= c.budget,
+        (c.unrestricted?.includes("budget") ||
+          p.estimatedCostForTwo <= c.budget),
     )
     .sort(
       (a, b) =>
@@ -338,7 +343,9 @@ export async function planDates(
   }
   const seed = options.seed ?? 0;
   const score = (p: Plan) =>
-    p.stops.filter((s) => s.place.vibeTags.includes(c.vibe)).length * 10 +
+    (c.unrestricted?.includes("vibe")
+      ? 0
+      : p.stops.filter((s) => s.place.vibeTags.includes(c.vibe)).length * 10) +
     new Set(p.stops.map((s) => s.place.category)).size * 5 -
     (favorsIndoors(p.weather)
       ? p.stops
@@ -382,7 +389,7 @@ export async function planDates(
     ai: false,
     ...(!selected.length
       ? {
-          error: `${[...reasons].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Not enough venues match the budget and indoor/outdoor preference. Try allowing either setting."} No two-stop plan fits the $${c.budget} budget, ${c.duration} minutes, ${c.maxWalkKm} km walking limit, setting and known opening hours with available routes. Try a supported landmark, add 45 minutes, increase your budget by $15, or loosen the indoor/outdoor preference.`,
+          error: `${[...reasons].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Not enough venues match the budget and indoor/outdoor preference. Try allowing either setting."} No two-stop plan fits the ${c.unrestricted?.includes("budget") ? "flexible" : "$" + c.budget} budget, ${c.duration} minutes, ${c.unrestricted?.includes("distance") ? "flexible" : c.maxWalkKm + " km"} walking limit, setting and known opening hours with available routes. Try a supported landmark, add 45 minutes, increase your budget by $15, or loosen the indoor/outdoor preference.`,
         }
       : {}),
   };

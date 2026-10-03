@@ -4,7 +4,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalStorage } from "../src/lib/storage";
 import { handleIncoming, messagesLink, parseLocal } from "../src/lib/messaging";
-import { answerAboutDate, conversationalIntro } from "../src/lib/messaging/questions";
+import {
+  answerAboutDate,
+  conversationalIntro,
+} from "../src/lib/messaging/questions";
 import { hash, isOwner, publicPlan } from "../src/lib/storage/dates";
 import { criteriaSchema, type Plan } from "../src/types";
 it("persists across closing and reopening the local adapter", async () => {
@@ -103,11 +106,11 @@ it("answers basic questions about a paired date", async () => {
   expect(answerAboutDate(plan, "http://localhost/date/abc", "how much?")).toBe(
     "Estimated $40 for two.",
   );
-  expect(
-    conversationalIntro(plan, "http://localhost/date/abc"),
-  ).toContain("You're heading to Hound and Mare.");
+  expect(conversationalIntro(plan, "http://localhost/date/abc")).toContain(
+    "You're heading to Hound and Mare.",
+  );
   const store = new LocalStorage(":memory:"),
-    send = vi.fn(async (_text: string) => "provider-id");
+    send = vi.fn<(text: string) => Promise<string>>(async () => "provider-id");
   await store.put("date:abc", {
     shareId: "abc",
     ownerHash: "owner",
@@ -147,7 +150,9 @@ it("answers basic questions about a paired date", async () => {
     { send },
     store,
   );
-  expect(send.mock.calls.at(-1)?.[0]).toContain("Send to myself");
+  expect(send.mock.calls.at(-1)?.[0]).toContain(
+    "Where would you like to start",
+  );
   store.close();
 });
 it("parses complete typed criteria locally and applies follow-up changes", () => {

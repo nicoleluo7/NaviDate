@@ -112,6 +112,9 @@ export default function Planner({
     setCriteria((c) => ({
       ...c,
       [key]: value,
+      unrestricted: c.unrestricted?.filter(
+        (flag) => flag !== (key === "maxWalkKm" ? "distance" : key),
+      ),
       ...(key === "dateType" && value !== "food"
         ? { restaurantId: undefined }
         : {}),
@@ -730,11 +733,13 @@ export default function Planner({
                   : "Let’s try another direction."}
               </h2>
               <p>
-                {result.ai
-                  ? "Chosen by Gemini from nearby places, with routes and schedules checked."
-                  : result.plans.length
-                    ? "Local suggestions from our curated places."
-                    : "Your preferences are still here. Adjust them or try again."}
+                {saved && !dirty
+                  ? "Your saved itinerary, ready to revisit or adjust."
+                  : result.ai
+                    ? "Chosen by Gemini from nearby places, with routes and schedules checked."
+                    : result.plans.length
+                      ? "Local suggestions from our curated places."
+                      : "Your preferences are still here. Adjust them or try again."}
               </p>
             </div>
             {result.error && <div className="notice">{result.error}</div>}

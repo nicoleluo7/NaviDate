@@ -1,6 +1,6 @@
 export function googleMapsServerKey() {
   if (process.env.DISABLE_EXTERNAL_APIS === "true") return "";
-  return process.env.GOOGLE_MAPS_API_KEY || "";
+  return process.env.GOOGLE_MAPS_API_KEY?.trim() || "";
 }
 
 export function geminiModel() {
@@ -9,7 +9,8 @@ export function geminiModel() {
 
 export function geminiConfigured() {
   return (
-    !!process.env.GEMINI_API_KEY && process.env.DISABLE_EXTERNAL_APIS !== "true"
+    !!process.env.GEMINI_API_KEY?.trim() &&
+    process.env.DISABLE_EXTERNAL_APIS !== "true"
   );
 }
 

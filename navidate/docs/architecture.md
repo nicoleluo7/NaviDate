@@ -48,3 +48,11 @@ The lockfile pins stable releases. A compatible OpenTelemetry core override (2.1
 Food discovery has a dedicated restaurant query. An optional restaurantId is resolved against provider data and enforced by both candidate validation and the scheduler. The restaurant browser performs at most two Nearby Search requests, not an exhaustive directory search.
 
 Google directions URLs use names/addresses in waypoints and a parallel waypoint_place_ids list only when every intermediate stop has an ID. Existing saved itinerary links are rebuilt on read/resume. See https://developers.google.com/maps/documentation/urls/get-started.
+
+## Conversational messages and public links
+
+The messaging handler separates essential start/date/time from optional preferences. Missing budget, distance and vibe are represented by explicit `unrestricted` flags, respected by discovery filtering, scheduling and ranking. Missing duration uses a disclosed three-hour window; explicit user limits override flexibility. Natural-language extraction uses Gemini with validated patches, with a deterministic local parser when unavailable. Grok remains the voice adapter. Conversations retain raw preferences and bounded history so omitted defaults do not become fake user requirements.
+
+Venue questions use a bounded Gemini Google Search request, scoped to the last referenced public venue. Provider grounding metadata must contain usable cited sources; otherwise a helpful, honest fallback is returned. Existing itinerary questions use saved facts. Search does not modify itineraries or include the private starting point. All chat AI requests share the Gemini daily cap.
+
+`PUBLIC_APP_URL` defaults to `https://navidate.us` and is independent of a localhost development `APP_URL`. The worker and that host must share persistence. Pairing replies contain one public itinerary link; explicit directions requests rebuild the Google URL from stops, avoiding stale stored URLs and model-generated links. Already delivered messages remain unchanged. Location sharing uses an explicit browser geolocation action followed by a user-sent coordinate message or a supported map link; no unsolicited device-location access occurs.
