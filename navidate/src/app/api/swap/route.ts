@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { Draft } from "../plan/route";
 import { getStorage } from "@/lib/storage";
 import { isOwner } from "@/lib/storage/dates";
+import { swapWithGemini } from "@/lib/planner/gemini";
+import { geminiConfigured, googleMapsServerKey } from "@/lib/maps/config";
 import { replaceStop } from "@/lib/planner";
 import { createPlannerRouter } from "@/lib/maps/routes";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
@@ -24,12 +26,18 @@ export async function POST(req: Request) {
     const old = draft.plans.find((p) => p.id === input.planId);
     if (!old || !old.stops[input.index])
       throw new HttpError(400, "Select a stop.");
-    const replaced = await replaceStop(
+    const replace =
+      old.stops.some((s) => s.place.googlePlaceId) &&
+      geminiConfigured() &&
+      googleMapsServerKey()
+        ? swapWithGemini
+        : replaceStop;
+    const replaced = await replace(
       draft.plans,
       input.planId,
       input.index,
       draft.criteria,
-      { router: createPlannerRouter(draft.criteria.transport) },
+      { router: createPlannerRouter() },
     );
     if (!replaced || !("plan" in replaced))
       throw new HttpError(

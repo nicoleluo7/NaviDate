@@ -57,10 +57,20 @@ export async function schedule(
     options.onReject?.(reason);
     return null;
   };
+  if (
+    sequence.some((p) => c.setting !== "any" && p.indoorOutdoor !== c.setting)
+  )
+    return reject(
+      "This combination does not match your indoor/outdoor preference.",
+    );
+  if (sequence.some((p) => p.estimatedCostForTwo > c.budget))
+    return reject("An activity exceeds the budget for two.");
   if (!sequence.some((p) => matchesDateType(p, c.dateType)))
     return reject(
       "No available stop matches this date type. Try Surprise me, a different start time, or a higher budget.",
     );
+  if (c.restaurantId && !sequence.some((p) => p.id === c.restaurantId))
+    return reject("The selected restaurant is missing from this combination.");
   const start = localTime(c.date, c.time);
   let now = start,
     cost = 0,
@@ -261,7 +271,7 @@ export async function schedule(
         lng: place.coordinates.lng,
         googlePlaceId: place.googlePlaceId,
       })),
-      transport: c.transport,
+      transport: legs.some((l) => l.mode === "bus") ? "bus" : "walk",
       returnToStart: c.returnToStart,
     }),
   };

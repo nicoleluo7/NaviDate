@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:e2e": "playwright test",
+    "test:voice": "playwright test --config playwright.voice.config.ts",
     "validate:data": "tsx scripts/validate-data.ts",
     "worker:photon": "node --env-file=.env.local --import tsx scripts/photon-worker.ts",
     "chat:local": "node --env-file-if-exists=.env.local --import tsx scripts/local-chat.ts",

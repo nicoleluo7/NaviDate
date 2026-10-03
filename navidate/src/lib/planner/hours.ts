@@ -6,19 +6,27 @@ export function fitsHours(
   departure: number,
 ): boolean {
   if (!place.openingHours) return true;
-  const hours = place.openingHours;
-  for (const date of [addDays(dateAt(arrival), -1), dateAt(arrival)]) {
-    const windows =
-      hours.exceptions[date] ?? hours.weekly[String(weekday(date))] ?? [];
-    for (const [open, close] of windows) {
+  const hours = place.openingHours,
+    intervals: [number, number][] = [];
+  for (let offset = -1; offset <= 1; offset++) {
+    const date = addDays(dateAt(arrival), offset);
+    for (const [open, close] of hours.exceptions[date] ??
+      hours.weekly[String(weekday(date))] ??
+      []) {
       try {
-        const start = serviceTime(date, open);
-        const end = serviceTime(close <= open ? addDays(date, 1) : date, close);
-        if (arrival >= start && departure <= end) return true;
+        intervals.push([
+          serviceTime(date, open),
+          serviceTime(close <= open ? addDays(date, 1) : date, close),
+        ]);
       } catch {
-        /* Ambiguous DST opening windows are not assumed safe. */
+        /* Ambiguous DST hours are not assumed open. */
       }
     }
   }
-  return false;
+  intervals.sort((a, b) => a[0] - b[0]);
+  let covered = arrival;
+  for (const [start, end] of intervals) {
+    if (start <= covered && end > covered) covered = end;
+  }
+  return covered >= departure;
 }

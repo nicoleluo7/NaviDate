@@ -221,7 +221,10 @@ export default function Itinerary({
                     Directions <ArrowUpRight size={14} />
                   </a>
                   <a href={s.place.sourceUrl} target="_blank" rel="noreferrer">
-                    Venue source <ArrowUpRight size={14} />
+                    {s.place.googlePlaceId
+                      ? "Google Maps place"
+                      : "Venue source"}{" "}
+                    <ArrowUpRight size={14} />
                   </a>
                   {onSwap && (
                     <Button isDisabled={busy} onPress={() => onSwap(i)}>
@@ -292,7 +295,9 @@ export default function Itinerary({
           </div>
           <p className="map-note">
             {plan.suitability}.{" "}
-            {plan.legs.some((leg) => leg.geometry?.length || leg.encodedPolyline)
+            {plan.legs.some(
+              (leg) => leg.geometry?.length || leg.encodedPolyline,
+            )
               ? "The line follows a routed path in itinerary order."
               : "No route line means travel is an estimate, not a verified walking path."}
           </p>

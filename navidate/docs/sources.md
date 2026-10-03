@@ -31,3 +31,12 @@ All new coordinates are approximate pin placements, not surveyed entrances. Cost
 React Aria Components 1.21.1 and @internationalized/date 3.12.4 were checked against the npm registry and official [DatePicker](https://react-aria.adobe.com/DatePicker), [TimeField](https://react-aria.adobe.com/TimeField), and [Select](https://react-aria.adobe.com/Select) documentation. The controls are styled locally rather than inheriting the browser's native popup appearance. Calendar dates and wall-clock times remain separate strings; the planner still resolves them in America/New_York.
 
 The logo is the user's supplied PNG, stored unchanged in `public/navidate-logo.png` and displayed through a cropped SVG viewport. The favicon embeds that same artwork. No generated substitute was used.
+
+## Recommendation and Navi rebuild (October 3, 2026)
+
+- [Google Nearby Search and field masks](https://developers.google.com/maps/documentation/places/web-service/nearby-search)
+- [Place data and opening periods](https://developers.google.com/maps/documentation/places/web-service/reference/rest/v1/places)
+- [Gemini generateContent / structured outputs](https://ai.google.dev/api/generate-content)
+- [Advanced Google Map markers](https://developers.google.com/maps/documentation/javascript/advanced-markers/start)
+- [xAI ephemeral client tokens](https://docs.x.ai/developers/model-capabilities/audio/ephemeral-tokens)
+- [xAI realtime audio and tool calling](https://docs.x.ai/developers/model-capabilities/audio/speech-to-speech)

@@ -26,11 +26,6 @@ export function mapsPlaceQuery(point: RouteStop) {
   return /ithaca/i.test(place) ? place : `${place}, Ithaca, NY`;
 }
 
-function waypoint(point: RouteStop) {
-  if (point.googlePlaceId) return `place_id:${point.googlePlaceId}`;
-  return mapsPlaceQuery(point);
-}
-
 export function buildGoogleMapsRouteUrl({
   start,
   stops,
@@ -54,8 +49,16 @@ export function buildGoogleMapsRouteUrl({
   if (start.googlePlaceId) params.set("origin_place_id", start.googlePlaceId);
   if (destinationPoint.googlePlaceId)
     params.set("destination_place_id", destinationPoint.googlePlaceId);
-  if (middle.length)
-    params.set("waypoints", middle.map(waypoint).join("|"));
+  if (middle.length) {
+    params.set("waypoints", middle.map(mapsPlaceQuery).join("|"));
+    // IDs must align one-for-one with the human-readable waypoint list.
+    // For mixed curated/live stops, names remain the documented fallback.
+    if (middle.every((point) => point.googlePlaceId))
+      params.set(
+        "waypoint_place_ids",
+        middle.map((point) => point.googlePlaceId!).join("|"),
+      );
+  }
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 

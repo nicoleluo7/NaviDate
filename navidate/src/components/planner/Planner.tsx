@@ -23,6 +23,10 @@ import {
   Palette,
   Trees,
 } from "lucide-react";
+import RestaurantBrowser from "./RestaurantBrowser";
+import NaviVoice from "@/components/voice/NaviVoice";
+import { locationFromPosition, locationError } from "@/lib/location";
+import { pointSchema } from "@/types";
 import type { Criteria, Plan, PlanResult } from "@/types";
 import landmarks from "../../../data/landmarks.json";
 import MapLoader from "@/components/map/MapLoader";
@@ -69,7 +73,8 @@ export default function Planner({
     [text, setText] = useState(""),
     [hint, setHint] = useState(""),
     [dirty, setDirty] = useState(false),
-    [planStatus, setPlanStatus] = useState("Finding date ideas…");
+    [locating, setLocating] = useState(false),
+    [locationNotice, setLocationNotice] = useState("");
   useEffect(() => {
     const query = new URLSearchParams(location.search);
     let active = true;
@@ -103,22 +108,14 @@ export default function Planner({
       active = false;
     };
   }, []);
-  useEffect(() => {
-    if (busy !== "plan") return;
-    const messages = [
-      "Finding date ideas…",
-      "Checking places…",
-      "Building your route…",
-    ];
-    let i = 0;
-    const timer = window.setInterval(() => {
-      i = (i + 1) % messages.length;
-      setPlanStatus(messages[i]);
-    }, 1400);
-    return () => window.clearInterval(timer);
-  }, [busy]);
   function update<K extends keyof Criteria>(key: K, value: Criteria[K]) {
-    setCriteria((c) => ({ ...c, [key]: value }));
+    setCriteria((c) => ({
+      ...c,
+      [key]: value,
+      ...(key === "dateType" && value !== "food"
+        ? { restaurantId: undefined }
+        : {}),
+    }));
   }
   async function request(path: string, data: unknown) {
     const res = await fetch(path, {
@@ -130,12 +127,11 @@ export default function Planner({
     if (!res.ok) throw new Error(json.error ?? "Please try again.");
     return json;
   }
-  async function generate() {
+  async function generate(input: Criteria = criteria) {
     setBusy("plan");
     setError("");
-    setPlanStatus("Finding date ideas…");
     try {
-      const r = await request("/api/plan", { criteria, seed });
+      const r = await request("/api/plan", { criteria: input, seed });
       setResult(r);
       setDirty(true);
       setSelected(null);
@@ -226,7 +222,7 @@ export default function Planner({
     setBusy("interpret");
     setError("");
     try {
-      const d = await request("/api/interpret", { text });
+      const d = await request("/api/interpret", { text, existing: criteria });
       setCriteria((c) => ({ ...c, ...d.criteria }));
       setHint(
         d.question ??
@@ -239,28 +235,37 @@ export default function Planner({
     }
   }
   function locate() {
-    setHint("Finding your location…");
-    if (!navigator.geolocation) {
-      setHint("Location isn’t supported. Choose a landmark instead.");
+    if (!window.isSecureContext) {
+      setLocationNotice(
+        "Location needs HTTPS or localhost. On a phone using an HTTP network address, choose a landmark or a point on the map.",
+      );
       return;
     }
+    if (!navigator.geolocation) {
+      setLocationNotice("Location isn’t supported. Choose a landmark instead.");
+      return;
+    }
+    setLocating(true);
+    setLocationNotice("Finding your location…");
     navigator.geolocation.getCurrentPosition(
-      (p) => {
-        update("start", {
-          lat: p.coords.latitude,
-          lng: p.coords.longitude,
-          name: "My location",
-          private: true,
-        });
-        setHint(
-          "Location selected. Without a routing provider, choose a supported landmark if no route is found.",
-        );
+      (position) => {
+        setLocating(false);
+        try {
+          update("start", locationFromPosition(position));
+          setLocationNotice(
+            "Current location selected. It stays hidden on your public share page.",
+          );
+        } catch (e) {
+          setLocationNotice(
+            e instanceof Error ? e.message : "Choose a landmark instead.",
+          );
+        }
       },
-      () =>
-        setHint(
-          "Location unavailable. You can still choose a landmark or a point on the map.",
-        ),
-      { timeout: 8000 },
+      (error) => {
+        setLocating(false);
+        setLocationNotice(locationError(error.code));
+      },
+      { timeout: 15000, maximumAge: 60000, enableHighAccuracy: true },
     );
   }
   return (
@@ -289,8 +294,8 @@ export default function Planner({
               next <em>date.</em>
             </h1>
             <p>
-              Turn “What should we do?” into a date.{" "}
-              <br />A few favorites, a little adventure, and a plan
+              Turn “What should we do?” into a date. <br />A few favorites, a
+              little adventure, and a plan
               <br className="desktop-break" /> that gets you there together.
             </p>
             <a href="#planner" className="primary">
@@ -364,6 +369,15 @@ export default function Planner({
             </p>
           </div>
           <div className="form-card">
+            <NaviVoice
+              criteria={criteria}
+              enabled={ai}
+              disabled={!!busy || locating}
+              onReady={(next) => {
+                setCriteria(next);
+                void generate(next);
+              }}
+            />
             {ai && (
               <div className="ai-input">
                 <label htmlFor="natural">Tell us what you have in mind</label>
@@ -423,11 +437,19 @@ export default function Planner({
                     >
                       Choose on map
                     </Button>
-                    <Button type="button" onPress={locate}>
+                    <Button
+                      type="button"
+                      onPress={locate}
+                      isDisabled={locating}
+                      aria-describedby="location-status"
+                    >
                       <LocateFixed size={13} />
-                      Use my location
+                      {locating ? "Locating…" : "Use my location"}
                     </Button>
                   </div>
+                  <p id="location-status" role="status" className="small muted">
+                    {locationNotice}
+                  </p>
                 </div>
                 <DateField
                   value={criteria.date}
@@ -471,6 +493,12 @@ export default function Planner({
                   <MapLoader
                     point={criteria.start}
                     onPick={(p) => {
+                      if (!pointSchema.safeParse(p).success) {
+                        setLocationNotice(
+                          "Choose a point within Cornell or Ithaca.",
+                        );
+                        return;
+                      }
                       const l = landmarks.find(
                         (l) =>
                           Math.abs(l.lat - p.lat) < 0.0001 &&
@@ -487,7 +515,7 @@ export default function Planner({
                       setHint(
                         l
                           ? "Supported landmark selected."
-                          : "Point selected. Local paths may be unavailable here; a supported landmark is the most reliable starting point.",
+                          : "Point selected. We’ll check walking routes from here.",
                       );
                     }}
                   />
@@ -525,6 +553,16 @@ export default function Planner({
                   ))}
                 </div>
               </fieldset>
+              {criteria.dateType === "food" && (
+                <RestaurantBrowser
+                  key={`${criteria.start.lat},${criteria.start.lng}`}
+                  criteria={criteria}
+                  disabled={!!busy}
+                  onChoose={(restaurantId) =>
+                    setCriteria((c) => ({ ...c, restaurantId }))
+                  }
+                />
+              )}
               <fieldset className="vibes">
                 <legend>Set the mood</legend>
                 <div>
@@ -659,7 +697,9 @@ export default function Planner({
                   <Heart size={14} /> A thoughtful date starts here.
                 </p>
                 <Button type="submit" className="primary" isDisabled={!!busy}>
-                  {busy === "plan" ? planStatus : "Find our date"}
+                  {busy === "plan"
+                    ? "Finding places and checking your date…"
+                    : "Find our date"}
                   {busy === "plan" ? (
                     <RefreshCw className="spin" size={18} />
                   ) : (
@@ -691,8 +731,10 @@ export default function Planner({
               </h2>
               <p>
                 {result.ai
-                  ? "AI planned with real Google Maps places where available. The scheduler still checks time and budget."
-                  : "Made with our local planner and curated places."}
+                  ? "Chosen by Gemini from nearby places, with routes and schedules checked."
+                  : result.plans.length
+                    ? "Local suggestions from our curated places."
+                    : "Your preferences are still here. Adjust them or try again."}
               </p>
             </div>
             {result.error && <div className="notice">{result.error}</div>}
@@ -780,7 +822,7 @@ export default function Planner({
             <Button
               className="secondary"
               isDisabled={!!busy}
-              onPress={generate}
+              onPress={() => void generate()}
             >
               <RefreshCw size={16} />
               Regenerate

@@ -4,7 +4,10 @@ export default async function Home() {
   await connection();
   return (
     <Planner
-      ai={!!process.env.XAI_API_KEY}
+      ai={
+        !!process.env.XAI_API_KEY &&
+        process.env.DISABLE_EXTERNAL_APIS !== "true"
+      }
       photon={
         !!(
           process.env.SPECTRUM_PROJECT_ID &&

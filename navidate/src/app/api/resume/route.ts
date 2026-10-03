@@ -32,9 +32,7 @@ export async function POST(req: Request) {
       );
     const criteria = criteriaSchema.parse(saved.criteria),
       draftId = randomId(),
-      plan = saved.plan.googleMapsUrl
-        ? saved.plan
-        : { ...saved.plan, googleMapsUrl: routeUrlForPlan(saved.plan) };
+      plan = { ...saved.plan, googleMapsUrl: routeUrlForPlan(saved.plan) };
     await store.put("draft:" + draftId, {
       ownerHash: hash(token),
       criteria,
