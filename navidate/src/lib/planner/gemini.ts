@@ -170,10 +170,7 @@ export async function planWithGemini(
       (a, b) => outdoorMinutes(a) - outdoorMinutes(b) || a.walkKm - b.walkKm,
     );
   }
-  const notices = [
-    "Gemini selected these combinations from nearby Google Places. Travel times come from route estimates; activity lengths and costs for two are planning estimates, not quotes.",
-    "Published regular hours are checked when available. Holiday hours, admission and dietary needs still need confirmation.",
-  ];
+  const notices: string[] = [];
   if (
     criteria.transport === "bus" &&
     !valid.some((p) => p.legs.some((l) => l.mode === "bus"))
