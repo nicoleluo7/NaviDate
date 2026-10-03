@@ -45,7 +45,8 @@ export default function Itinerary({
     [focus, setFocus] = useState(0),
     [tab, setTab] = useState("timeline"),
     [notice, setNotice] = useState(""),
-    [pairCode, setPairCode] = useState("");
+    [pairCode, setPairCode] = useState(""),
+    [pairLink, setPairLink] = useState("");
   function choose(index: number) {
     setSelected((current) => (current === index ? null : index));
     setFocus((n) => n + 1);
@@ -80,7 +81,9 @@ export default function Itinerary({
         data = await r.json();
       if (!r.ok) throw new Error(data.error);
       setPairCode(data.code);
+      setPairLink(data.link);
       setNotice(data.instruction);
+      if (data.link) window.location.assign(data.link);
     } catch (e) {
       setNotice(
         e instanceof Error ? e.message : "Could not create pairing code.",
@@ -343,6 +346,7 @@ export default function Itinerary({
       {notice && (
         <div className="notice" role="status">
           {notice}
+          {pairLink && <a href={pairLink}>Open Messages again</a>}
           {pairCode && (
             <Button onPress={checkPair}>Check pairing status</Button>
           )}

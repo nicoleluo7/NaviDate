@@ -2,7 +2,7 @@ import { z } from "zod";
 import type { SavedDate } from "@/types";
 import { getStorage } from "@/lib/storage";
 import { isOwner, hash } from "@/lib/storage/dates";
-import { createPair, type Pair } from "@/lib/messaging";
+import { createPair, messagesLink, type Pair } from "@/lib/messaging";
 import { body, guard, session, failure, HttpError } from "@/lib/api";
 export async function POST(req: Request) {
   try {
@@ -27,7 +27,9 @@ export async function POST(req: Request) {
     return Response.json({
       code,
       address: process.env.PHOTON_AGENT_ADDRESS,
-      instruction: `Send “pair ${code}” to ${process.env.PHOTON_AGENT_ADDRESS} in iMessage within 10 minutes. We’ll reply in that conversation.`,
+      link: messagesLink(process.env.PHOTON_AGENT_ADDRESS, code),
+      instruction:
+        "Messages should open with the text ready. Press Send within 10 minutes. We’ll reply in that conversation.",
     });
   } catch (e) {
     return failure(e);

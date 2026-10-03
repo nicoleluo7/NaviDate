@@ -1,6 +1,14 @@
 import { Spectrum } from "@spectrum-ts/core";
 import { imessage } from "@spectrum-ts/imessage";
 import { handleIncoming } from "../src/lib/messaging";
+const nodeMajor = Number(process.versions.node.split(".")[0]);
+if (nodeMajor < 24) {
+  console.error(
+    `This worker is running Node ${process.versions.node}. Navidate needs Node 24.`,
+  );
+  console.error("From the navidate folder: nvm use && npm run worker:photon");
+  process.exit(1);
+}
 async function main() {
   if (!process.env.SPECTRUM_PROJECT_ID || !process.env.SPECTRUM_PROJECT_SECRET)
     throw new Error("Set Spectrum project credentials in .env.local first.");
@@ -24,10 +32,8 @@ async function main() {
       !message.sender
     )
       continue;
+    if ("type" in space && space.type !== "dm") continue;
     try {
-      const im = imessage(app),
-        resolved = await im.space.get(space.id);
-      if (resolved.type !== "dm") continue;
       await handleIncoming(
         {
           id: message.id,
@@ -45,10 +51,14 @@ async function main() {
           },
         },
       );
-    } catch {
-      console.error(
-        "Message handling failed. No message content or credentials logged.",
-      );
+    } catch (err) {
+      const detail =
+        err instanceof Error
+          ? `${err.name}: ${err.message}`
+          : typeof err === "object" && err && "message" in err
+            ? String(err.message)
+            : String(err);
+      console.error("Message handling failed.", detail.split("\n")[0]);
     }
   }
 }

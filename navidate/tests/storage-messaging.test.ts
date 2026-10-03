@@ -3,7 +3,7 @@ import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { LocalStorage } from "../src/lib/storage";
-import { handleIncoming, parseLocal } from "../src/lib/messaging";
+import { handleIncoming, messagesLink, parseLocal } from "../src/lib/messaging";
 import { hash, isOwner, publicPlan } from "../src/lib/storage/dates";
 import { criteriaSchema, type Plan } from "../src/types";
 it("persists across closing and reopening the local adapter", async () => {
@@ -76,6 +76,11 @@ it("redacts precise private starting coordinates and route geometry", () => {
   } as Plan;
   expect(JSON.stringify(publicPlan(plan))).not.toContain("42.42");
   expect(plan.start.lat).toBe(42.42);
+});
+it("builds an iMessage link with the pair code filled in", () => {
+  expect(messagesLink("+14155951440", "4F5F8F1D4520D3E1")).toBe(
+    "sms:+14155951440&body=pair%204F5F8F1D4520D3E1",
+  );
 });
 it("parses complete typed criteria locally and applies follow-up changes", () => {
   const c = parseLocal(

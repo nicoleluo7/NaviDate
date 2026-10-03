@@ -989,12 +989,15 @@ footer small {
   margin: 18px 0;
   overflow-wrap: anywhere;
 }
-.notice button {
+.notice button,
+.notice a {
   display: block;
   background: none;
   border: 0;
   padding: 10px 0;
   text-decoration: underline;
+  color: inherit;
+  width: fit-content;
 }
 .error {
   background: #fce9e2;

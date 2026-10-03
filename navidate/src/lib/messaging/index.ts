@@ -61,6 +61,12 @@ export async function createPair(
   } satisfies Pair);
   return code;
 }
+export function messagesLink(address: string, code: string) {
+  const recipient = address.trim().startsWith("+")
+    ? address.trim()
+    : `+${address.trim()}`;
+  return `sms:${recipient}&body=${encodeURIComponent(`pair ${code}`)}`;
+}
 export function parseLocal(
   text: string,
   prior: Partial<Criteria>,
@@ -224,7 +230,11 @@ export async function handleIncoming(
         });
     }
     return { status: providerId ? "accepted" : "unknown" };
-  } catch {
+  } catch (err) {
+    console.error(
+      "iMessage reply was not sent.",
+      err instanceof Error ? `${err.name}: ${err.message}` : String(err),
+    );
     await store.put(eventKey, { status: "failed", at: Date.now() });
     if (pairKey) {
       const pair = await store.get<Pair>(pairKey);
