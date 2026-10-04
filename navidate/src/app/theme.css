@@ -172,10 +172,40 @@ h3 {
   margin: 0;
 }
 .hero-collage {
-  width: min(340px, 100%);
+  width: min(330px, 100%);
+  height: 250px;
   justify-self: end;
-  transform: rotate(1.5deg);
-  filter: drop-shadow(0 10px 16px #5b2b2122);
+  position: relative;
+}
+.hero-photo {
+  position: absolute;
+  display: block;
+  width: 176px;
+  height: 122px;
+  padding: 7px 7px 18px;
+  border: 1px solid #ead7ce;
+  background: #fffdfa;
+  object-fit: cover;
+  box-shadow: 5px 6px 0 #7b3f3f24;
+}
+.hero-photo-coffee {
+  left: 2px;
+  top: 2px;
+  transform: rotate(7deg);
+  object-position: center 72%;
+}
+.hero-photo-rainbow {
+  right: 0;
+  top: 62px;
+  z-index: 2;
+  transform: rotate(-2deg);
+  object-position: center 72%;
+}
+.hero-photo-sheep {
+  left: 34px;
+  bottom: 0;
+  transform: rotate(8deg);
+  object-position: center 62%;
 }
 .hero-note {
   position: absolute;
@@ -252,6 +282,39 @@ h3 {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
+}
+.hero-voice-cta {
+  width: min(760px, 100%);
+  display: grid;
+  grid-template-columns: minmax(32px, 1fr) auto minmax(32px, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  justify-items: center;
+  gap: 10px 14px;
+  z-index: 2;
+  margin: 2px auto 8px;
+}
+.hero-voice-cta .mic-button {
+  grid-column: 2;
+  grid-row: 2;
+}
+.hero-voice-line {
+  width: 100%;
+  justify-self: stretch;
+  height: 2px;
+  background: repeating-linear-gradient(
+    90deg,
+    #ed9da5 0 10px,
+    transparent 10px 16px
+  );
+}
+.hero-voice-label {
+  color: #a44e58;
+  font: 700 13px/1.2 "Courier New", monospace;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  grid-column: 2;
+  grid-row: 1;
 }
 .pill {
   border: 1px solid var(--border);
@@ -471,7 +534,7 @@ h3 {
     0 0 0 26px #ffdfe044,
     0 0 0 52px #fff0ec77;
   overflow: visible;
-  margin: 24px 0 14px;
+  margin: 36px 0 50px;
 }
 .navi-voice > .navi-avatar .navi-mascot {
   width: 158px !important;
@@ -756,6 +819,16 @@ h3 {
   .prompt-bar {
     margin-top: 10px;
   }
+  .hero-voice-cta {
+    grid-template-columns: 1fr auto 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .hero-voice-label {
+    grid-column: 2;
+    grid-row: 1;
+    white-space: normal;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .navi-mascot,
@@ -765,6 +838,15 @@ h3 {
 }
 
 /* Romantic pixel-game layer. */
+body {
+  background-color: #fff8f5;
+  background-image:
+    linear-gradient(#f5aeb51a 2px, transparent 2px),
+    linear-gradient(90deg, #f5aeb51a 2px, transparent 2px),
+    linear-gradient(180deg, #fff8f5 0%, #fff3f0 52%, #fffaf6 100%);
+  background-size: 32px 32px, 32px 32px, 100% 100%;
+  background-attachment: fixed;
+}
 body::after {
   content: "";
   position: fixed;
@@ -780,7 +862,7 @@ body::after {
   background-position: 1% 16%, 8% 7%, 98% 44%, 93% 13%, 4% 72%, 88% 84%;
   background-size: 112px, 34px, 132px, 42px, 28px, 92px;
   image-rendering: pixelated;
-  opacity: 0.34;
+  opacity: 0.24;
   pointer-events: none;
   z-index: -1;
 }
@@ -795,12 +877,12 @@ body::after {
   image-rendering: pixelated;
 }
 .mic-icon-image {
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
 }
 .mic-button {
-  width: 52px;
-  height: 52px;
+  width: 60px;
+  height: 60px;
   border: 2px solid #b93643;
   box-shadow: 3px 3px 0 #b93643;
   overflow: hidden;
@@ -855,27 +937,11 @@ legend,
   flex: 0 0 184px;
   position: relative;
   isolation: isolate;
+  margin: 50px 0 56px;
 }
 .navi-voice > .navi-avatar .navi-mascot {
   width: 154px !important;
   height: 154px !important;
-}
-.navi-voice > .navi-avatar::before,
-.navi-voice > .navi-avatar::after {
-  position: absolute;
-  color: #f47f8b;
-  font: 22px/1 "Courier New", monospace;
-  z-index: -1;
-}
-.navi-voice > .navi-avatar::before {
-  content: "♥";
-  left: -46px;
-  top: 25px;
-}
-.navi-voice > .navi-avatar::after {
-  content: "♡";
-  right: -43px;
-  bottom: 22px;
 }
 .navi-voice .voice-transcript {
   flex: 0 1 auto;
@@ -900,11 +966,33 @@ legend,
     width: 142px;
     height: 142px;
     flex-basis: 142px;
-    margin: 18px 0 8px;
+    margin: 44px 0 50px;
   }
   .navi-voice > .navi-avatar .navi-mascot {
     width: 124px !important;
     height: 124px !important;
+  }
+  .hero-stage {
+    gap: 8px;
+  }
+  .hero-mascot-wrap {
+    min-height: 124px;
+    display: grid;
+    place-items: center;
+  }
+  .hero-navi-main {
+    width: 132px;
+    transform: none;
+    margin: 0 0 6px;
+  }
+  .hero-copy {
+    position: relative;
+    z-index: 2;
+  }
+  .start-map-card .leaflet-map,
+  .start-map-card .google-map,
+  .start-map-card .map-placeholder {
+    height: 320px;
   }
   .voice-actions {
     margin-top: 4px;

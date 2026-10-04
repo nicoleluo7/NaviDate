@@ -46,28 +46,6 @@ const initial: Criteria = {
   returnToStart: false,
   preferences: "",
 };
-const pills = [
-  {
-    label: "Cozy coffee",
-    text: "A cozy coffee date near Cornell",
-    icon: "/navidate/icons/category_icons/09_cozy.png",
-  },
-  {
-    label: "Surprise me ✨",
-    text: "Surprise me with a lovely date in Ithaca",
-    icon: "/navidate/icons/category_icons/10_surprise_me.png",
-  },
-  {
-    label: "Something outdoors",
-    text: "Something outdoors, not too much walking",
-    icon: "/navidate/icons/category_icons/02_outdoors.png",
-  },
-  {
-    label: "Romantic",
-    text: "A romantic evening around Cornell and Ithaca",
-    icon: "/navidate/icons/category_icons/07_romantic.png",
-  },
-] as const;
 const planningCopy = [
   "Finding date ideas…",
   "Checking places…",
@@ -90,7 +68,6 @@ export default function Planner({
     [error, setError] = useState(""),
     [seed, setSeed] = useState(0),
     [saved, setSaved] = useState<{ url: string; shareId: string } | null>(null),
-    [text, setText] = useState(""),
     [hint, setHint] = useState(""),
     [dirty, setDirty] = useState(false),
     [locating, setLocating] = useState(false),
@@ -250,35 +227,6 @@ export default function Planner({
       setBusy("");
     }
   }
-  async function interpret(prompt = text) {
-    const value = prompt.trim();
-    if (!value) return;
-    setText(value);
-    if (!ai) {
-      update("preferences", value);
-      setHint(
-        "Preferences noted. Review the form, then find your date.",
-      );
-      return;
-    }
-    setBusy("interpret");
-    setError("");
-    try {
-      const d = await request("/api/interpret", {
-        text: value,
-        existing: criteria,
-      });
-      setCriteria((c) => ({ ...c, ...d.criteria }));
-      setHint(
-        d.question ??
-          "Preferences filled in. Review the form, then find your date.",
-      );
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Use the form to continue.");
-    } finally {
-      setBusy("");
-    }
-  }
   function locate() {
     if (!window.isSecureContext) {
       setLocationNotice(
@@ -333,45 +281,35 @@ export default function Planner({
                 Navigate your next date,
                 <span className="hero-script">for more butterflies</span>
               </h1>
-              <p>
-                Tell Navi what you&apos;re dreaming of, and we&apos;ll turn it into
-                a date worth looking forward to.
-              </p>
             </div>
-            {/* Generated from the supplied layout reference; decorative only. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="hero-collage"
-              src="/navidate/hero/date-collage.png"
-              alt=""
-            />
-            <span className="hero-note" aria-hidden="true">
-              fall in love<br />with the plan ♡
-            </span>
+            <div className="hero-collage" aria-label="Favorite date memories">
+              {/* User-supplied photos, cropped within the Polaroid frames. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="hero-photo hero-photo-coffee"
+                src="/navidate/hero/photos/date-photo-1.jpg"
+                alt="Two iced coffees on a date"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="hero-photo hero-photo-rainbow"
+                src="/navidate/hero/photos/date-photo-2.jpg"
+                alt="A rainbow over Cornell"
+              />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="hero-photo hero-photo-sheep"
+                src="/navidate/hero/photos/date-photo-3.jpg"
+                alt="Sheep grazing in a sunny field"
+              />
+            </div>
           </div>
-          <form
-            className="prompt-bar"
-            onSubmit={(e) => {
-              e.preventDefault();
-              void interpret();
-            }}
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              className="prompt-icon prompt-icon-image"
-              src="/navidate/icons/map_and_status_icons/16_sparkles_small.png"
-              alt=""
-            />
-            <label className="sr-only" htmlFor="natural">
-              Describe your ideal date
-            </label>
-            <input
-              id="natural"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              maxLength={1000}
-              placeholder="Tell me what kind of date you’re in the mood for..."
-            />
+          <div className="hero-voice-cta">
+            <span className="hero-voice-line" aria-hidden="true" />
+            <span className="hero-voice-label">
+              Talk to Navi about your date idea
+            </span>
+            <span className="hero-voice-line" aria-hidden="true" />
             <Button
               className="mic-button"
               type="button"
@@ -386,25 +324,6 @@ export default function Planner({
                 alt=""
               />
             </Button>
-          </form>
-          <div className="suggestion-pills">
-            {pills.map((pill) => (
-              <Button
-                key={pill.label}
-                type="button"
-                className="pill"
-                isDisabled={!!busy}
-                onPress={() => {
-                  setText(pill.text);
-                  if (ai) void interpret(pill.text);
-                  else setHint("Preferences noted in the prompt. Review the form, then find your date.");
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="chip-icon-image" src={pill.icon} alt="" />
-                {pill.label}
-              </Button>
-            ))}
           </div>
         </section>
         <NaviVoice
