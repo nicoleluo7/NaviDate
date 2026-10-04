@@ -36,7 +36,10 @@ it("registers a shared Photon user and returns the assigned line", async () => {
   await expect(registerSharedUser("+16072550100", fetchImpl)).resolves.toBe(
     "+14155951440",
   );
-  const [url, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+  const [url, init] = fetchImpl.mock.calls[0] as unknown as [
+    string,
+    RequestInit,
+  ];
   expect(url).toBe("https://spectrum.photon.codes/projects/project/users/");
   expect(init.method).toBe("POST");
   expect(JSON.parse(String(init.body))).toEqual({
