@@ -13,7 +13,7 @@ test("coffee dates restore and failed automatic saves retry the same share link"
   await page.getByRole("button", { name: "Coffee", exact: true }).click();
   const generated = page.waitForResponse((r) => r.url().endsWith("/api/plan"));
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   const draft = await (await generated).json();
   expect(draft.plans.length).toBeGreaterThan(0);
@@ -24,7 +24,7 @@ test("coffee dates restore and failed automatic saves retry the same share link"
   ).toBe(true);
   await page.locator(".plan-card").first().click();
   await page
-    .getByRole("button", { name: "Save this date", exact: true })
+    .getByRole("button", { name: "Save & Share", exact: true })
     .click();
   await expect(page.getByText(/Your date is saved\./)).toBeVisible();
   const link = page.getByRole("link", { name: "Open read-only share page" });
@@ -42,7 +42,7 @@ test("coffee dates restore and failed automatic saves retry the same share link"
     }
     return route.continue();
   });
-  await page.getByRole("button", { name: "Try another place" }).last().click();
+  await page.getByRole("button", { name: "Swap" }).last().click();
   await expect(
     page.getByRole("button", { name: "Retry save", exact: true }),
   ).toBeVisible();

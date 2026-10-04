@@ -1,13 +1,21 @@
 @import "tailwindcss";
 :root {
-  --cream: #faf8f1;
-  --ink: #283b33;
-  --muted: #6b736b;
-  --coral: #b84230;
-  --peach: #f3e4d8;
-  --line: #e3e5db;
+  --bg: #fff9f3;
+  --surface: #fffcf8;
+  --surface-soft: #fff0ea;
+  --text: #17352f;
+  --text-muted: #6f7e78;
+  --accent: #f57b68;
+  --accent-hover: #e56a57;
+  --border: #ecddd4;
+  --cream: var(--bg);
+  --ink: var(--text);
+  --muted: var(--text-muted);
+  --coral: var(--accent);
+  --peach: var(--surface-soft);
+  --line: var(--border);
   --green: #e7eddf;
-  --white: #fffefa;
+  --white: var(--surface);
 }
 * {
   box-sizing: border-box;
@@ -1687,28 +1695,26 @@ button.map-pin {
   height: 36px;
   left: 4px;
   top: 4px;
-  border-radius: 50% 50% 50% 4px;
-  transform: rotate(-45deg);
-  background: var(--coral);
-  border: 3px solid white;
-  color: white;
-  box-shadow: 0 3px 8px #283b3345;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
 }
-.pin-body > span {
-  transform: rotate(45deg);
-  font:
-    700 15px/1 Arial,
-    sans-serif;
+.pin-body > img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 .map-pin-start .pin-body {
-  background: #345648;
+  background: transparent;
 }
 .map-pin-bus .pin-body {
   background: #365d86;
 }
 .pin-selected .pin-body {
-  background: #842c1d;
+  background: transparent;
   outline: 5px solid #b8423035;
+  border-radius: 50%;
 }
 .leaflet-tooltip.venue-tooltip {
   border: none;

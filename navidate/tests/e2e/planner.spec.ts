@@ -3,7 +3,6 @@ import { setDate, selectOption } from "./fields";
 test("plans, maps, saves, shares and protects editing", async ({
   page,
   browser,
-  isMobile,
 }) => {
   // Tiles are deliberately mocked; live external services are never needed by CI.
   await page.route("https://tile.openstreetmap.org/**", (route) =>
@@ -18,7 +17,9 @@ test("plans, maps, saves, shares and protects editing", async ({
   );
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "Navigate your next date." }),
+    page.getByRole("heading", {
+      name: "Navigate your next date, for more butterflies",
+    }),
   ).toBeVisible();
   await page.screenshot({
     path: `test-results/home-${test.info().project.name}.png`,
@@ -29,18 +30,16 @@ test("plans, maps, saves, shares and protects editing", async ({
     (r) => r.url().endsWith("/api/plan") && r.request().method() === "POST",
   );
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   const draft = await (await planResponse).json();
   await expect(
-    page.getByRole("heading", { name: "A few ways to spend it together." }),
+    page.getByRole("heading", { name: "Your date ✨" }),
   ).toBeVisible();
   await page.locator(".plan-card").first().click();
   await expect(
     page.getByRole("region", { name: "Selected itinerary" }),
   ).toBeVisible();
-  if (isMobile)
-    await page.getByRole("button", { name: "Map", exact: true }).click();
   await expect(
     page.getByRole("region", { name: "Itinerary map" }),
   ).toBeVisible();
@@ -56,10 +55,8 @@ test("plans, maps, saves, shares and protects editing", async ({
     path: `test-results/itinerary-${test.info().project.name}.png`,
     fullPage: true,
   });
-  if (isMobile)
-    await page.getByRole("button", { name: "Timeline", exact: true }).click();
   await page
-    .getByRole("button", { name: "Save this date", exact: true })
+    .getByRole("button", { name: "Save & Share", exact: true })
     .click();
   await expect(page.getByText(/Your date is saved\./)).toBeVisible();
   const share = await page
@@ -90,15 +87,14 @@ test("preserves inputs after an impossible budget and duration", async ({
 }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("button", { name: "Find our date", exact: true }),
+    page.getByRole("button", { name: "Find my date", exact: true }),
   ).toBeEnabled();
   await page.getByLabel("Total budget for two").fill("0");
   await expect(page.getByLabel("Total budget for two")).toHaveValue("0");
   await selectOption(page, "Time together", "60 minutes");
-  await page.locator(".preferences summary").click();
   await selectOption(page, "Indoor or outdoor?", "Indoor activities");
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   await expect(page.getByText(/No two-stop plan fits/)).toBeVisible();
   await expect(page.getByLabel("Total budget for two")).toHaveValue("0");

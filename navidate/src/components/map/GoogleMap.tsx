@@ -95,8 +95,10 @@ export default function GoogleMapView({
         ) => {
           const element = document.createElement("div");
           element.className = "google-date-pin";
+          element.classList.toggle("google-date-pin-start", label === "S");
+          element.dataset.pin = label ?? "location";
           if (stopIndex != null) element.dataset.stopIndex = String(stopIndex);
-          element.textContent = label ?? "•";
+          element.textContent = "";
           const marker = new AdvancedMarkerElement({
             map: instance,
             position,
@@ -107,7 +109,7 @@ export default function GoogleMapView({
           pins.current.push({ marker, element, stopIndex });
         };
         if (plan) {
-          if (plan.start.name !== "Private starting point hidden") {
+          if (!plan.start.private) {
             addMarker(
               new google.maps.LatLng(plan.start.lat, plan.start.lng),
               "Starting point: " + plan.start.name,

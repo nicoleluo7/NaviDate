@@ -1,7 +1,7 @@
-import { publicAppUrl } from "@/lib/urls";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BrandMark from "@/components/BrandMark";
+import SiteHeader from "@/components/brand/SiteHeader";
+import NaviMascot from "@/components/brand/NaviMascot";
 import { session } from "@/lib/api";
 import { isOwner } from "@/lib/storage/dates";
 import type { SavedDate } from "@/types";
@@ -10,7 +10,7 @@ import { publicPlan } from "@/lib/storage/dates";
 import Itinerary from "@/components/itinerary/Itinerary";
 export const dynamic = "force-dynamic";
 export const metadata = {
-  title: "A date to look forward to · Navidate",
+  title: "Your date is ready · NaviDate",
   robots: { index: false, follow: false },
 };
 export default async function Shared({
@@ -21,22 +21,20 @@ export default async function Shared({
   const { shareId } = await params;
   const record = await getStorage().get<SavedDate>("date:" + shareId);
   if (!record) notFound();
+  const plan = publicPlan(record.plan);
   return (
     <>
-      <header className="site-header">
-        <Link href="/" className="logo">
-          <BrandMark />
-          navidate
-        </Link>
-        <Link href="/?new=1" className="nav-cta">
-          Plan your own date ↗
-        </Link>
-      </header>
-      <main>
-        <p className="share-banner">
-          A date to look forward to.{" "}
-          <strong>Read-only shared itinerary.</strong>
-        </p>
+      <SiteHeader ctaHref="/?new=1" ctaLabel="Plan your own date" />
+      <main className="invitation">
+        <div className="invitation-hero">
+          <NaviMascot state="happy" size={120} />
+          <p className="eyebrow">NaviDate</p>
+          <h1>Your date is ready 💌</h1>
+          <p className="share-banner">
+            A date to look forward to.{" "}
+            <strong>Read-only shared itinerary.</strong>
+          </p>
+        </div>
         {isOwner(record, await session()) && (
           <p className="share-banner">
             <Link className="secondary" href={`/?date=${shareId}`}>
@@ -45,9 +43,15 @@ export default async function Shared({
           </p>
         )}
         <Itinerary
-          plan={publicPlan(record.plan)}
-          savedUrl={`${publicAppUrl()}/date/${shareId}`}
+          variant="share"
+          plan={plan}
+          savedUrl={`${process.env.APP_URL ?? "http://localhost:3000"}/date/${shareId}`}
         />
+        <p className="invitation-cta">
+          <Link className="secondary" href="/?new=1">
+            Plan your own date
+          </Link>
+        </p>
       </main>
     </>
   );

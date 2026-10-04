@@ -30,7 +30,7 @@ test("browse restaurants, select a required stop and clear it when changing date
   await page.getByRole("button", { name: "Choose", exact: true }).click();
   const request = page.waitForRequest((r) => r.url().endsWith("/api/plan"));
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   expect((await request).postDataJSON().criteria.restaurantId).toBe(
     "fixture-restaurant",
@@ -38,7 +38,7 @@ test("browse restaurants, select a required stop and clear it when changing date
   await page.getByRole("button", { name: "Coffee", exact: true }).click();
   const next = page.waitForRequest((r) => r.url().endsWith("/api/plan"));
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   expect((await next).postDataJSON().criteria.restaurantId).toBeUndefined();
   expect(

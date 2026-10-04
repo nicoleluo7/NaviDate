@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Button } from "react-aria-components";
-import { Mic, Square } from "lucide-react";
-import BrandMark from "@/components/BrandMark";
+import { Button, Dialog, Modal, ModalOverlay } from "react-aria-components";
+import { Square, X } from "lucide-react";
+import NaviMascot from "@/components/brand/NaviMascot";
 import type { Criteria } from "@/types";
 import { resolveRequirements } from "@/lib/voice/requirements";
 
@@ -12,11 +12,15 @@ export default function NaviVoice({
   enabled,
   disabled,
   onReady,
+  open,
+  onOpenChange,
 }: {
   criteria: Criteria;
   enabled: boolean;
   disabled: boolean;
   onReady: (c: Criteria) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const [state, setState] = useState<"idle" | "connecting" | "listening">(
       "idle",
@@ -24,6 +28,7 @@ export default function NaviVoice({
     [notice, setNotice] = useState(""),
     [turns, setTurns] = useState<Turn[]>([]);
   const [speaking, setSpeaking] = useState(false);
+  const opened = useRef(false);
   const avatar = useRef<HTMLDivElement>(null),
     transcript = useRef<HTMLDivElement>(null);
   const analyser = useRef<AnalyserNode | null>(null),
@@ -81,11 +86,11 @@ export default function NaviVoice({
     context.current = null;
   }
   useEffect(() => () => cleanup(), []);
-  function stop(message = "Conversation ended. Your form is still here.") {
+  function stop(message?: string) {
     cleanup();
     setSpeaking(false);
     setState("idle");
-    setNotice(message);
+    setNotice(message ?? "");
   }
   async function start() {
     cleanup();
@@ -299,9 +304,10 @@ export default function NaviVoice({
                 },
               });
               stop(
-                "Got it. Navi is finding date options from your confirmed preferences.",
+                "Got it. Navi filled in your planner from this conversation.",
               );
               ready.current(next);
+              onOpenChange(false);
             } catch (err) {
               send({
                 type: "conversation.item.create",
@@ -338,76 +344,131 @@ export default function NaviVoice({
         );
     }
   }
+  useEffect(() => {
+    if (open && !opened.current && !disabled && enabled) {
+      opened.current = true;
+      void start();
+    }
+    if (!open) opened.current = false;
+    // Opening the modal starts one voice session; close is handled by the overlay.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, disabled, enabled]);
+  const mood =
+    state === "connecting"
+      ? "thinking"
+      : speaking
+        ? "talking"
+        : state === "listening"
+          ? "listening"
+          : "idle";
+  const status =
+    state === "connecting"
+      ? "Thinking..."
+      : speaking
+        ? "Navi is speaking"
+        : state === "listening"
+          ? "Listening..."
+          : notice ||
+            (enabled
+              ? "Tell Navi what you’re in the mood for."
+              : "Voice is unavailable. Use the form instead.");
   return (
-    <section className="navi-voice" aria-label="Talk to Navi">
-      <div className="navi-heading">
-        <div
-          ref={avatar}
-          className="navi-avatar"
-          data-speaking={speaking}
-          aria-label={speaking ? "Navi is speaking" : "Navi"}
-        >
-          <BrandMark size={64} />
-        </div>
-        <div>
-          <span className="navi-eyebrow">YOUR DATE-PLANNING COMPANION</span>
-          <h3>Talk it through</h3>
-          <p>Navi can fill in the form from a short conversation.</p>
-        </div>
-      </div>
-      <Button
-        className={state === "idle" ? "primary" : "secondary"}
-        isDisabled={state === "idle" && (!enabled || disabled)}
-        onPress={() => (state === "idle" ? void start() : stop())}
-      >
-        {state === "idle" ? <Mic size={18} /> : <Square size={16} />}{" "}
-        {state === "idle"
-          ? "Talk to Navi"
-          : state === "connecting"
-            ? "Cancel connection"
-            : "End conversation"}
-      </Button>
-      <p className="small muted">
-        {enabled
-          ? "Tap to start. The microphone stops when you end the chat."
-          : "Voice is unavailable. You can plan with the form below."}
-      </p>
-      {state !== "idle" && (
-        <p className="navi-live-state" role="status">
-          <span className="navi-live-dot" />
-          {state === "connecting"
-            ? "Getting ready…"
-            : speaking
-              ? "Navi is speaking · you can interrupt"
-              : "Listening to you…"}
-        </p>
-      )}
-      {notice && (
-        <p role="status" className="notice">
-          {notice}
-        </p>
-      )}
-      {!!turns.length && (
-        <div
-          ref={transcript}
-          className="voice-transcript"
-          role="log"
-          aria-label="Conversation with Navi"
-        >
-          {turns.map((t, i) => (
+    <>
+    <ModalOverlay
+      isOpen={open}
+      onOpenChange={(next) => {
+        if (!next) stop();
+        onOpenChange(next);
+      }}
+      isDismissable={state === "idle"}
+      className="voice-overlay"
+    >
+      <Modal className="voice-modal">
+        <Dialog className="navi-voice" aria-label="Talk to Navi">
+          <Button
+            className="voice-close"
+            aria-label="Close voice mode"
+            onPress={() => {
+              stop();
+              onOpenChange(false);
+            }}
+          >
+            <X size={18} />
+          </Button>
+          <div
+            ref={avatar}
+            className="navi-avatar"
+            data-speaking={speaking}
+            aria-label={speaking ? "Navi is speaking" : "Navi"}
+          >
+            <NaviMascot state={mood} size={168} />
+          </div>
+          <p className="navi-live-state" role="status">
+            {status}
+          </p>
+          {!turns.length && (
+            <p className="voice-prompt">
+              Tell me what kind of date you’re dreaming of…
+            </p>
+          )}
+          <div
+            className="voice-wave"
+            data-active={state !== "idle"}
+            data-speaking={speaking}
+            aria-hidden="true"
+          >
+            {Array.from({ length: 9 }, (_, index) => (
+              <span key={index} />
+            ))}
+          </div>
+          {!!turns.length && (
             <div
-              key={i}
-              className={`voice-turn ${t.who === "You" ? "from-you" : "from-navi"}`}
+              ref={transcript}
+              className="voice-transcript"
+              role="log"
+              aria-label="Conversation with Navi"
             >
-              {t.who === "Navi" && <BrandMark size={24} />}
-              <div>
-                <span className="voice-speaker">{t.who}</span>
-                <p>{t.text}</p>
-              </div>
+              {turns.map((t, i) => (
+                <div
+                  key={i}
+                  className={`voice-turn ${t.who === "You" ? "from-you" : "from-navi"}`}
+                >
+                  <div>
+                    <span className="voice-speaker">{t.who}</span>
+                    <p>{t.text}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-      )}
-    </section>
+          )}
+          <div className="voice-actions">
+            <Button
+              className="voice-cancel"
+              onPress={() => {
+                stop();
+                onOpenChange(false);
+              }}
+            >
+              <X size={18} />
+              <span>Cancel</span>
+            </Button>
+            <Button
+              className={state === "idle" ? "voice-start" : "voice-stop"}
+              isDisabled={state === "idle" && (!enabled || disabled)}
+              onPress={() => (state === "idle" ? void start() : stop())}
+            >
+              {state === "idle" ? (
+                "Talk to Navi"
+              ) : (
+                <>
+                  <Square size={18} /> <span>End conversation</span>
+                </>
+              )}
+            </Button>
+          </div>
+        </Dialog>
+      </Modal>
+    </ModalOverlay>
+  </>
   );
 }

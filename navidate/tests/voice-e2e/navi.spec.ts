@@ -187,6 +187,12 @@ test("Navi recovers from incomplete criteria, hands off once, and stops the micr
   await expect(
     page.getByText("Hi, I’m Navi. What kind of date sounds lovely?"),
   ).toBeVisible();
+  await expect(
+    page.getByText("Navi filled in your details. Review the form, then find your date."),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Find my date", exact: true })
+    .click();
   await expect(page.getByText("Mocked Gemini handoff")).toBeVisible();
   await expect(page.locator(".navi-avatar")).toHaveAttribute(
     "data-speaking",
@@ -220,10 +226,10 @@ test("denied microphone never requests a voice token", async ({ page }) => {
   await page.goto("/?new=1");
   await page.getByRole("button", { name: "Talk to Navi", exact: true }).click();
   await expect(
-    page.getByText(/Microphone permission was denied/),
+    page.getByText(/Microphone permission was denied/).first(),
   ).toBeVisible();
   expect(tokenCalls).toBe(0);
   await expect(
-    page.getByRole("button", { name: "Find our date", exact: true }),
+    page.getByRole("button", { name: "Find my date", exact: true }),
   ).toBeEnabled();
 });

@@ -4,25 +4,23 @@ import { useState } from "react";
 import {
   ArrowUpRight,
   Footprints,
-  Clock,
-  Wallet,
-  CloudSun,
   Copy,
   Heart,
-  RefreshCw,
-  MapPin,
   MessageCircle,
+  Sparkles,
 } from "lucide-react";
 import type { Plan } from "@/types";
-import { approximateDuration, displayTime } from "@/lib/planner/time";
+import { displayTime } from "@/lib/planner/time";
 import { directionsToPlace, routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
+import { formatDuration, formatWalkMiles } from "@/components/ui/format";
 import WeatherPanel from "./WeatherPanel";
 import MapLoader from "@/components/map/MapLoader";
+
 export default function Itinerary({
   plan,
   onSwap,
   onSave,
-  saveLabel = "Save this date",
+  saveLabel = "Save & Share",
   saving = false,
   dirty = false,
   busy = false,
@@ -30,6 +28,7 @@ export default function Itinerary({
   shareId,
   canPair = false,
   photon = false,
+  variant = "planner",
 }: {
   plan: Plan;
   onSwap?: (index: number) => void;
@@ -42,15 +41,14 @@ export default function Itinerary({
   shareId?: string;
   canPair?: boolean;
   photon?: boolean;
+  variant?: "planner" | "share";
 }) {
   const [selected, setSelected] = useState<number | null>(null),
     [focus, setFocus] = useState(0),
-    [tab, setTab] = useState("map"),
+    [tab, setTab] = useState("timeline"),
     [notice, setNotice] = useState(""),
     [pairCode, setPairCode] = useState(""),
-    [pairLink, setPairLink] = useState(""),
-    [phone, setPhone] = useState(""),
-    [pairing, setPairing] = useState(false);
+    [pairLink, setPairLink] = useState("");
   function choose(index: number) {
     setSelected((current) => (current === index ? null : index));
     setFocus((n) => n + 1);
@@ -63,7 +61,7 @@ export default function Itinerary({
       setNotice("Clipboard unavailable. Select and copy the text below.");
     }
   }
-  const routeUrl = routeUrlForPlan(plan);
+  const routeUrl = plan.googleMapsUrl ?? routeUrlForPlan(plan);
   const summary = [
     plan.title,
     `${displayTime(plan.startsAt)} – ${displayTime(plan.endsAt)}`,
@@ -78,16 +76,11 @@ export default function Itinerary({
     savedUrl ?? "",
   ].join("\n");
   async function pair() {
-    if (!phone.trim()) {
-      setNotice("Enter the phone number you use with iMessage.");
-      return;
-    }
-    setPairing(true);
     try {
       const r = await fetch("/api/pair", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shareId, phone }),
+          body: JSON.stringify({ shareId }),
         }),
         data = await r.json();
       if (!r.ok) throw new Error(data.error);
@@ -99,8 +92,6 @@ export default function Itinerary({
       setNotice(
         e instanceof Error ? e.message : "Could not create pairing code.",
       );
-    } finally {
-      setPairing(false);
     }
   }
   async function checkPair() {
@@ -112,47 +103,30 @@ export default function Itinerary({
         : `Pairing status: ${d.status ?? "unavailable"}. No delivery confirmation yet.`,
     );
   }
+  const share = variant === "share";
   return (
     <section className="itinerary" aria-label="Selected itinerary">
-      <div className="itinerary-heading">
-        <div>
-          <span className="eyebrow">
-            A LITTLE PLAN. A LOT TO LOOK FORWARD TO.
-          </span>
-          <h2>{plan.title}</h2>
-          <p>
-            {displayTime(plan.startsAt)} — {displayTime(plan.endsAt)}
-          </p>
-          {routeUrl && (
-            <a
-              className="map-directions"
-              href={routeUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
-              Open route in Google Maps <ArrowUpRight size={16} />
-            </a>
-          )}
+      {!share && (
+        <div className="itinerary-heading">
+          <div>
+            <h2>Your date ✨</h2>
+            <p className="plan-kicker">{plan.title}</p>
+            <p>{plan.explanation}</p>
+          </div>
+          <Heart className="heart-outline" size={34} />
         </div>
-        <Heart className="heart-outline" size={34} />
-      </div>
-      <div className="stat-row">
-        <span>
-          <Wallet size={17} /> ${plan.cost} for two <small>estimated</small>
-        </span>
-        <span>
-          <Clock size={17} />
-          {approximateDuration(plan.duration)}
-        </span>
-        <span>
-          <Footprints size={17} />
-          {plan.walkKm} km
-        </span>
-        <span>
-          <CloudSun size={17} />
-          {plan.weather.summary}
-        </span>
-      </div>
+      )}
+      {share && (
+        <div className="itinerary-heading invite-plan-heading">
+          <div>
+            <h2>{plan.title}</h2>
+            <p>
+              {displayTime(plan.startsAt)} — {displayTime(plan.endsAt)} · $
+              {plan.cost} for two
+            </p>
+          </div>
+        </div>
+      )}
       <div className="mobile-tabs" role="group" aria-label="Itinerary view">
         <Button
           aria-pressed={tab === "timeline"}
@@ -167,7 +141,7 @@ export default function Itinerary({
       <div className="itinerary-grid">
         <div className={`timeline ${tab === "map" ? "mobile-hidden" : ""}`}>
           <div className="start-row">
-            <MapPin size={18} />
+            <span className="timeline-dot start-dot">S</span>
             <div>
               <strong>{plan.start.name}</strong>
               <small>Meet at {displayTime(plan.startsAt)}</small>
@@ -175,12 +149,14 @@ export default function Itinerary({
           </div>
           {plan.stops.map((s, i) => (
             <div className="timeline-step" key={s.place.id}>
-              <div className="travel">
-                <Footprints size={14} />
-                {plan.legs[i]?.mode === "bus"
-                  ? `Bus ${plan.legs[i].bus?.route} · ${plan.legs[i].minutes} min incl. walking & waiting`
-                  : `${plan.legs[i]?.minutes ?? 0} min walk · estimate`}
-              </div>
+              {plan.legs[i] && (
+                <div className="travel">
+                  <Footprints size={14} />
+                  {plan.legs[i]?.mode === "bus"
+                    ? `Bus ${plan.legs[i].bus?.route} · ${plan.legs[i].minutes} min incl. walking & waiting`
+                    : `${plan.legs[i]?.minutes ?? 0} min walk`}
+                </div>
+              )}
               {plan.legs[i]?.bus && (
                 <p className="bus-detail">
                   Scheduled: {plan.legs[i].bus!.boarding} →{" "}
@@ -208,21 +184,19 @@ export default function Itinerary({
                 >
                   <span className="stop-number">{i + 1}</span>
                   <div>
-                    <span className="eyebrow">
-                      {s.place.category} · {s.place.indoorOutdoor}
-                    </span>
+                    <time>{displayTime(s.arrival)}</time>
                     <h3>{s.place.name}</h3>
                   </div>
                 </Button>
                 <p>{s.place.description}</p>
                 <div className="stop-meta">
-                  <span>{displayTime(s.arrival)}</span>
                   <span>{s.place.typicalDurationMinutes} min</span>
                   <span>
                     {s.place.estimatedCostForTwo === 0
                       ? "Free"
-                      : `Est. $${s.place.estimatedCostForTwo} for two`}
+                      : `$${s.place.estimatedCostForTwo}`}
                   </span>
+                  <span className="stop-category">{s.place.category}</span>
                 </div>
                 <small>
                   Leave {displayTime(s.departure)} ·{" "}
@@ -246,8 +220,7 @@ export default function Itinerary({
                   </a>
                   {onSwap && (
                     <Button isDisabled={busy} onPress={() => onSwap(i)}>
-                      <RefreshCw size={14} />
-                      Try another place
+                      Swap
                     </Button>
                   )}
                 </div>
@@ -260,25 +233,22 @@ export default function Itinerary({
               {plan.legs.at(-1)!.label}
             </p>
           )}
-          <div className="end-row">
-            <Heart size={16} /> A good date, well spent. Ends{" "}
-            {displayTime(plan.endsAt)}
-          </div>
-          <WeatherPanel weather={plan.weather} />
         </div>
         <div
           className={`map-column ${tab === "timeline" ? "mobile-hidden" : ""}`}
         >
-          <MapLoader
-            plan={plan}
-            selected={selected}
-            focus={focus}
-            onSelect={choose}
-            onClear={() => {
-              setSelected(null);
-              setFocus((n) => n + 1);
-            }}
-          />
+          <div className="map-card">
+            <MapLoader
+              plan={plan}
+              selected={selected}
+              focus={focus}
+              onSelect={choose}
+              onClear={() => {
+                setSelected(null);
+                setFocus((n) => n + 1);
+              }}
+            />
+          </div>
           <div className="map-stop">
             {selected == null ? (
               <>
@@ -312,74 +282,55 @@ export default function Itinerary({
               </>
             )}
           </div>
-          <p className="map-note">
-            {plan.suitability}.{" "}
-            {plan.legs.some(
-              (leg) => leg.geometry?.length || leg.encodedPolyline,
-            )
-              ? "The line follows a routed path in itinerary order."
-              : "No route line means travel is an estimate, not a verified walking path."}
-          </p>
         </div>
       </div>
-      <details className="practical">
-        <summary>Before you go · estimates & availability</summary>
-        <ul>
-          {plan.warnings.map((w) => (
-            <li key={w}>{w}</li>
-          ))}
-        </ul>
-        <p>
-          Weather: {plan.weather.source}. All times use America/New_York.
-          Opening hours can change on holidays.
-        </p>
-      </details>
-      {canPair && photon && shareId && (
-        <label className="pair-phone">
-          <span>Your iMessage number</span>
-          <input
-            type="tel"
-            name="imessage-phone"
-            autoComplete="tel"
-            inputMode="tel"
-            placeholder="+1 607 555 0100"
-            value={phone}
-            disabled={pairing || dirty || busy}
-            onChange={(event) => setPhone(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                void pair();
-              }
-            }}
-          />
-          <small className="field-help">
-            We’ll register this number with Photon and open a text to the line
-            it assigns you. Press Send from that phone.
-          </small>
-        </label>
-      )}
+      <div className="stat-row plan-summary" aria-label="Plan summary">
+        <span>💵 ${plan.cost} for two</span>
+        <span>⏱ {formatDuration(plan.duration)}</span>
+        <span>🚶 {formatWalkMiles(plan.walkKm)}</span>
+      </div>
+      <aside className="why-navi">
+        <h3>
+          <Sparkles size={18} /> Why Navi chose this
+        </h3>
+        <p>{plan.explanation}</p>
+        <p>{plan.suitability}</p>
+        {plan.weather.summary && <p>{plan.weather.summary}</p>}
+        {plan.warnings.length > 0 && (
+          <ul>
+            {plan.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        )}
+      </aside>
+      <WeatherPanel weather={plan.weather} />
       <div className="action-bar">
         {routeUrl && (
-          <a
-            className="secondary"
-            href={routeUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Open route in Google Maps
+          <a className="primary" href={routeUrl} target="_blank" rel="noreferrer">
+            Open in Google Maps
             <ArrowUpRight size={17} />
           </a>
         )}
+        {canPair && (
+          <Button
+            className="secondary"
+            onPress={pair}
+            isDisabled={!photon || !shareId || dirty || busy}
+          >
+            <MessageCircle size={17} />
+            Send to iMessage
+          </Button>
+        )}
         {onSave && (
-          <Button className="primary" onPress={onSave} isDisabled={busy}>
+          <Button className="secondary" onPress={onSave} isDisabled={busy}>
             <Heart size={17} />
             {saving ? "Saving…" : saveLabel}
           </Button>
         )}
         {savedUrl && (
           <Button
-            className={onSave ? "secondary" : "primary"}
+            className="secondary"
             onPress={() => copy(savedUrl)}
             isDisabled={dirty || busy}
           >
@@ -387,26 +338,10 @@ export default function Itinerary({
             Copy share link
           </Button>
         )}
-        <Button className="secondary" onPress={() => copy(summary)}>
-          <Copy size={17} />
-          Copy itinerary
-        </Button>
-        {canPair && (
-          <Button
-            className="secondary"
-            onPress={pair}
-            isDisabled={
-              !photon || !shareId || !phone.trim() || dirty || busy || pairing
-            }
-          >
-            <MessageCircle size={17} />
-            {pairing ? "Opening Messages…" : "Send to myself"}
-          </Button>
-        )}
       </div>
       {canPair && !photon && (
         <p className="muted small">
-          iMessage isn’t connected yet. You can copy the itinerary instead.
+          iMessage isn’t connected yet. You can copy the share link instead.
         </p>
       )}
       {canPair && photon && !shareId && (
@@ -421,15 +356,17 @@ export default function Itinerary({
           )}
         </div>
       )}
-      <details className="copy-text">
-        <summary>View copyable itinerary text</summary>
-        <textarea
-          readOnly
-          value={summary}
-          aria-label="Copyable itinerary text"
-          rows={10}
-        />
-      </details>
+      {!share && (
+        <details className="copy-text">
+          <summary>View copyable itinerary text</summary>
+          <textarea
+            readOnly
+            value={summary}
+            aria-label="Copyable itinerary text"
+            rows={10}
+          />
+        </details>
+      )}
     </section>
   );
 }

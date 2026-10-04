@@ -8,7 +8,7 @@ test("themed controls support calendar selection, time choices and keyboard dism
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/?new=1");
   await expect(
-    page.getByRole("button", { name: "Find our date", exact: true }),
+    page.getByRole("button", { name: "Find my date", exact: true }),
   ).toBeEnabled();
   await setDate(page, "2026-10-02");
   await page.getByRole("button", { name: /^Choose date/ }).click();
@@ -53,7 +53,7 @@ test("themed controls support calendar selection, time choices and keyboard dism
   await expect(page.getByRole("listbox")).not.toBeVisible();
   const request = page.waitForRequest((r) => r.url().endsWith("/api/plan"));
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   expect((await request).postDataJSON().criteria).toMatchObject({
     date: "2026-10-03",
@@ -85,7 +85,7 @@ test("time picker preserves midnight, noon and exact typed minutes", async ({
   );
   await page.goto("/?new=1");
   await expect(
-    page.getByRole("button", { name: "Find our date", exact: true }),
+    page.getByRole("button", { name: "Find my date", exact: true }),
   ).toBeEnabled();
   for (const [choice, expected] of [
     ["12:00 AM", "00:00"],
@@ -97,11 +97,11 @@ test("time picker preserves midnight, noon and exact typed minutes", async ({
     await page.getByRole("option", { name: choice, exact: true }).click();
     const submitted = page.waitForRequest((r) => r.url().endsWith("/api/plan"));
     await page
-      .getByRole("button", { name: "Find our date", exact: true })
+      .getByRole("button", { name: "Find my date", exact: true })
       .click();
     expect((await submitted).postDataJSON().criteria.time).toBe(expected);
     await expect(
-      page.getByRole("button", { name: "Find our date", exact: true }),
+      page.getByRole("button", { name: "Find my date", exact: true }),
     ).toBeEnabled();
   }
   await page.getByRole("spinbutton", { name: /minute, Start time/ }).fill("07");
@@ -110,7 +110,7 @@ test("time picker preserves midnight, noon and exact typed minutes", async ({
     .press("Tab");
   const submitted = page.waitForRequest((r) => r.url().endsWith("/api/plan"));
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   expect((await submitted).postDataJSON().criteria.time).toBe("12:07");
 });

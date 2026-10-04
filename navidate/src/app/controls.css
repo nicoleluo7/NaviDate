@@ -681,17 +681,31 @@ button[data-focus-visible],
   height: 36px;
   display: grid;
   place-items: center;
-  border: 3px solid white;
-  border-radius: 50% 50% 50% 8px;
-  background: #bc422f;
-  color: white;
-  font: bold 16px system-ui;
-  box-shadow: 0 2px 8px #0003;
+  border: 0;
+  border-radius: 0;
+  background: center / contain no-repeat
+    url("/navidate/icons/map_and_status_icons/01_pin_location.png");
+  box-shadow: none;
+}
+.google-date-pin[data-pin="1"] {
+  background-image: url("/navidate/icons/map_and_status_icons/02_pin_1.png");
+}
+.google-date-pin[data-pin="2"] {
+  background-image: url("/navidate/icons/map_and_status_icons/03_pin_2.png");
+}
+.google-date-pin[data-pin="3"] {
+  background-image: url("/navidate/icons/map_and_status_icons/04_pin_3.png");
 }
 .google-date-pin.is-selected {
-  background: #264d42;
   outline: 4px solid #bc422f55;
+  border-radius: 50%;
   transform: scale(1.15);
+}
+.google-date-pin.google-date-pin-start {
+  background-image: url("/navidate/icons/map_and_status_icons/05_pin_start.png");
+}
+.google-date-pin.google-date-pin-start.is-selected {
+  outline-color: #34564855;
 }
 .map-stop {
   padding: 12px 16px;

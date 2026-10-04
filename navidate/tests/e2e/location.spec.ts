@@ -17,7 +17,7 @@ test("GPS selects a private Ithaca start", async ({ page, context }) => {
     (r) => r.url().endsWith("/api/plan") && r.method() === "POST",
   );
   await page
-    .getByRole("button", { name: "Find our date", exact: true })
+    .getByRole("button", { name: "Find my date", exact: true })
     .click();
   const request = await response;
   expect(request.postDataJSON().criteria.start).toMatchObject({

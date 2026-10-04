@@ -59,14 +59,25 @@ export default function Map({
       setStatus((s) => (s === "error" ? "error" : "ready")),
     );
     tile.on("tileerror", () => setStatus("error"));
-    const icon = (text: string, start = false, stopIndex?: number) =>
-      L.divIcon({
+    const icon = (text: string, start = false, stopIndex?: number) => {
+      const source =
+        text === "S"
+          ? "/navidate/icons/map_and_status_icons/05_pin_start.png"
+          : text === "1"
+            ? "/navidate/icons/map_and_status_icons/02_pin_1.png"
+            : text === "2"
+              ? "/navidate/icons/map_and_status_icons/03_pin_2.png"
+              : text === "3"
+                ? "/navidate/icons/map_and_status_icons/04_pin_3.png"
+                : "/navidate/icons/map_and_status_icons/01_pin_location.png";
+      return L.divIcon({
         className: `map-pin ${start ? "map-pin-start" : ""} ${text === "B" ? "map-pin-bus" : ""}`,
-        html: `<span class="pin-body"${stopIndex != null ? ` data-stop-index="${stopIndex}"` : ""}><span>${text === "S" ? "↗" : text}</span></span>`,
+        html: `<span class="pin-body"${stopIndex != null ? ` data-stop-index="${stopIndex}"` : ""}><img src="${source}" alt="" /></span>`,
         iconSize: [44, 48],
         iconAnchor: [22, 46],
         tooltipAnchor: [0, -42],
       });
+    };
     const bounds: L.LatLngExpression[] = [];
     markers.current = [];
     if (plan) {
