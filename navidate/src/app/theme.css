@@ -75,7 +75,7 @@ h3 {
   align-items: center;
   text-align: center;
   gap: 14px;
-  padding: 22px 22px 30px;
+  padding: 30px 30px 38px;
   margin-top: 14px;
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -115,9 +115,9 @@ h3 {
 }
 .hero-stage {
   width: 100%;
-  min-height: 230px;
+  min-height: 280px;
   display: grid;
-  grid-template-columns: minmax(170px, 0.8fr) minmax(330px, 1.35fr) minmax(230px, 1fr);
+  grid-template-columns: minmax(205px, 0.85fr) minmax(350px, 1.3fr) minmax(285px, 1fr);
   align-items: center;
   position: relative;
   z-index: 1;
@@ -128,7 +128,7 @@ h3 {
 }
 .hero-navi-main {
   display: block;
-  width: min(205px, 100%);
+  width: min(235px, 100%);
   height: auto;
   animation: navi-float 4s ease-in-out infinite;
 }
@@ -172,17 +172,17 @@ h3 {
   margin: 0;
 }
 .hero-collage {
-  width: min(330px, 100%);
-  height: 250px;
+  width: min(390px, 100%);
+  height: 290px;
   justify-self: end;
   position: relative;
 }
 .hero-photo {
   position: absolute;
   display: block;
-  width: 176px;
-  height: 122px;
-  padding: 7px 7px 18px;
+  width: 205px;
+  height: 142px;
+  padding: 8px 8px 20px;
   border: 1px solid #ead7ce;
   background: #fffdfa;
   object-fit: cover;
@@ -196,13 +196,13 @@ h3 {
 }
 .hero-photo-rainbow {
   right: 0;
-  top: 62px;
+  top: 72px;
   z-index: 2;
   transform: rotate(-2deg);
   object-position: center 72%;
 }
 .hero-photo-sheep {
-  left: 34px;
+  left: 42px;
   bottom: 0;
   transform: rotate(8deg);
   object-position: center 62%;
@@ -763,8 +763,8 @@ h3 {
     width: 100%;
   }
   .hero-stage {
-    grid-template-columns: 150px minmax(0, 1fr);
-    min-height: 210px;
+    grid-template-columns: 180px minmax(0, 1fr);
+    min-height: 240px;
   }
   .hero-collage,
   .hero-note {
@@ -774,7 +774,7 @@ h3 {
 @media (max-width: 600px) {
   .hero {
     margin: 8px -8px 0;
-    padding: 26px 16px 28px;
+    padding: 32px 16px 34px;
     border-radius: 0 0 26px 26px;
   }
   .hero-stage {
@@ -828,6 +828,170 @@ h3 {
     grid-column: 2;
     grid-row: 1;
     white-space: normal;
+  }
+}
+
+/* Generated date layout: one compact, aligned composition. */
+.itinerary {
+  margin: 28px 0;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  overflow: visible;
+}
+.itinerary-heading {
+  align-items: flex-start;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+}
+.itinerary-heading h2 {
+  margin: 0 0 4px;
+  font-size: clamp(34px, 4vw, 52px);
+}
+.itinerary-heading .plan-kicker {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+.itinerary-grid {
+  grid-template-columns: minmax(340px, 0.9fr) minmax(0, 1.35fr);
+  gap: 24px;
+  align-items: start;
+}
+.itinerary .timeline {
+  padding-left: 0;
+}
+.itinerary .timeline-step {
+  margin-left: 14px;
+  padding-left: 22px;
+}
+.itinerary .travel {
+  padding: 12px 0;
+}
+.itinerary .stop-card {
+  padding: 18px;
+  border-radius: 16px;
+}
+.itinerary .stop-card > p {
+  margin: 10px 0;
+  line-height: 1.5;
+}
+.itinerary .stop-actions {
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.itinerary .map-column {
+  top: 18px;
+}
+.itinerary .map-card,
+.itinerary .map-shell {
+  border-radius: 16px 16px 0 0;
+}
+.itinerary .map-stop {
+  min-height: 104px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-top: 0;
+  border-radius: 0 0 16px 16px;
+}
+.itinerary .map-stop h3 {
+  margin: 3px 0;
+  font-size: 22px;
+}
+.itinerary .plan-summary {
+  margin: 0;
+  padding: 0;
+}
+.itinerary-support {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  gap: 18px;
+  align-items: stretch;
+}
+.itinerary-support .why-navi,
+.itinerary-support .weather-panel {
+  height: 100%;
+  margin: 0;
+  padding: 20px;
+}
+.itinerary-support .why-navi p,
+.itinerary-support .why-navi li {
+  font-size: 14px;
+  line-height: 1.55;
+}
+.itinerary .action-bar {
+  margin: 0;
+  padding-top: 2px;
+}
+.itinerary .pair-phone {
+  width: min(440px, 100%);
+  max-width: none;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-soft);
+}
+.itinerary .pair-phone > span {
+  margin-bottom: 8px;
+  font-family: "Courier New", monospace;
+  font-weight: 700;
+}
+.itinerary .pair-phone input {
+  width: 100%;
+  background: var(--surface);
+}
+.itinerary .pair-phone .field-help {
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+.itinerary .copy-text {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
+@media (max-width: 900px) {
+  .itinerary {
+    padding: 20px;
+    gap: 18px;
+  }
+  .itinerary-grid,
+  .itinerary-support {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .itinerary .map-column {
+    position: static;
+  }
+  .itinerary .itinerary-map,
+  .itinerary .google-map,
+  .itinerary .leaflet-map,
+  .itinerary .map-placeholder {
+    height: 360px;
+  }
+}
+@media (max-width: 600px) {
+  .itinerary {
+    margin: 18px -8px;
+    padding: 18px 14px;
+    border-radius: 18px;
+  }
+  .itinerary-heading h2 {
+    font-size: 34px;
+  }
+  .itinerary .timeline-step {
+    margin-left: 10px;
+    padding-left: 14px;
+  }
+  .itinerary .stop-card {
+    padding: 15px;
+  }
+  .itinerary .itinerary-map,
+  .itinerary .google-map,
+  .itinerary .leaflet-map,
+  .itinerary .map-placeholder {
+    height: 300px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -976,12 +1140,12 @@ legend,
     gap: 8px;
   }
   .hero-mascot-wrap {
-    min-height: 124px;
+    min-height: 148px;
     display: grid;
     place-items: center;
   }
   .hero-navi-main {
-    width: 132px;
+    width: 152px;
     transform: none;
     margin: 0 0 6px;
   }

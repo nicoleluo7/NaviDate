@@ -48,7 +48,9 @@ export default function Itinerary({
     [tab, setTab] = useState("timeline"),
     [notice, setNotice] = useState(""),
     [pairCode, setPairCode] = useState(""),
-    [pairLink, setPairLink] = useState("");
+    [pairLink, setPairLink] = useState(""),
+    [phone, setPhone] = useState(""),
+    [pairing, setPairing] = useState(false);
   function choose(index: number) {
     setSelected((current) => (current === index ? null : index));
     setFocus((n) => n + 1);
@@ -76,11 +78,16 @@ export default function Itinerary({
     savedUrl ?? "",
   ].join("\n");
   async function pair() {
+    if (!phone.trim()) {
+      setNotice("Enter the phone number you use with iMessage.");
+      return;
+    }
+    setPairing(true);
     try {
       const r = await fetch("/api/pair", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ shareId }),
+          body: JSON.stringify({ shareId, phone }),
         }),
         data = await r.json();
       if (!r.ok) throw new Error(data.error);
@@ -92,6 +99,8 @@ export default function Itinerary({
       setNotice(
         e instanceof Error ? e.message : "Could not create pairing code.",
       );
+    } finally {
+      setPairing(false);
     }
   }
   async function checkPair() {
@@ -111,7 +120,6 @@ export default function Itinerary({
           <div>
             <h2>Your date ✨</h2>
             <p className="plan-kicker">{plan.title}</p>
-            <p>{plan.explanation}</p>
           </div>
           <Heart className="heart-outline" size={34} />
         </div>
@@ -289,22 +297,47 @@ export default function Itinerary({
         <span>⏱ {formatDuration(plan.duration)}</span>
         <span>🚶 {formatWalkMiles(plan.walkKm)}</span>
       </div>
-      <aside className="why-navi">
-        <h3>
-          <Sparkles size={18} /> Why Navi chose this
-        </h3>
-        <p>{plan.explanation}</p>
-        <p>{plan.suitability}</p>
-        {plan.weather.summary && <p>{plan.weather.summary}</p>}
-        {plan.warnings.length > 0 && (
-          <ul>
-            {plan.warnings.map((w) => (
-              <li key={w}>{w}</li>
-            ))}
-          </ul>
-        )}
-      </aside>
-      <WeatherPanel weather={plan.weather} />
+      <div className="itinerary-support">
+        <aside className="why-navi">
+          <h3>
+            <Sparkles size={18} /> Why Navi chose this
+          </h3>
+          <p>{plan.explanation}</p>
+          <p>{plan.suitability}</p>
+          {plan.warnings.length > 0 && (
+            <ul>
+              {plan.warnings.map((w) => (
+                <li key={w}>{w}</li>
+              ))}
+            </ul>
+          )}
+        </aside>
+        <WeatherPanel weather={plan.weather} />
+      </div>
+      {canPair && photon && shareId && (
+        <label className="pair-phone">
+          <span>Enter the phone number you use with iMessage</span>
+          <input
+            type="tel"
+            name="imessage-phone"
+            autoComplete="tel"
+            inputMode="tel"
+            placeholder="+1 607 555 0100"
+            value={phone}
+            disabled={pairing || dirty || busy}
+            onChange={(event) => setPhone(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void pair();
+              }
+            }}
+          />
+          <small className="field-help">
+            We’ll connect this number, then open a ready-to-send pairing text.
+          </small>
+        </label>
+      )}
       <div className="action-bar">
         {routeUrl && (
           <a className="primary" href={routeUrl} target="_blank" rel="noreferrer">
@@ -316,10 +349,10 @@ export default function Itinerary({
           <Button
             className="secondary"
             onPress={pair}
-            isDisabled={!photon || !shareId || dirty || busy}
+            isDisabled={!photon || !shareId || dirty || busy || pairing}
           >
             <MessageCircle size={17} />
-            Send to iMessage
+            {pairing ? "Connecting…" : "Send to iMessage"}
           </Button>
         )}
         {onSave && (
