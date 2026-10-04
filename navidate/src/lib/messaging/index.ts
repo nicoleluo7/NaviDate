@@ -294,7 +294,7 @@ export async function handleIncoming(
             response = limitedAnswer(saved.plan.title);
           }
         } else response = limitedAnswer(saved.plan.title);
-      } else if (saved && (intent === "plan" || intent === "location")) {
+      } else if (saved && intent === "plan") {
         criteria = conversation.criteria;
         response = `I can answer questions about this date, but I can’t change it from a text. Update the time, budget, or stops in the planner where you saved it.`;
       } else if (saved && intent === "greeting") {
