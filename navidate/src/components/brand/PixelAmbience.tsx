@@ -53,7 +53,7 @@ export default function PixelAmbience() {
     }
 
     function trail(event: PointerEvent) {
-      if ((event.buttons & 1) === 0) return;
+      if (event.pointerType === "touch") return;
       const now = performance.now();
       if (now - lastRelease.current < 110) return;
       lastRelease.current = now;
@@ -90,6 +90,18 @@ export default function PixelAmbience() {
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        className="pixel-cloud pixel-cloud-four"
+        src="/navidate/background/new/cloud-hearts.png"
+        alt=""
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="pixel-cloud pixel-cloud-five"
+        src="/navidate/background/new/cloud-wide.png"
+        alt=""
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         className="pixel-heart pixel-heart-one"
         src="/navidate/background/new/heart-sparkle.png"
         alt=""
@@ -103,6 +115,18 @@ export default function PixelAmbience() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className="pixel-heart pixel-heart-three"
+        src="/navidate/background/new/heart-sparkle.png"
+        alt=""
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="pixel-heart pixel-heart-four"
+        src="/navidate/background/new/heart-soft.png"
+        alt=""
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="pixel-heart pixel-heart-five"
         src="/navidate/background/new/heart-sparkle.png"
         alt=""
       />

@@ -21,19 +21,6 @@ body {
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   position: relative;
 }
-body::before {
-  content: "♡     ·     ♡                         ♡     ·                 ♡";
-  position: fixed;
-  inset: 118px 3vw auto;
-  color: #ef7b881f;
-  font:
-    32px/1 var(--font-pinyon),
-    "Pinyon Script",
-    cursive;
-  letter-spacing: 18px;
-  pointer-events: none;
-  z-index: -1;
-}
 h1,
 h2,
 h3 {
@@ -92,7 +79,6 @@ h3 {
     radial-gradient(circle at 72% 105%, #ffdcd5 0 18%, transparent 18.4%),
     linear-gradient(180deg, #fffaf7 0%, #fff1ec 100%);
 }
-.hero::before,
 .hero::after {
   position: absolute;
   color: #f26676;
@@ -100,15 +86,8 @@ h3 {
   pointer-events: none;
   z-index: 0;
 }
-.hero::before {
-  content: "♡";
-  top: 52px;
-  left: 22%;
-  font-size: 32px;
-  transform: rotate(-12deg);
-}
 .hero::after {
-  content: "✦  ♡";
+  content: "✦";
   right: 7%;
   bottom: 112px;
   font-size: 22px;
@@ -1061,7 +1040,6 @@ body {
   inset: 0;
   pointer-events: none;
   overflow: hidden;
-  z-index: 0;
 }
 #main-content {
   position: relative;
@@ -1078,7 +1056,8 @@ body {
 }
 .pixel-cloud {
   opacity: 0.18;
-  animation: cloud-drift 9s ease-in-out infinite alternate;
+  animation: cloud-drift 3.8s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+  will-change: transform;
 }
 .pixel-cloud-one {
   width: 270px;
@@ -1089,20 +1068,37 @@ body {
   width: 250px;
   right: -58px;
   top: 42%;
-  animation-delay: -3s;
-  animation-duration: 11s;
+  animation-delay: -1.4s;
+  animation-duration: 4.2s;
 }
 .pixel-cloud-three {
   width: 215px;
   left: 6%;
   bottom: 5%;
-  animation-delay: -6s;
-  animation-duration: 13s;
+  animation-delay: -2.4s;
+  animation-duration: 4.6s;
+}
+.pixel-cloud-four {
+  width: 190px;
+  left: 38%;
+  top: 48%;
+  opacity: 0.12;
+  animation-delay: -0.8s;
+  animation-duration: 4.4s;
+}
+.pixel-cloud-five {
+  width: 165px;
+  right: 30%;
+  top: 72%;
+  opacity: 0.13;
+  animation-delay: -2.8s;
+  animation-duration: 4s;
 }
 .pixel-heart {
   width: 45px;
   opacity: 0.2;
-  animation: heart-hover 5s steps(5, end) infinite;
+  animation: heart-hover 3.2s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
 }
 .pixel-heart-one {
   left: 3%;
@@ -1112,13 +1108,27 @@ body {
   right: 4%;
   top: 24%;
   width: 38px;
-  animation-delay: -2s;
+  animation-delay: -1.1s;
 }
 .pixel-heart-three {
   right: 8%;
   bottom: 13%;
   width: 32px;
-  animation-delay: -4s;
+  animation-delay: -2.1s;
+}
+.pixel-heart-four {
+  left: 47%;
+  top: 34%;
+  width: 34px;
+  opacity: 0.14;
+  animation-delay: -0.7s;
+}
+.pixel-heart-five {
+  left: 56%;
+  top: 65%;
+  width: 29px;
+  opacity: 0.15;
+  animation-delay: -1.8s;
 }
 .click-butterfly {
   position: fixed;
@@ -1273,12 +1283,22 @@ legend,
     width: 135px;
     left: -35px;
   }
+  .pixel-cloud-four {
+    width: 115px;
+    left: 36%;
+  }
+  .pixel-cloud-five {
+    width: 105px;
+    right: 22%;
+  }
   .pixel-heart {
     width: 28px;
     opacity: 0.16;
   }
   .pixel-heart-two,
-  .pixel-heart-three {
+  .pixel-heart-three,
+  .pixel-heart-four,
+  .pixel-heart-five {
     width: 24px;
   }
   .click-butterfly {

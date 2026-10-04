@@ -18,7 +18,7 @@ test("plans, maps, saves, shares and protects editing", async ({
   await page.goto("/");
   await expect(
     page.getByRole("heading", {
-      name: "Navigate your next date, for more butterflies",
+      name: "Navigate your next date, with more butterflies",
     }),
   ).toBeVisible();
   await page.screenshot({
@@ -59,6 +59,14 @@ test("plans, maps, saves, shares and protects editing", async ({
     .getByRole("button", { name: "Save & Share", exact: true })
     .click();
   await expect(page.getByText(/Your date is saved\./)).toBeVisible();
+  const phone = page.getByLabel("Enter the phone number you use with iMessage");
+  await expect(phone).toBeEnabled();
+  await phone.fill("+1 607 555 0100");
+  await expect(phone).toHaveValue("+1 607 555 0100");
+  await page.locator(".plan-card").nth(1).click();
+  await expect(phone).toBeEnabled();
+  await phone.fill("+1 607 555 0199");
+  await expect(phone).toHaveValue("+1 607 555 0199");
   const share = await page
     .getByRole("link", { name: "Open read-only share page" })
     .getAttribute("href");

@@ -121,7 +121,6 @@ export default function Itinerary({
             <h2>Your date ✨</h2>
             <p className="plan-kicker">{plan.title}</p>
           </div>
-          <Heart className="heart-outline" size={34} />
         </div>
       )}
       {share && (
@@ -332,7 +331,7 @@ export default function Itinerary({
             inputMode="tel"
             placeholder="+1 607 555 0100"
             value={phone}
-            disabled={pairing || dirty || busy}
+            disabled={pairing}
             onChange={(event) => setPhone(event.target.value)}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
