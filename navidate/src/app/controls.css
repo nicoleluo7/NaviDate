@@ -1,6 +1,6 @@
 /* React Aria primitives use the same palette in fields, portals, and actions. */
 .brand-mark {
-  mix-blend-mode: multiply;
+  mix-blend-mode: normal;
   overflow: hidden;
 }
 .logo .brand-mark {

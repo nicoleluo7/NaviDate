@@ -279,7 +279,7 @@ export default function Planner({
             <div className="hero-copy">
               <h1 className="hero-title">
                 Navigate your next date,
-                <span className="hero-script">for more butterflies</span>
+                <span className="hero-script">with more butterflies</span>
               </h1>
             </div>
             <div className="hero-collage" aria-label="Favorite date memories">

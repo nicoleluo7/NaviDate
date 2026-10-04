@@ -3,11 +3,11 @@ export default function BrandMark({ size = 38 }: { size?: number }) {
     <svg
       width={size}
       height={size}
-      viewBox="465 590 1065 1065"
+      viewBox="0 0 2064 1486"
       aria-hidden="true"
       className="brand-mark"
     >
-      <image href="/navidate-logo.png" width="2000" height="2000" />
+      <image href="/navidate-logo.png" width="2064" height="1486" />
     </svg>
   );
 }

@@ -2,42 +2,47 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 
-type Butterfly = {
+type ClickParticle = {
   id: number;
   x: number;
   y: number;
   drift: number;
-  variant: "open" | "hearts" | "blush" | "side";
+  variant:
+    "open" | "hearts" | "blush" | "side" | "heart-sparkle" | "heart-soft";
 };
 
-const butterflyTypes: Butterfly["variant"][] = [
+const particleTypes: ClickParticle["variant"][] = [
   "open",
+  "heart-sparkle",
   "hearts",
+  "heart-soft",
   "blush",
+  "heart-sparkle",
   "side",
+  "heart-soft",
 ];
 
 export default function PixelAmbience() {
-  const [butterflies, setButterflies] = useState<Butterfly[]>([]);
+  const [particles, setParticles] = useState<ClickParticle[]>([]);
   const nextId = useRef(0);
   const lastRelease = useRef(0);
 
   useEffect(() => {
     function spawn(x: number, y: number) {
       const id = nextId.current++;
-      const arrivals: Butterfly[] = [
+      const arrivals: ClickParticle[] = [
         {
           id,
           x: x - 22,
           y: y - 22,
           drift: id % 2 === 0 ? -42 : 42,
-          variant: butterflyTypes[id % butterflyTypes.length],
+          variant: particleTypes[id % particleTypes.length],
         },
       ];
-      setButterflies((current) => [...current.slice(-10), ...arrivals]);
+      setParticles((current) => [...current.slice(-10), ...arrivals]);
       window.setTimeout(() => {
         const ids = new Set(arrivals.map(({ id }) => id));
-        setButterflies((current) => current.filter(({ id }) => !ids.has(id)));
+        setParticles((current) => current.filter(({ id }) => !ids.has(id)));
       }, 1800);
     }
 
@@ -101,22 +106,25 @@ export default function PixelAmbience() {
         src="/navidate/background/new/heart-sparkle.png"
         alt=""
       />
-      {butterflies.map((butterfly) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={butterfly.id}
-          className={`click-butterfly click-butterfly-${butterfly.variant}`}
-          src={`/navidate/background/new/butterfly-${butterfly.variant}.png`}
-          alt=""
-          style={
-            {
-              left: butterfly.x,
-              top: butterfly.y,
-              "--butterfly-drift": `${butterfly.drift}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
+      {particles.map((particle) => {
+        const isHeart = particle.variant.startsWith("heart-");
+        return (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={particle.id}
+            className={`click-butterfly ${isHeart ? "click-particle-heart" : `click-butterfly-${particle.variant}`}`}
+            src={`/navidate/background/new/${isHeart ? particle.variant : `butterfly-${particle.variant}`}.png`}
+            alt=""
+            style={
+              {
+                left: particle.x,
+                top: particle.y,
+                "--butterfly-drift": `${particle.drift}px`,
+              } as CSSProperties
+            }
+          />
+        );
+      })}
     </div>
   );
 }

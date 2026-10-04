@@ -1131,6 +1131,9 @@ body {
   width: 43px;
   animation-delay: 70ms;
 }
+.click-particle-heart {
+  width: 38px;
+}
 @keyframes cloud-drift {
   from {
     transform: translate3d(-10px, 4px, 0);
@@ -1255,6 +1258,9 @@ legend,
   background: #fffdfa;
 }
 @media (max-width: 600px) {
+  .how {
+    display: none;
+  }
   .pixel-cloud-one {
     width: 155px;
     left: -70px;
@@ -1280,6 +1286,9 @@ legend,
   }
   .click-butterfly-side {
     width: 38px;
+  }
+  .click-particle-heart {
+    width: 34px;
   }
   .navi-voice {
     max-height: calc(100dvh - 24px);
