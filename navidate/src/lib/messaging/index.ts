@@ -137,7 +137,10 @@ export function parseLocal(
       );
       if (parsed.success) result.vibe = parsed.data;
     }
-    if (key === "transport" && (value === "walk" || value === "bus"))
+    if (
+      key === "transport" &&
+      (value === "walk" || value === "bus" || value === "drive")
+    )
       result.transport = value;
   }
   return result;

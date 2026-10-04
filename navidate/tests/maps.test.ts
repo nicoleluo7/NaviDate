@@ -166,6 +166,15 @@ describe("Google Maps helpers", () => {
     expect(url).not.toContain("42.451");
   });
 
+  it("maps drive to driving travel mode", () => {
+    const url = buildGoogleMapsRouteUrl({
+      start: { name: "Start", lat: 42.45, lng: -76.48 },
+      stops: [{ name: "One", lat: 42.451, lng: -76.481 }],
+      transport: "drive",
+    });
+    expect(new URL(url!).searchParams.get("travelmode")).toBe("driving");
+  });
+
   it("decodes an encoded polyline into coordinates", () => {
     const points = decodePolyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
     expect(points.length).toBeGreaterThan(1);

@@ -10,6 +10,13 @@ export class HttpError extends Error {
     super(message);
   }
 }
+function isHttpError(error: unknown): error is HttpError {
+  return (
+    error instanceof Error &&
+    "status" in error &&
+    typeof (error as { status: unknown }).status === "number"
+  );
+}
 export async function session(create = false) {
   const jar = await cookies();
   let token = jar.get("navidate_creator")?.value;
@@ -68,7 +75,7 @@ export function failure(error: unknown) {
       },
       { status: 400 },
     );
-  if (error instanceof HttpError)
+  if (error instanceof HttpError || isHttpError(error))
     return Response.json({ error: error.message }, { status: error.status });
   if (error instanceof Error && error.message.startsWith("Choose a valid"))
     return Response.json({ error: error.message }, { status: 400 });

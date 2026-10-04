@@ -23,20 +23,31 @@ export async function POST(req: Request) {
       process.env.XAI_VOICE_DAILY_SESSION_LIMIT,
       10,
     );
-    const r = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.XAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ expires_after: { seconds: 60 } }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!r.ok)
+    let r: Response;
+    try {
+      r = await fetch("https://api.x.ai/v1/realtime/client_secrets", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${process.env.XAI_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ expires_after: { seconds: 300 } }),
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch {
       throw new HttpError(
         503,
-        "Navi couldn’t connect. Check xAI voice access and credits, or use the form.",
+        "Navi couldn’t reach xAI. Check your network, or use the form.",
       );
+    }
+    if (!r.ok) {
+      throw new HttpError(
+        503,
+        r.status === 401 || r.status === 403
+          ? "Navi voice isn’t authorized. Check XAI_API_KEY in .env.local (xAI console, voice/realtime access), restart the server, or use the form."
+          : "Navi couldn’t connect. Check xAI voice access and credits, or use the form.",
+      );
+    }
     const data = z
       .object({ value: z.string().min(1), expires_at: z.number() })
       .parse(await r.json());

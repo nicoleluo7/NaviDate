@@ -15,7 +15,6 @@ export default function SiteHeader({
         NaviDate
       </Link>
       <nav>
-        <Link href="/#how">How it works</Link>
         <Link className="nav-cta" href={ctaHref}>
           {ctaLabel}
         </Link>

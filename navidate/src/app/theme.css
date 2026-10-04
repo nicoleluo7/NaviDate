@@ -16,8 +16,7 @@ body {
     radial-gradient(ellipse at 95% 42%, #ffe3df 0 7%, transparent 7.3%),
     radial-gradient(ellipse at 88% 45%, #ffede9 0 10%, transparent 10.3%),
     radial-gradient(circle at 12% 8%, #ffe4dc 0, transparent 28%),
-    radial-gradient(circle at 88% 12%, #ffe9e2 0, transparent 24%),
-    var(--bg);
+    radial-gradient(circle at 88% 12%, #ffe9e2 0, transparent 24%), var(--bg);
   color: var(--text);
   font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
   position: relative;
@@ -27,7 +26,10 @@ body::before {
   position: fixed;
   inset: 118px 3vw auto;
   color: #ef7b881f;
-  font: 32px/1 var(--font-pinyon), "Pinyon Script", cursive;
+  font:
+    32px/1 var(--font-pinyon),
+    "Pinyon Script",
+    cursive;
   letter-spacing: 18px;
   pointer-events: none;
   z-index: -1;
@@ -117,7 +119,10 @@ h3 {
   width: 100%;
   min-height: 280px;
   display: grid;
-  grid-template-columns: minmax(205px, 0.85fr) minmax(350px, 1.3fr) minmax(285px, 1fr);
+  grid-template-columns: minmax(205px, 0.85fr) minmax(350px, 1.3fr) minmax(
+      285px,
+      1fr
+    );
   align-items: center;
   position: relative;
   z-index: 1;
@@ -130,11 +135,17 @@ h3 {
   display: block;
   width: min(235px, 100%);
   height: auto;
-  animation: navi-float 4s ease-in-out infinite;
+  animation: hero-navi-float 3s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+  will-change: transform;
 }
-@keyframes navi-float {
-  0%, 100% { transform: translateY(0) rotate(-1deg); }
-  50% { transform: translateY(-10px) rotate(1.5deg); }
+@keyframes hero-navi-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.5deg);
+  }
+  50% {
+    transform: translate3d(0, -8px, 0) rotate(0.75deg);
+  }
 }
 .hero-copy {
   display: flex;
@@ -212,7 +223,10 @@ h3 {
   right: 2%;
   top: 18px;
   color: #a94639;
-  font: 26px/0.95 var(--font-pinyon), "Pinyon Script", cursive;
+  font:
+    26px/0.95 var(--font-pinyon),
+    "Pinyon Script",
+    cursive;
   transform: rotate(-7deg);
 }
 @media (max-width: 1200px) {
@@ -292,7 +306,7 @@ h3 {
   justify-items: center;
   gap: 10px 14px;
   z-index: 2;
-  margin: 2px auto 8px;
+  margin: 24px auto 8px;
 }
 .hero-voice-cta .mic-button {
   grid-column: 2;
@@ -310,7 +324,9 @@ h3 {
 }
 .hero-voice-label {
   color: #a44e58;
-  font: 700 13px/1.2 "Courier New", monospace;
+  font:
+    700 13px/1.2 "Courier New",
+    monospace;
   letter-spacing: 0.02em;
   white-space: nowrap;
   grid-column: 2;
@@ -900,13 +916,9 @@ h3 {
   margin: 3px 0;
   font-size: 22px;
 }
-.itinerary .plan-summary {
-  margin: 0;
-  padding: 0;
-}
 .itinerary-support {
   display: grid;
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
   align-items: stretch;
 }
@@ -914,9 +926,39 @@ h3 {
 .itinerary-support .weather-panel {
   height: 100%;
   margin: 0;
-  padding: 20px;
+  padding: 20px 22px;
 }
-.itinerary-support .why-navi p,
+.why-navi-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 16px;
+}
+.why-navi-stats span {
+  background: var(--surface-soft);
+  border-radius: 999px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  line-height: 1.2;
+}
+.why-navi-details {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+.why-navi-details dt {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.why-navi-details dd {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
 .itinerary-support .why-navi li {
   font-size: 14px;
   line-height: 1.55;
@@ -1008,30 +1050,123 @@ body {
     linear-gradient(#f5aeb51a 2px, transparent 2px),
     linear-gradient(90deg, #f5aeb51a 2px, transparent 2px),
     linear-gradient(180deg, #fff8f5 0%, #fff3f0 52%, #fffaf6 100%);
-  background-size: 32px 32px, 32px 32px, 100% 100%;
+  background-size:
+    32px 32px,
+    32px 32px,
+    100% 100%;
   background-attachment: fixed;
 }
-body::after {
-  content: "";
+.pixel-ambience {
   position: fixed;
-  inset: 90px 0 0;
-  background-image:
-    url("/navidate/background/pixel-cloud.svg"),
-    url("/navidate/background/pixel-heart.svg"),
-    url("/navidate/background/pixel-cloud.svg"),
-    url("/navidate/background/pixel-heart.svg"),
-    url("/navidate/background/pixel-heart.svg"),
-    url("/navidate/background/pixel-cloud.svg");
-  background-repeat: no-repeat;
-  background-position: 1% 16%, 8% 7%, 98% 44%, 93% 13%, 4% 72%, 88% 84%;
-  background-size: 112px, 34px, 132px, 42px, 28px, 92px;
-  image-rendering: pixelated;
-  opacity: 0.24;
+  inset: 0;
   pointer-events: none;
-  z-index: -1;
+  overflow: hidden;
+  z-index: 0;
+}
+#main-content {
+  position: relative;
+  z-index: 1;
+}
+.pixel-cloud,
+.pixel-heart,
+.click-butterfly {
+  position: absolute;
+  display: block;
+  height: auto;
+  image-rendering: pixelated;
+  user-select: none;
+}
+.pixel-cloud {
+  opacity: 0.18;
+  animation: cloud-drift 9s ease-in-out infinite alternate;
+}
+.pixel-cloud-one {
+  width: 270px;
+  left: -70px;
+  top: 17%;
+}
+.pixel-cloud-two {
+  width: 250px;
+  right: -58px;
+  top: 42%;
+  animation-delay: -3s;
+  animation-duration: 11s;
+}
+.pixel-cloud-three {
+  width: 215px;
+  left: 6%;
+  bottom: 5%;
+  animation-delay: -6s;
+  animation-duration: 13s;
+}
+.pixel-heart {
+  width: 45px;
+  opacity: 0.2;
+  animation: heart-hover 5s steps(5, end) infinite;
+}
+.pixel-heart-one {
+  left: 3%;
+  top: 9%;
+}
+.pixel-heart-two {
+  right: 4%;
+  top: 24%;
+  width: 38px;
+  animation-delay: -2s;
+}
+.pixel-heart-three {
+  right: 8%;
+  bottom: 13%;
+  width: 32px;
+  animation-delay: -4s;
+}
+.click-butterfly {
+  position: fixed;
+  width: 50px;
+  z-index: 9999;
+  transform-origin: center;
+  animation: butterfly-release 1.8s ease-out forwards;
+}
+.click-butterfly-side {
+  width: 43px;
+  animation-delay: 70ms;
+}
+@keyframes cloud-drift {
+  from {
+    transform: translate3d(-10px, 4px, 0);
+  }
+  to {
+    transform: translate3d(24px, -8px, 0);
+  }
+}
+@keyframes heart-hover {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(3deg);
+  }
+}
+@keyframes butterfly-release {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0) scale(0.35) rotate(-10deg);
+  }
+  18% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--butterfly-drift), -125px, 0) scale(1)
+      rotate(12deg);
+  }
 }
 .hero-navi-main {
-  animation-timing-function: steps(8, end);
+  animation-timing-function: cubic-bezier(0.45, 0, 0.55, 1);
   image-rendering: pixelated;
 }
 .navi-state-image,
@@ -1039,6 +1174,9 @@ body::after {
 .prompt-icon-image,
 .mic-icon-image {
   image-rendering: pixelated;
+}
+.chip-icon-smooth {
+  image-rendering: auto;
 }
 .mic-icon-image {
   width: 42px;
@@ -1117,9 +1255,31 @@ legend,
   background: #fffdfa;
 }
 @media (max-width: 600px) {
-  body::after {
-    background-position: -4% 15%, 7% 8%, 105% 46%, 94% 12%, 4% 72%, 90% 86%;
-    background-size: 72px, 25px, 82px, 30px, 22px, 64px;
+  .pixel-cloud-one {
+    width: 155px;
+    left: -70px;
+  }
+  .pixel-cloud-two {
+    width: 150px;
+    right: -70px;
+  }
+  .pixel-cloud-three {
+    width: 135px;
+    left: -35px;
+  }
+  .pixel-heart {
+    width: 28px;
+    opacity: 0.16;
+  }
+  .pixel-heart-two,
+  .pixel-heart-three {
+    width: 24px;
+  }
+  .click-butterfly {
+    width: 44px;
+  }
+  .click-butterfly-side {
+    width: 38px;
   }
   .navi-voice {
     max-height: calc(100dvh - 24px);
@@ -1153,6 +1313,27 @@ legend,
     position: relative;
     z-index: 2;
   }
+  .preference-grid .vibes > div {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+  .preference-grid .vibes button,
+  .preference-grid .vibes button:last-child {
+    grid-column: auto;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 7px;
+    gap: 5px;
+    font-size: 11px;
+    line-height: 1.15;
+    white-space: normal;
+  }
+  .preference-grid .chip-icon-image {
+    width: 18px;
+    height: 18px;
+  }
   .start-map-card .leaflet-map,
   .start-map-card .google-map,
   .start-map-card .map-placeholder {
@@ -1160,5 +1341,14 @@ legend,
   }
   .voice-actions {
     margin-top: 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pixel-cloud,
+  .pixel-heart {
+    animation: none;
+  }
+  .click-butterfly {
+    animation-duration: 600ms;
   }
 }

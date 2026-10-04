@@ -30,7 +30,7 @@ export const criteriaSchema = z.object({
     .enum(["any", "food", "coffee", "dessert", "outdoors"])
     .default("any"),
   vibe: vibeSchema,
-  transport: z.enum(["walk", "bus"]),
+  transport: z.enum(["walk", "bus", "drive"]),
   dietary: z
     .array(z.enum(["vegetarian", "vegan", "gluten-free"]))
     .max(3)

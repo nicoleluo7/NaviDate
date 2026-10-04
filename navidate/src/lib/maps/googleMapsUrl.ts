@@ -56,7 +56,12 @@ export function buildGoogleMapsRouteUrl({
     api: "1",
     origin: mapsPlaceQuery(start),
     destination: mapsPlaceQuery(destinationPoint),
-    travelmode: transport === "bus" ? "transit" : "walking",
+    travelmode:
+      transport === "bus"
+        ? "transit"
+        : transport === "drive"
+          ? "driving"
+          : "walking",
   });
   if (middle.length)
     params.set("waypoints", middle.map(mapsPlaceQuery).join("|"));
@@ -91,6 +96,9 @@ export function routeUrlForPlan(plan: {
 }) {
   if (!plan.stops.length) return plan.googleMapsUrl;
   const legs = plan.legs ?? [];
+  const driving = /[?&]travelmode=driving(?:&|$)/i.test(
+    plan.googleMapsUrl ?? "",
+  );
   return (
     buildGoogleMapsRouteUrl({
       start: {
@@ -105,7 +113,11 @@ export function routeUrlForPlan(plan: {
         lat: stop.place.coordinates?.lat,
         lng: stop.place.coordinates?.lng,
       })),
-      transport: legs.some((leg) => leg.mode === "bus") ? "bus" : "walk",
+      transport: legs.some((leg) => leg.mode === "bus")
+        ? "bus"
+        : driving
+          ? "drive"
+          : "walk",
       returnToStart: legs.at(-1)?.toName === plan.start.name,
     }) ?? plan.googleMapsUrl
   );

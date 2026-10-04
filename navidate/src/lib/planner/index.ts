@@ -275,7 +275,7 @@ export async function schedule(
         lng: place.coordinates.lng,
         googlePlaceId: place.googlePlaceId,
       })),
-      transport: legs.some((l) => l.mode === "bus") ? "bus" : "walk",
+      transport: c.transport,
       returnToStart: c.returnToStart,
     }),
   };

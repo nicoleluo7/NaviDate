@@ -190,7 +190,7 @@ export function StartTimeField({
           isRequired
         >
           <Label className="field-label">
-            Start time <small>New York</small>
+            Start time
           </Label>
           <Group className="field-control segmented-control">
             <DateInput className="segment-input">
@@ -220,7 +220,7 @@ export function StartTimeField({
                 >
                   <Heading slot="title">When shall we meet?</Heading>
                   <p className="picker-note">
-                    New York time · or type any minute in the field
+                    Or type any minute in the field
                   </p>
                   <ListBox
                     className="option-list time-options"

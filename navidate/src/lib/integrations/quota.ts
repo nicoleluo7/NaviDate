@@ -1,4 +1,5 @@
 import { getStorage } from "@/lib/storage";
+import { HttpError } from "@/lib/api";
 export async function claimDaily(
   provider: string,
   requested: string | undefined,
@@ -13,7 +14,8 @@ export async function claimDaily(
   for (let i = 0; i < limit; i++)
     if (await store.claim(`provider-quota:${provider}:${day}:${i}`, true))
       return;
-  throw new Error(
+  throw new HttpError(
+    429,
     `${provider} daily limit reached. Try again tomorrow or use the form in local mode.`,
   );
 }

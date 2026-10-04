@@ -292,18 +292,26 @@ export default function Itinerary({
           </div>
         </div>
       </div>
-      <div className="stat-row plan-summary" aria-label="Plan summary">
-        <span>💵 ${plan.cost} for two</span>
-        <span>⏱ {formatDuration(plan.duration)}</span>
-        <span>🚶 {formatWalkMiles(plan.walkKm)}</span>
-      </div>
       <div className="itinerary-support">
         <aside className="why-navi">
           <h3>
             <Sparkles size={18} /> Why Navi chose this
           </h3>
-          <p>{plan.explanation}</p>
-          <p>{plan.suitability}</p>
+          <div className="why-navi-stats" aria-label="Plan summary">
+            <span>💵 ${plan.cost} for two</span>
+            <span>⏱ {formatDuration(plan.duration)}</span>
+            <span>🚶 {formatWalkMiles(plan.walkKm)}</span>
+          </div>
+          <dl className="why-navi-details">
+            <div>
+              <dt>The idea</dt>
+              <dd>{plan.explanation}</dd>
+            </div>
+            <div>
+              <dt>The fit</dt>
+              <dd>{plan.suitability}</dd>
+            </div>
+          </dl>
           {plan.warnings.length > 0 && (
             <ul>
               {plan.warnings.map((w) => (

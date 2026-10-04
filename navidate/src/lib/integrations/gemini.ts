@@ -292,7 +292,7 @@ const chatExtraction = z.object({
       .enum(["any", "food", "coffee", "dessert", "outdoors"])
       .optional(),
     setting: z.enum(["any", "indoor", "outdoor"]).optional(),
-    transport: z.enum(["walk", "bus"]).optional(),
+    transport: z.enum(["walk", "bus", "drive"]).optional(),
     dietary: z.array(z.enum(["vegetarian", "vegan", "gluten-free"])).optional(),
     preferences: z.string().max(1000).optional(),
     returnToStart: z.boolean().optional(),

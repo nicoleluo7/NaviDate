@@ -4,7 +4,7 @@ export function googleMapsServerKey() {
 }
 
 export function geminiModel() {
-  return process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  return process.env.GEMINI_MODEL || "gemini-3.8-flash";
 }
 
 export function geminiConfigured() {

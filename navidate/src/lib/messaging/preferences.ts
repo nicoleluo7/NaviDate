@@ -96,6 +96,7 @@ export function naturalCriteria(
   if (/\bindoor(s)?\b/.test(t)) c.setting = "indoor";
   else if (/\boutdoor(s)?\b/.test(t)) c.setting = "outdoor";
   if (/\bwalk(?:ing)? only\b|\bno bus\b/.test(t)) c.transport = "walk";
+  else if (/\bdriv(?:e|ing)\b/.test(t)) c.transport = "drive";
   else if (/\bbus\b/.test(t)) c.transport = "bus";
   for (const vibe of [
     "Cozy",

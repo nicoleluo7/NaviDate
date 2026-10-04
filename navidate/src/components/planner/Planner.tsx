@@ -8,8 +8,6 @@ import { useEffect, useState } from "react";
 import {
   ArrowRight,
   MapPin,
-  Footprints,
-  Bus,
   Clock,
   Wallet,
   Sparkles,
@@ -60,6 +58,7 @@ export default function Planner({
   ai?: boolean;
 }) {
   const [criteria, setCriteria] = useState<Criteria>(initial),
+    [budgetInput, setBudgetInput] = useState(String(initial.budget)),
     [result, setResult] = useState<(PlanResult & { draftId: string }) | null>(
       null,
     ),
@@ -84,6 +83,7 @@ export default function Planner({
       .then((d) => {
         if (!active || !d.saved) return;
         setCriteria(d.criteria);
+        setBudgetInput(String(d.criteria.budget));
         setResult({
           plans: [d.plan],
           draftId: d.draftId,
@@ -334,6 +334,7 @@ export default function Planner({
           onOpenChange={setVoiceOpen}
           onReady={(next) => {
             setCriteria(next);
+            setBudgetInput(String(next.budget));
             setHint(
               "Navi filled in your details. Review the form, then find your date.",
             );
@@ -358,7 +359,11 @@ export default function Planner({
                 inert={busy === "resume"}
                 onSubmit={(e) => {
                   e.preventDefault();
-                  void generate();
+                  const budget = budgetInput === "" ? 0 : Number(budgetInput);
+                  const next = { ...criteria, budget };
+                  setCriteria(next);
+                  setBudgetInput(String(budget));
+                  void generate(next);
                 }}
               >
                 <div className="form-grid">
@@ -440,10 +445,20 @@ export default function Planner({
                         min={0}
                         max={1000}
                         required
-                        value={criteria.budget}
-                        onChange={(e) =>
-                          update("budget", Number(e.target.value))
-                        }
+                        value={budgetInput}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setBudgetInput(value);
+                          if (value !== "") {
+                            update("budget", Number(value));
+                          }
+                        }}
+                        onBlur={() => {
+                          if (budgetInput === "") {
+                            setBudgetInput("0");
+                            update("budget", 0);
+                          }
+                        }}
                       />
                     </div>
                   </label>
@@ -457,7 +472,6 @@ export default function Planner({
                         ["any", "Surprise me", "/navidate/icons/category_icons/10_surprise_me.png"],
                         ["food", "Food", "/navidate/icons/category_icons/01_food_drinks.png"],
                         ["coffee", "Coffee", "/navidate/icons/category_icons/09_cozy.png"],
-                        ["dessert", "Something sweet", "/navidate/icons/category_icons/07_romantic.png"],
                         ["outdoors", "Outdoors", "/navidate/icons/category_icons/02_outdoors.png"],
                       ] as const
                     ).map(([value, label, icon]) => (
@@ -484,7 +498,6 @@ export default function Planner({
                           "Romantic",
                           "Adventurous",
                           "Casual",
-                          "Creative",
                         ] as const
                       ).map((v) => (
                         <Button
@@ -498,15 +511,15 @@ export default function Planner({
                           <img
                             className="chip-icon-image"
                             src={
-                              v === "Cozy"
-                                ? "/navidate/icons/category_icons/09_cozy.png"
-                                : v === "Romantic"
-                                  ? "/navidate/icons/category_icons/07_romantic.png"
-                                  : v === "Adventurous"
-                                    ? "/navidate/icons/category_icons/06_active.png"
-                                    : v === "Casual"
-                                      ? "/navidate/icons/category_icons/13_nature.png"
-                                      : "/navidate/icons/category_icons/03_arts_culture.png"
+                              {
+                                Cozy: "/navidate/icons/category_icons/09_cozy.png",
+                                Romantic:
+                                  "/navidate/icons/category_icons/07_romantic.png",
+                                Adventurous:
+                                  "/navidate/icons/category_icons/06_active.png",
+                                Casual:
+                                  "/navidate/icons/category_icons/13_nature.png",
+                              }[v]
                             }
                             alt=""
                           />
@@ -529,7 +542,7 @@ export default function Planner({
                 <div className="transport-row">
                   <span>Getting around</span>
                   <div>
-                    {(["walk", "bus"] as const).map((t) => (
+                    {(["walk", "drive"] as const).map((t) => (
                       <Button
                         type="button"
                         key={t}
@@ -537,12 +550,17 @@ export default function Planner({
                         aria-pressed={criteria.transport === t}
                         onPress={() => update("transport", t)}
                       >
-                        {t === "walk" ? (
-                          <Footprints size={17} />
-                        ) : (
-                          <Bus size={17} />
-                        )}{" "}
-                        {t === "walk" ? "Walking" : "Walking + bus"}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          className="chip-icon-image chip-icon-smooth"
+                          src={
+                            t === "walk"
+                              ? "/navidate/icons/transport_pills/walk_icon.png"
+                              : "/navidate/icons/transport_pills/drive_icon.png"
+                          }
+                          alt=""
+                        />
+                        {t === "walk" ? "Walking" : "Driving"}
                       </Button>
                     ))}
                   </div>
@@ -575,7 +593,7 @@ export default function Planner({
                   </label>
                 </div>
                 <fieldset className="dietary">
-                  <legend>Dietary preferences · confirm with venues</legend>
+                  <legend>Dietary preferences</legend>
                   {(["vegetarian", "vegan", "gluten-free"] as const).map(
                     (d) => (
                       <label key={d}>
@@ -596,14 +614,6 @@ export default function Planner({
                     ),
                   )}
                 </fieldset>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={criteria.returnToStart}
-                    onChange={(e) => update("returnToStart", e.target.checked)}
-                  />
-                  End back where we started
-                </label>
                 <label>
                   <span>
                     Additional preferences <small>Optional</small>
@@ -681,12 +691,11 @@ export default function Planner({
         )}
         {result && (
           <section id="results" className="results">
-            <div className="section-intro">
-              {!result.plans.length && (
+            {!result.plans.length && (
+              <div className="section-intro">
                 <h2>Let’s try another direction.</h2>
-              )}
-              {selected && <p>{selected.explanation}</p>}
-            </div>
+              </div>
+            )}
             {result.error && <div className="notice">{result.error}</div>}
             {result.notices.map((n) => (
               <p className="notice" key={n}>
@@ -736,6 +745,7 @@ export default function Planner({
               isDisabled={!!busy}
               onPress={() => {
                 setCriteria(initial);
+                setBudgetInput(String(initial.budget));
                 setResult(null);
                 setSelected(null);
                 setSaved(null);

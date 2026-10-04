@@ -4,6 +4,7 @@ import "leaflet/dist/leaflet.css";
 import "./globals.css";
 import "./controls.css";
 import "./theme.css";
+import PixelAmbience from "@/components/brand/PixelAmbience";
 
 const bodoniModa = Bodoni_Moda({
   subsets: ["latin"],
@@ -34,6 +35,7 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>
+        <PixelAmbience />
         <div id="main-content">{children}</div>
       </body>
     </html>
