@@ -1,14 +1,8 @@
 import { randomBytes } from "node:crypto";
-import {
-  criteriaSchema,
-  type Criteria,
-  type Plan,
-  type SavedDate,
-} from "@/types";
+import { criteriaSchema, type Criteria, type SavedDate } from "@/types";
 import { landmarks } from "@/lib/data";
 import { getStorage, type Storage } from "@/lib/storage";
 import { hash, saveDate } from "@/lib/storage/dates";
-import { displayTime } from "@/lib/planner/time";
 import { routeUrlForPlan } from "@/lib/maps/googleMapsUrl";
 import { generate } from "@/lib/planner/service";
 import {
@@ -29,6 +23,7 @@ import {
 import {
   answerAboutDate,
   conversationalIntro,
+  savedFactAnswer,
   isPlannerCommand,
   limitedAnswer,
   isVenueQuestion,
@@ -68,22 +63,6 @@ export type Pair = {
   status: "waiting" | "sending" | "accepted" | "failed" | "unknown";
   providerId?: string;
 };
-export function itineraryText(plan: Plan, url: string) {
-  const maps = routeUrlForPlan(plan);
-  return [
-    plan.title,
-    `${displayTime(plan.startsAt)} → ${displayTime(plan.endsAt)}`,
-    `Estimated $${plan.cost} for two · ${plan.duration} min · ${plan.walkKm} km walking`,
-    ...plan.stops.map(
-      (s, i) =>
-        `${i + 1}. ${displayTime(s.arrival)} — ${s.place.name} (${s.place.typicalDurationMinutes} min, est. $${s.place.estimatedCostForTwo})${plan.legs[i]?.bus ? ` · Bus ${plan.legs[i].bus!.route}, scheduled ${displayTime(plan.legs[i].bus!.boardTime)}, wait ${plan.legs[i].bus!.wait} min` : ` · ${plan.legs[i]?.minutes ?? 0} min walking estimate`}`,
-    ),
-    plan.weather.summary,
-    ...plan.warnings,
-    maps ? `Google Maps route: ${maps}` : "",
-    url,
-  ].join("\n");
-}
 export async function createPair(
   ownerHash: string,
   shareId: string,
@@ -160,6 +139,10 @@ export async function handleIncoming(
     hash([event.platform, event.spaceId, event.senderId].join(":"));
   let pairKey: string | undefined;
   let response: string;
+  const pending: Promise<unknown>[] = [];
+  let settlePair:
+    | ((providerId: string | undefined, failed?: boolean) => Promise<void>)
+    | undefined;
   try {
     const match = event.text.trim().match(/^pair\s+([A-F0-9]{16})$/i);
     if (match) {
@@ -177,19 +160,29 @@ export async function handleIncoming(
         const saved = await store.get<SavedDate>("date:" + pair.shareId);
         if (!saved) response = "That itinerary is no longer available.";
         else {
-          await store.put(pairKey, { ...pair, status: "sending" });
-          const url = `${appUrl()}/date/${saved.shareId}`;
-          response = conversationalIntro(saved.plan, url);
-          await store.put(
-            conversationKey,
-            withTurn(
-              {
-                criteria: saved.criteria,
-                shareId: saved.shareId,
-                revision: 0,
-              },
-              "Tell me about this date.",
-              response,
+          response = conversationalIntro(saved.plan);
+          settlePair = (providerId, failed) =>
+            store.put(pairKey!, {
+              ...pair,
+              status: failed
+                ? "failed"
+                : providerId
+                  ? "accepted"
+                  : "unknown",
+              providerId,
+            });
+          pending.push(
+            store.put(
+              conversationKey,
+              withTurn(
+                {
+                  criteria: saved.criteria,
+                  shareId: saved.shareId,
+                  revision: 0,
+                },
+                "Tell me about this date.",
+                response,
+              ),
             ),
           );
         }
@@ -216,10 +209,13 @@ export async function handleIncoming(
         /(?:my|current|live) location|where am i|share.*location|maps\.app\.goo\.gl|maps\.apple\.com/i.test(
           text,
         );
+      const fact = saved
+        ? savedFactAnswer(saved.plan, text, conversation.history ?? [])
+        : undefined;
       if (locationRequest) intent = "location";
       else if (coords) intent = "plan";
-      else if (saved && isVenueQuestion(text)) intent = "answer";
-      else if (!introduction && geminiConfigured()) {
+      else if (saved && (fact || isVenueQuestion(text))) intent = "answer";
+      else if (!saved && !introduction && geminiConfigured()) {
         try {
           const interpreted = await interpretMessage(
             text,
@@ -235,16 +231,27 @@ export async function handleIncoming(
           /* Natural local parsing still supports essentials and revisions. */
         }
       }
-      if (/(?:make it |something |a bit )?cheaper|less expensive/i.test(text)) {
+      if (
+        !saved &&
+        /(?:make it |something |a bit )?cheaper|less expensive/i.test(text)
+      ) {
         criteria.budget = Math.max(
           0,
-          (saved?.plan.cost ?? conversation.criteria.budget ?? 50) - 15,
+          (conversation.criteria.budget ?? 50) - 15,
         );
         criteria.unrestricted = criteria.unrestricted?.filter(
           (p) => p !== "budget",
         );
         intent = "plan";
       }
+      if (
+        saved &&
+        /cheaper|less expensive|make it indoors|keep it indoors|regenerate|another (?:date|plan)|new date|plan (?:a |my |our )?date|different time|start time\s*\d|tweak the|swap/i.test(
+          text,
+        )
+      )
+        intent = "plan";
+      else if (fact) intent = "answer";
       if (introduction) {
         response = introduction;
         criteria = conversation.criteria;
@@ -252,11 +259,15 @@ export async function handleIncoming(
       else if (saved && intent === "answer") {
         criteria = conversation.criteria;
         const url = `${appUrl()}/date/${saved.shareId}`;
-        const fallback =
-          answerAboutDate(saved.plan, url, text) ??
-          limitedAnswer(saved.plan.title);
+        const local = answerAboutDate(
+          saved.plan,
+          url,
+          text,
+          conversation.history ?? [],
+        );
         if (/google maps|maps route|directions|open route/i.test(text))
           response = `Here’s your walking route, with the stops in order:\n${routeUrlForPlan(saved.plan) ?? url}`;
+        else if (local) response = local;
         else if (isVenueQuestion(text)) {
           try {
             response = await researchVenueWithGemini(
@@ -280,12 +291,15 @@ export async function handleIncoming(
               conversation.history ?? [],
             );
           } catch {
-            response = fallback;
+            response = limitedAnswer(saved.plan.title);
           }
-        } else response = fallback;
+        } else response = limitedAnswer(saved.plan.title);
+      } else if (saved && (intent === "plan" || intent === "location")) {
+        criteria = conversation.criteria;
+        response = `I can answer questions about this date, but I can’t change it from a text. Update the time, budget, or stops in the planner where you saved it.`;
       } else if (saved && intent === "greeting") {
         response =
-          "Hey, lovely to hear from you. Want to tweak your date, or start something new?";
+          "Hey, lovely to hear from you. Ask me about the time, a stop, the cost, or the weather.";
       } else {
         await store.put(conversationKey, { ...conversation, criteria });
         const defaults = flexibleCriteria(criteria),
@@ -317,13 +331,15 @@ export async function handleIncoming(
             ]
               .filter(Boolean)
               .join(" ");
-            response = `Here’s an idea for the two of you. ${assumptions}\n\n${conversationalIntro(date.plan, `${appUrl()}/date/${date.shareId}`)}\n\nI can also make it cheaper, keep it indoors, or try a different time.`;
+            response = `Here’s an idea for the two of you. ${assumptions}\n\n${conversationalIntro(date.plan)}`;
           }
         }
       }
-      await store.put(
-        conversationKey,
-        withTurn({ ...conversation, criteria }, text, response),
+      pending.push(
+        store.put(
+          conversationKey,
+          withTurn({ ...conversation, criteria }, text, response),
+        ),
       );
     }
   } catch (error) {
@@ -332,36 +348,29 @@ export async function handleIncoming(
         ? error.message
         : "Sorry, I couldn’t finish that just now. Want to try again? I’ve kept the details you already shared.";
   }
-  // Record intent before delivery: duplicate events never retry an ambiguous send.
-  await store.put(eventKey, { status: "sending", at: Date.now() });
+  // The inbound event is already claimed, so a duplicate will not send again.
   try {
     const providerId = await transport.send(response);
-    await store.put(eventKey, {
-      status: providerId ? "accepted" : "unknown",
-      at: Date.now(),
-      providerId,
-    });
-    if (pairKey) {
-      const pair = await store.get<Pair>(pairKey);
-      if (pair?.status === "sending")
-        await store.put(pairKey, {
-          ...pair,
-          status: providerId ? "accepted" : "unknown",
-          providerId,
-        });
-    }
+    await Promise.all([
+      store.put(eventKey, {
+        status: providerId ? "accepted" : "unknown",
+        at: Date.now(),
+        providerId,
+      }),
+      ...pending,
+      settlePair?.(providerId) ?? Promise.resolve(),
+    ]);
     return { status: providerId ? "accepted" : "unknown" };
   } catch (err) {
     console.error(
       "iMessage reply was not sent.",
       err instanceof Error ? `${err.name}: ${err.message}` : String(err),
     );
-    await store.put(eventKey, { status: "failed", at: Date.now() });
-    if (pairKey) {
-      const pair = await store.get<Pair>(pairKey);
-      if (pair?.status === "sending")
-        await store.put(pairKey, { ...pair, status: "failed" });
-    }
+    await Promise.all([
+      store.put(eventKey, { status: "failed", at: Date.now() }),
+      ...pending,
+      settlePair?.(undefined, true) ?? Promise.resolve(),
+    ]);
     return { status: "failed" };
   }
 }

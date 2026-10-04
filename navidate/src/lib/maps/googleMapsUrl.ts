@@ -38,6 +38,35 @@ export function mapsPlaceQuery(point: RouteStop) {
   return withCity(place);
 }
 
+function placeKey(point: RouteStop) {
+  return namedPlace(point)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function samePlace(a: RouteStop, b: RouteStop) {
+  const left = placeKey(a);
+  const right = placeKey(b);
+  return !!left && left === right;
+}
+
+export function routePoints({
+  start,
+  stops,
+  returnToStart = false,
+}: {
+  start: RouteStop;
+  stops: RouteStop[];
+  returnToStart?: boolean;
+}) {
+  const points = [start, ...stops, ...(returnToStart ? [start] : [])];
+  return points.filter(
+    (point, index) => index === 0 || !samePlace(point, points[index - 1]),
+  );
+}
+
 export function buildGoogleMapsRouteUrl({
   start,
   stops,
@@ -49,13 +78,12 @@ export function buildGoogleMapsRouteUrl({
   transport: Criteria["transport"];
   returnToStart?: boolean;
 }) {
-  if (!stops.length) return undefined;
-  const destinationPoint = returnToStart ? start : stops.at(-1)!;
-  const middle = returnToStart ? stops : stops.slice(0, -1);
+  const points = routePoints({ start, stops, returnToStart });
+  if (points.length < 2) return undefined;
   const params = new URLSearchParams({
     api: "1",
-    origin: mapsPlaceQuery(start),
-    destination: mapsPlaceQuery(destinationPoint),
+    origin: mapsPlaceQuery(points[0]),
+    destination: mapsPlaceQuery(points.at(-1)!),
     travelmode:
       transport === "bus"
         ? "transit"
@@ -63,6 +91,7 @@ export function buildGoogleMapsRouteUrl({
           ? "driving"
           : "walking",
   });
+  const middle = points.slice(1, -1);
   if (middle.length)
     params.set("waypoints", middle.map(mapsPlaceQuery).join("|"));
   return `https://www.google.com/maps/dir/?${params.toString()}`;
@@ -81,6 +110,45 @@ export function directionsToPlace(place: {
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
+function planRoute(plan: {
+  googleMapsUrl?: string;
+  start: { name: string; lat: number; lng: number; private?: boolean };
+  stops: {
+    place: {
+      name: string;
+      address?: string;
+      coordinates?: { lat: number; lng: number };
+      googlePlaceId?: string;
+    };
+  }[];
+  legs?: { mode: string; toName: string }[];
+}) {
+  const legs = plan.legs ?? [];
+  const driving = /[?&]travelmode=driving(?:&|$)/i.test(
+    plan.googleMapsUrl ?? "",
+  );
+  return {
+    start: {
+      name: plan.start.name,
+      lat: plan.start.lat,
+      lng: plan.start.lng,
+      private: plan.start.private,
+    },
+    stops: plan.stops.map((stop) => ({
+      name: stop.place.name,
+      address: stop.place.address,
+      lat: stop.place.coordinates?.lat,
+      lng: stop.place.coordinates?.lng,
+    })),
+    transport: (legs.some((leg) => leg.mode === "bus")
+      ? "bus"
+      : driving
+        ? "drive"
+        : "walk") as Criteria["transport"],
+    returnToStart: legs.at(-1)?.toName === plan.start.name,
+  };
+}
+
 export function routeUrlForPlan(plan: {
   googleMapsUrl?: string;
   start: { name: string; lat: number; lng: number; private?: boolean };
@@ -95,32 +163,7 @@ export function routeUrlForPlan(plan: {
   legs?: { mode: string; toName: string }[];
 }) {
   if (!plan.stops.length) return plan.googleMapsUrl;
-  const legs = plan.legs ?? [];
-  const driving = /[?&]travelmode=driving(?:&|$)/i.test(
-    plan.googleMapsUrl ?? "",
-  );
-  return (
-    buildGoogleMapsRouteUrl({
-      start: {
-        name: plan.start.name,
-        lat: plan.start.lat,
-        lng: plan.start.lng,
-        private: plan.start.private,
-      },
-      stops: plan.stops.map((stop) => ({
-        name: stop.place.name,
-        address: stop.place.address,
-        lat: stop.place.coordinates?.lat,
-        lng: stop.place.coordinates?.lng,
-      })),
-      transport: legs.some((leg) => leg.mode === "bus")
-        ? "bus"
-        : driving
-          ? "drive"
-          : "walk",
-      returnToStart: legs.at(-1)?.toName === plan.start.name,
-    }) ?? plan.googleMapsUrl
-  );
+  return buildGoogleMapsRouteUrl(planRoute(plan)) ?? plan.googleMapsUrl;
 }
 
 export function routeStopsFromPlaces(

@@ -175,6 +175,38 @@ describe("Google Maps helpers", () => {
     expect(new URL(url!).searchParams.get("travelmode")).toBe("driving");
   });
 
+  it("drops a stop that repeats the starting place", () => {
+    const url = buildGoogleMapsRouteUrl({
+      start: {
+        name: "Herbert F. Johnson Museum of Art",
+        lat: 42.4508,
+        lng: -76.4856,
+      },
+      stops: [
+        {
+          name: "Herbert F. Johnson Museum of Art",
+          address: "114 Central Ave",
+          lat: 42.4508,
+          lng: -76.4856,
+        },
+        {
+          name: "Fall Creek Gorge Natural Area",
+          lat: 42.452,
+          lng: -76.482,
+        },
+      ],
+      transport: "walk",
+    });
+    const params = new URL(url!).searchParams;
+    expect(params.get("origin")).toBe(
+      "Herbert F. Johnson Museum of Art, Ithaca, NY",
+    );
+    expect(params.get("destination")).toBe(
+      "Fall Creek Gorge Natural Area, Ithaca, NY",
+    );
+    expect(params.get("waypoints")).toBeNull();
+  });
+
   it("decodes an encoded polyline into coordinates", () => {
     const points = decodePolyline("_p~iF~ps|U_ulLnnqC_mqNvxq`@");
     expect(points.length).toBeGreaterThan(1);

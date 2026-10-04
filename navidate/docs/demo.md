@@ -8,7 +8,7 @@
 
 **1:30 — Sharing:** Save, copy the share link and open it in a private browser. Show the read-only view. Switch the browser to 375px to show the timeline/map tabs.
 
-**2:00 — iMessage:** Only if Spectrum is already activated and live-tested: create a pairing code and send it to the connected agent. Show the actual reply and share URL; then send “make it cheaper.” Explain that the same planner and storage power both interfaces. A phone needs a reachable APP_URL; do not pretend localhost is externally hosted.
+**2:00 — iMessage:** Only if Spectrum is already activated and live-tested: create a pairing code and send it to the connected agent. Show the actual reply and share URL; then ask something the saved plan can answer, such as “what’s next?”. Edits stay on the web planner. A phone needs a reachable APP_URL; do not pretend localhost is externally hosted.
 
 If credentials or a reachable URL are unavailable, explicitly show `npm run chat:local` instead and say: “This is our local transport exercising the messaging logic. It does not send an iMessage.” This does not replace the track's requirement for a real Spectrum integration demo.
 

@@ -9,7 +9,6 @@ import {
   venueFallback,
   conversationalIntro,
 } from "../src/lib/messaging/questions";
-import { publicAppUrl } from "../src/lib/urls";
 import type { Plan } from "../src/types";
 vi.mock("../src/lib/integrations/quota", () => ({ claimDaily: vi.fn() }));
 const plan = {
@@ -71,34 +70,32 @@ it("resolves there from the previous stop mentioned rather than refusing", () =>
     "Which stop",
   );
 });
-it("opens with the public itinerary and a named walking route", () => {
+it("opens with a named walking route and no itinerary link", () => {
   vi.stubEnv("APP_URL", "http://localhost:3000");
   vi.stubEnv("PUBLIC_APP_URL", "https://navidate.us/");
-  const text = conversationalIntro(
-    {
-      ...plan,
-      start: { name: "Beebe Lake", lat: 42.45, lng: -76.48, private: false },
-      stops: [
-        {
-          place: {
-            name: "Libe Slope",
-            address: "Libe Slope",
-            coordinates: { lat: 42.447, lng: -76.484 },
-          },
+  const text = conversationalIntro({
+    ...plan,
+    start: { name: "Beebe Lake", lat: 42.45, lng: -76.48, private: false },
+    stops: [
+      {
+        place: {
+          name: "Libe Slope",
+          address: "Libe Slope",
+          coordinates: { lat: 42.447, lng: -76.484 },
         },
-        {
-          place: {
-            name: "place_id:ChIJabcdefghijklmnopqrstuvwxyz",
-            address: "123 Dryden Rd",
-            coordinates: { lat: 42.44, lng: -76.48 },
-          },
+      },
+      {
+        place: {
+          name: "place_id:ChIJabcdefghijklmnopqrstuvwxyz",
+          address: "123 Dryden Rd",
+          coordinates: { lat: 42.44, lng: -76.48 },
         },
-      ],
-    } as Plan,
-    `${publicAppUrl()}/date/fixture`,
-  );
-  const maps = text.match(/https:\/\/www\.google\.com\/maps\/dir\/\?\S+/)?.[0] ?? "";
-  expect(text).toContain("https://navidate.us/date/fixture");
+      },
+    ],
+  } as Plan);
+  const maps =
+    text.match(/https:\/\/www\.google\.com\/maps\/dir\/\?\S+/)?.[0] ?? "";
+  expect(text).not.toContain("/date/");
   expect(maps).toContain("https://www.google.com/maps/dir/?");
   const decoded = decodeURIComponent(maps.replace(/\+/g, " "));
   expect(decoded).toContain("Libe Slope");

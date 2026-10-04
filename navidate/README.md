@@ -120,7 +120,7 @@ npm run worker:photon
 start=arts-quad; date=2026-10-03; time=13:00; duration=180; budget=50; vibe=Cozy; transport=walk
 ```
 
-Follow-ups: `make it cheaper` (reduces the budget by $15), `start time 14:30`, `make it indoors`, `regenerate`. A follow-up creates a fresh immutable share link; earlier shared plans remain readable. Conversation criteria and current share ID persist across restarts. Only direct messages are handled; group messages and outbound echoes are ignored.
+Once a date is saved, texts ask about that plan. Changes to the time, budget, or stops are made in the web planner; a text does not rebuild it. Conversation criteria and the current share ID persist across restarts. Only direct messages are handled; group messages and outbound echoes are ignored.
 
 **If “Send to myself” is disabled:** use `navidate/.env.local` (next to `package.json`), and fill in `SPECTRUM_PROJECT_ID` and `SPECTRUM_PROJECT_SECRET`. Restart the web server and Photon worker after environment changes, refresh the page, and save your itinerary before pairing. Keep the worker running to receive the pairing message.
 
@@ -191,4 +191,4 @@ Start directly in chat: “Tomorrow at 7pm, from the Commons.” Navi asks one f
 
 “Use my current location” returns `/location` on the public host. The user explicitly taps the browser location button, then sends the coordinates using Messages or copies them. Full Apple/Google map links containing coordinates and Spectrum rich-link messages are accepted. Shortened links/native attachments without coordinates receive a location-page fallback; they are not silently geocoded. Coordinates become a private start used in Google directions, redacted from public itineraries. HTTPS and a configured `PHOTON_AGENT_ADDRESS` are needed for the live phone flow.
 
-Opening messages contain a short summary, a Google Maps walking route built from stop names and addresses, and the public itinerary link. Place ids stay out of that link so Maps does not label a stop `place_id:`. Messages already delivered cannot be changed by restarting the worker.
+Opening messages contain a short summary and a Google Maps walking route built from stop names and addresses. A stop that is the same place as the start is not listed twice. Place ids stay out of that link so Maps does not label a stop `place_id:`. The public itinerary stays on the website. Messages already delivered cannot be changed by restarting the worker.

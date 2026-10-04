@@ -213,6 +213,37 @@ it("rebuilds a stale Google route from stops when directions are requested", asy
   expect(text).toContain("waypoints=fictional-a");
 });
 
+it("does not rebuild a saved date when asked to change it", async () => {
+  const plan = await schedule(
+    c,
+    raw.slice(0, 2).map((p) => placeSchema.parse(p)),
+    {
+      router: {
+        route: async () => ({ minutes: 5, km: 0.2, label: "Fixture walk" }),
+      },
+    },
+  );
+  await store.put("date:fixture", {
+    shareId: "fixture",
+    criteria: c,
+    plan,
+    ownerHash: "fixture",
+  });
+  await store.put(key, { criteria: c, revision: 1, shareId: "fixture" });
+  await handleIncoming(
+    { ...event, id: "cheaper", text: "make it cheaper" },
+    { send },
+    store,
+  );
+  expect(generate).not.toHaveBeenCalled();
+  const reply = send.mock.calls[0][0];
+  expect(reply).toContain("can’t change it from a text");
+  expect(reply).not.toContain("/date/fixture");
+  const stored = await store.get<Conversation>(key);
+  expect(stored?.criteria.budget).toBe(50);
+  expect(stored?.shareId).toBe("fixture");
+});
+
 it("introduces Navi naturally without a saved date or an AI call", async () => {
   await handleIncoming({ ...event, text: "What is ur name?" }, { send }, store);
   expect(send.mock.calls[0][0]).toContain("I’m Navi");

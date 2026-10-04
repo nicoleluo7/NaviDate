@@ -86,6 +86,132 @@ it("builds an iMessage link with the pair code filled in", () => {
     "sms:+14155951440&body=pair%204F5F8F1D4520D3E1",
   );
 });
+it("answers address, one stop, leave time, walk, and stop cost from the saved plan", () => {
+  const now = Date.parse("2026-10-03T17:10:00.000Z");
+  const plan = {
+    title: "Afternoon",
+    startsAt: "2026-10-03T17:00:00.000Z",
+    endsAt: "2026-10-03T19:26:00.000Z",
+    duration: 146,
+    cost: 32,
+    walkKm: 2.2,
+    weather: { available: true, summary: "Clear.", source: "test" },
+    warnings: ["Some opening hours are unverified."],
+    stops: [
+      {
+        place: {
+          name: "Cornell Arts Quad",
+          address: "Arts Quad, Cornell",
+          estimatedCostForTwo: 0,
+          typicalDurationMinutes: 25,
+        },
+        arrival: "2026-10-03T17:00:00.000Z",
+        departure: "2026-10-03T17:25:00.000Z",
+      },
+      {
+        place: {
+          name: "Libe Slope",
+          address: "Libe Slope, Cornell",
+          estimatedCostForTwo: 0,
+          typicalDurationMinutes: 25,
+          openingHours: {
+            weekly: { "6": [["09:00", "12:00"]] },
+            exceptions: {},
+          },
+        },
+        arrival: "2026-10-03T17:40:00.000Z",
+        departure: "2026-10-03T18:05:00.000Z",
+      },
+      {
+        place: {
+          name: "Hound and Mare",
+          address: "123 Dryden Rd",
+          estimatedCostForTwo: 32,
+          typicalDurationMinutes: 40,
+          websiteUrl: "https://hound.example",
+          openingHours: {
+            weekly: { "6": [["11:00", "22:00"]] },
+            exceptions: {},
+          },
+        },
+        arrival: "2026-10-03T18:46:00.000Z",
+        departure: "2026-10-03T19:26:00.000Z",
+      },
+    ],
+    legs: [
+      {
+        mode: "walk",
+        fromName: "Cornell Arts Quad",
+        toName: "Libe Slope",
+        departure: "2026-10-03T17:25:00.000Z",
+        minutes: 15,
+        walkKm: 0.6,
+      },
+      {
+        mode: "walk",
+        fromName: "Libe Slope",
+        toName: "Hound and Mare",
+        departure: "2026-10-03T18:05:00.000Z",
+        minutes: 41,
+        walkKm: 1.6,
+      },
+    ],
+  } as unknown as Plan;
+  const ask = (text: string, history: { role: string; text: string }[] = []) =>
+    answerAboutDate(plan, "http://localhost/date/abc", text, history, now);
+  expect(ask("where is hound and. mare")).toBe(
+    "Hound and Mare is at 123 Dryden Rd.",
+  );
+  expect(ask("where's hound and mare")).toBe(
+    "Hound and Mare is at 123 Dryden Rd.",
+  );
+  expect(
+    ask("what is the address", [
+      { role: "user", text: "where is hound and mare" },
+    ]),
+  ).toBe("Hound and Mare is at 123 Dryden Rd.");
+  expect(ask("what's the second stop")).toContain("Libe Slope");
+  expect(ask("when do I leave arts quad")).toContain("Leave Cornell Arts Quad");
+  expect(ask("how long from libe slope to hound and mare")).toContain(
+    "Libe Slope to Hound and Mare",
+  );
+  expect(ask("how long from arts quad to hound and mare")).toContain(
+    "aren't next to each other",
+  );
+  expect(ask("how much is hound and mare")).toBe(
+    "About $32 for two at Hound and Mare.",
+  );
+  expect(ask("how much is this date")).toBe("Estimated $32 for two.");
+  expect(ask("what's the website for hound and mare")).toBe(
+    "Hound and Mare: https://hound.example",
+  );
+  expect(ask("what's the website for libe slope")).toContain(
+    "don't have a website",
+  );
+  expect(ask("what's next")).toContain("Libe Slope");
+  expect(ask("anything I should know")).toContain("unverified");
+  expect(ask("is hound and mare open when we get there")).toBe(
+    "Hound and Mare is open 11 AM to 10 PM.",
+  );
+  expect(ask("is libe slope open")).toBe("Libe Slope is open 9 AM to 12 PM.");
+  expect(ask("is arts quad open")).toContain("don't have opening hours");
+  expect(ask("where should we be")).toContain("Cornell Arts Quad");
+  expect(ask("are we on time")).toContain("Cornell Arts Quad");
+  expect(
+    answerAboutDate(
+      plan,
+      "http://localhost/date/abc",
+      "where should we be",
+      [],
+      Date.parse("2026-10-03T18:20:00.000Z"),
+    ),
+  ).toContain("heading to Hound and Mare");
+  expect(ask("where are we going")).toContain("Cornell Arts Quad");
+  expect(ask("where are we going")).toContain("Hound and Mare");
+  expect(
+    ask("and after that?", [{ role: "user", text: "we are at arts quad" }]),
+  ).toContain("Libe Slope");
+});
 it("answers basic questions about a paired date", async () => {
   const plan = {
     title: "Coffee",
@@ -106,7 +232,7 @@ it("answers basic questions about a paired date", async () => {
   expect(answerAboutDate(plan, "http://localhost/date/abc", "how much?")).toBe(
     "Estimated $40 for two.",
   );
-  expect(conversationalIntro(plan, "http://localhost/date/abc")).toContain(
+  expect(conversationalIntro(plan)).toContain(
     "You're heading to Hound and Mare.",
   );
   const store = new LocalStorage(":memory:"),
