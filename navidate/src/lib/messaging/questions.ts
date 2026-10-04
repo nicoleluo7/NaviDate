@@ -23,7 +23,10 @@ export function conversationalIntro(plan: Plan) {
       : `You're starting at ${names[0]}, then ${names.slice(1).join(", then ")}.`;
   const weather = plan.weather.summary.replace(/(\d+)–\1°F/g, "$1°F");
   const maps = walkingRoute(plan);
-  const routeLink = maps ? `\n\nYour walking route:\n${maps}` : "";
+  const routeKind = plan.legs?.some((leg) => leg.mode === "drive")
+    ? "driving"
+    : "walking";
+  const routeLink = maps ? `\n\nYour ${routeKind} route:\n${maps}` : "";
   return `You’re all set — this sounds like a lovely way to spend some time together.\n\n${displayTime(plan.startsAt)} · ${approximateDuration(plan.duration)}\n${route}\nAround $${plan.cost} for the two of you. ${weather}${routeLink}\n\nAsk me the time, the cost, an address, when to leave, whether a stop is open, or where you should be.`;
 }
 export function isPlannerCommand(text: string) {
@@ -273,12 +276,14 @@ export function savedFactAnswer(
     /how long is the walk|how far|walking time|walk time/.test(q) &&
     named.length === 0
   ) {
+    const driving = (plan.legs ?? []).some((leg) => leg.mode === "drive");
     const minutes = (plan.legs ?? [])
-      .filter((leg) => leg.mode === "walk")
+      .filter((leg) => leg.mode === "walk" || leg.mode === "drive")
       .reduce((sum, leg) => sum + leg.minutes, 0);
+    const kind = driving ? "driving" : "walking";
     return minutes
-      ? `${approximateDuration(minutes)} of walking, about ${plan.walkKm} km.`
-      : `About ${plan.walkKm} km of walking.`;
+      ? `${approximateDuration(minutes)} of ${kind}, about ${plan.walkKm} km.`
+      : `About ${plan.walkKm} km of ${kind}.`;
   }
   if (
     /how long|duration/.test(q) &&
@@ -368,7 +373,7 @@ export function answerAboutDate(
   if (/when|what time|start|end\b/.test(q))
     return `${plan.title} runs ${displayTime(plan.startsAt)} to ${displayTime(plan.endsAt)}.`;
   if (/walk|how far|\bkm\b/.test(q))
-    return `About ${plan.walkKm} km of walking.`;
+    return `About ${plan.walkKm} km of ${plan.legs.some((leg) => leg.mode === "drive") ? "driving" : "walking"}.`;
   if (/how much|cost|price|budget|expensive/.test(q))
     return `Estimated $${plan.cost} for two.`;
   if (/weather|rain|forecast/.test(q)) return plan.weather.summary;

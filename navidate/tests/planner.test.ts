@@ -24,6 +24,25 @@ const router = {
   route: async () => ({ minutes: 10, km: 0.5, label: "Fictional test walk" }),
 };
 describe("deterministic scheduling", () => {
+  it("keeps a driving plan that is farther than the walking limit", async () => {
+    const driveRouter = {
+      route: async () => ({
+        minutes: 8,
+        km: 8,
+        label: "Google Maps · estimated driving time",
+      }),
+    };
+    expect(
+      await schedule(criteria, places.slice(0, 2), { router: driveRouter }),
+    ).toBeNull();
+    const driven = await schedule(
+      { ...criteria, transport: "drive" },
+      places.slice(0, 2),
+      { router: driveRouter },
+    );
+    expect(driven?.legs.every((leg) => leg.mode === "drive")).toBe(true);
+    expect(driven?.googleMapsUrl).toContain("travelmode=driving");
+  });
   it("counts costs for two and never exceeds budget", async () => {
     const p = await schedule(criteria, places.slice(0, 2), { router });
     expect(p?.cost).toBe(22);

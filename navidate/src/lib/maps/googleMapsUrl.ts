@@ -97,15 +97,18 @@ export function buildGoogleMapsRouteUrl({
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
 
-export function directionsToPlace(place: {
-  name: string;
-  address?: string;
-  googlePlaceId?: string;
-}) {
+export function directionsToPlace(
+  place: {
+    name: string;
+    address?: string;
+    googlePlaceId?: string;
+  },
+  transport: "walk" | "drive" = "walk",
+) {
   const params = new URLSearchParams({
     api: "1",
     destination: mapsPlaceQuery(place),
-    travelmode: "walking",
+    travelmode: transport === "drive" ? "driving" : "walking",
   });
   return `https://www.google.com/maps/dir/?${params.toString()}`;
 }
@@ -124,9 +127,9 @@ function planRoute(plan: {
   legs?: { mode: string; toName: string }[];
 }) {
   const legs = plan.legs ?? [];
-  const driving = /[?&]travelmode=driving(?:&|$)/i.test(
-    plan.googleMapsUrl ?? "",
-  );
+  const driving =
+    legs.some((leg) => leg.mode === "drive") ||
+    /[?&]travelmode=driving(?:&|$)/i.test(plan.googleMapsUrl ?? "");
   return {
     start: {
       name: plan.start.name,

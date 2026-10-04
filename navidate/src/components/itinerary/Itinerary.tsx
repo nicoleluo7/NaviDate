@@ -3,6 +3,7 @@ import { Button } from "react-aria-components";
 import { useState } from "react";
 import {
   ArrowUpRight,
+  Car,
   Footprints,
   Copy,
   Heart,
@@ -64,6 +65,7 @@ export default function Itinerary({
     }
   }
   const routeUrl = plan.googleMapsUrl ?? routeUrlForPlan(plan);
+  const driving = plan.legs.some((leg) => leg.mode === "drive");
   const summary = [
     plan.title,
     `${displayTime(plan.startsAt)} – ${displayTime(plan.endsAt)}`,
@@ -158,10 +160,16 @@ export default function Itinerary({
             <div className="timeline-step" key={s.place.id}>
               {plan.legs[i] && (
                 <div className="travel">
-                  <Footprints size={14} />
+                  {plan.legs[i]?.mode === "drive" ? (
+                    <Car size={14} />
+                  ) : (
+                    <Footprints size={14} />
+                  )}
                   {plan.legs[i]?.mode === "bus"
                     ? `Bus ${plan.legs[i].bus?.route} · ${plan.legs[i].minutes} min incl. walking & waiting`
-                    : `${plan.legs[i]?.minutes ?? 0} min walk`}
+                    : plan.legs[i]?.mode === "drive"
+                      ? `${plan.legs[i]?.minutes ?? 0} min drive`
+                      : `${plan.legs[i]?.minutes ?? 0} min walk`}
                 </div>
               )}
               {plan.legs[i]?.bus && (
@@ -213,7 +221,7 @@ export default function Itinerary({
                 </small>
                 <div className="stop-actions">
                   <a
-                    href={directionsToPlace(s.place)}
+                    href={directionsToPlace(s.place, driving ? "drive" : "walk")}
                     target="_blank"
                     rel="noreferrer"
                   >
@@ -282,7 +290,10 @@ export default function Itinerary({
                   className="map-directions"
                   target="_blank"
                   rel="noreferrer"
-                  href={directionsToPlace(plan.stops[selected].place)}
+                  href={directionsToPlace(
+                    plan.stops[selected].place,
+                    driving ? "drive" : "walk",
+                  )}
                 >
                   Directions to this stop <ArrowUpRight size={16} />
                 </a>
@@ -299,7 +310,9 @@ export default function Itinerary({
           <div className="why-navi-stats" aria-label="Plan summary">
             <span>💵 ${plan.cost} for two</span>
             <span>⏱ {formatDuration(plan.duration)}</span>
-            <span>🚶 {formatWalkMiles(plan.walkKm)}</span>
+            <span>
+              {driving ? "🚗" : "🚶"} {formatWalkMiles(plan.walkKm)}
+            </span>
           </div>
           <dl className="why-navi-details">
             <div>

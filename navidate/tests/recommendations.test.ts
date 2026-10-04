@@ -62,29 +62,37 @@ describe("Gemini recommendation pipeline", () => {
       result.plans[0].stops.some((s) => s.place.id === catalog[1].id),
     ).toBe(true);
   });
-  it("rejects invented and duplicate place IDs", () => {
-    expect(() =>
+  it("drops invented and duplicate place IDs and keeps the valid plans", () => {
+    const invented = {
+      ...draft,
+      title: "Invented",
+      stops: [{ ...draft.stops[0], placeId: "invented" }, draft.stops[1]],
+    };
+    const repeated = {
+      ...draft,
+      stops: [draft.stops[0], draft.stops[0]],
+    };
+    expect(parseRecommendations({ plans: [invented] }, places)).toEqual([]);
+    expect(parseRecommendations({ plans: [repeated] }, places)).toEqual([]);
+    expect(
+      parseRecommendations({ plans: [invented, draft] }, places),
+    ).toEqual([draft]);
+    expect(
       parseRecommendations(
         {
           plans: [
             {
               ...draft,
               stops: [
-                { ...draft.stops[0], placeId: "invented" },
+                { ...draft.stops[0], placeId: places[0].name },
                 draft.stops[1],
               ],
             },
           ],
         },
         places,
-      ),
-    ).toThrow();
-    expect(() =>
-      parseRecommendations(
-        { plans: [{ ...draft, stops: [draft.stops[0], draft.stops[0]] }] },
-        places,
-      ),
-    ).toThrow();
+      )[0].stops[0].placeId,
+    ).toBe(places[0].id);
   });
   it("does not trust model budget or timing and includes every travel leg", async () => {
     vi.mocked(recommend).mockResolvedValue([draft]);
@@ -93,6 +101,57 @@ describe("Gemini recommendation pipeline", () => {
     expect(result.plans[0].cost).toBe(22);
     expect(result.plans[0].duration).toBe(80);
     expect(result.plans[0].legs).toHaveLength(2);
+  });
+  it("asks for a dessert stop without telling the user to add a restaurant", async () => {
+    const dessert = {
+      ...places[0],
+      id: "sweet-stop",
+      category: "dessert" as const,
+    };
+    vi.mocked(recommend).mockResolvedValue([draft]);
+    const result = await planWithGemini(
+      { ...c, dateType: "dessert" },
+      { places: [...places, dessert], router },
+    );
+    expect(result.plans).toHaveLength(0);
+    expect(result.error).toMatch(/dessert/i);
+    expect(result.error).not.toContain("For Food");
+    const repair = vi.mocked(recommend).mock.calls[1]?.[4];
+    expect(JSON.stringify(repair)).toContain("category is dessert");
+    expect(JSON.stringify(repair)).not.toContain("For Food");
+  });
+  it("shortens long visits so travel still fits a two-hour date", async () => {
+    vi.mocked(recommend).mockResolvedValue([
+      {
+        ...draft,
+        stops: draft.stops.map((stop) => ({ ...stop, minutes: 90 })),
+      },
+    ]);
+    const result = await planWithGemini(c, { places, router });
+    expect(result.plans).toHaveLength(1);
+    expect(result.plans[0].duration).toBeLessThanOrEqual(120);
+    expect(result.plans[0].stops).toHaveLength(2);
+  });
+  it("plans one restaurant when an hour cannot hold a meal and another stop", async () => {
+    const catalog = places.map((place, index) =>
+      index === 1 ? { ...place, category: "food" as const } : place,
+    );
+    vi.mocked(recommend).mockResolvedValue([
+      {
+        ...draft,
+        stops: draft.stops.map((stop) => ({ ...stop, minutes: 60 })),
+      },
+    ]);
+    const result = await planWithGemini(
+      { ...c, duration: 60, dateType: "food" },
+      { places: catalog, router },
+    );
+    expect(result.plans).toHaveLength(1);
+    expect(result.plans[0].stops.map((stop) => stop.place.id)).toEqual([
+      "fictional-b",
+    ]);
+    expect(result.plans[0].duration).toBeLessThanOrEqual(60);
+    expect(result.error).toBeUndefined();
   });
   it("rejects over-budget plans instead of shortening them", async () => {
     vi.mocked(recommend).mockResolvedValue([draft]);

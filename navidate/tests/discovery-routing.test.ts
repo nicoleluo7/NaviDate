@@ -43,6 +43,22 @@ describe("Places discovery and route truth", () => {
       toDiscoveredPlace({ ...raw, location: { latitude: 40, longitude: -74 } }),
     ).toBeNull();
   });
+  it("treats an ice cream shop as dessert and keeps a restaurant as food", () => {
+    expect(
+      toDiscoveredPlace({
+        ...raw,
+        primaryType: "ice_cream_shop",
+        types: ["ice_cream_shop", "store"],
+      })?.category,
+    ).toBe("dessert");
+    expect(
+      toDiscoveredPlace({
+        ...raw,
+        primaryType: "italian_restaurant",
+        types: ["italian_restaurant", "bakery"],
+      })?.category,
+    ).toBe("food");
+  });
   it("keeps a restaurant with secondary cafe tags in the Food category", () => {
     expect(
       toDiscoveredPlace({
@@ -116,6 +132,18 @@ describe("Places discovery and route truth", () => {
       expect(body.locationRestriction.circle.radius).toBeLessThanOrEqual(5000);
     }
   });
+  it("searches a wider circle when the date is a drive", async () => {
+    live();
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      Response.json({ places: [] }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    await discoverPlaces({ ...c, transport: "drive" });
+    for (const [, init] of fetch.mock.calls) {
+      const body = JSON.parse(String(init?.body));
+      expect(body.locationRestriction.circle.radius).toBe(12000);
+    }
+  });
   it("does not interpret missing route values as a one-minute trip", async () => {
     live();
     vi.stubGlobal(
@@ -139,6 +167,23 @@ describe("Places discovery and route truth", () => {
     expect(JSON.parse(String(fetch.mock.calls[0][1]?.body)).travelMode).toBe(
       "WALK",
     );
+    expect(
+      JSON.parse(String(fetch.mock.calls[0][1]?.body)).routingPreference,
+    ).toBeUndefined();
+  });
+  it("requests a driving route when the date is a drive", async () => {
+    live();
+    const fetch = vi.fn<typeof globalThis.fetch>(async () =>
+      Response.json({ routes: [] }),
+    );
+    vi.stubGlobal("fetch", fetch);
+    const router = createGoogleRouter("DRIVE");
+    expect(
+      await router.route(c.start, { lat: 42.441, lng: -76.49 }),
+    ).toBeNull();
+    const body = JSON.parse(String(fetch.mock.calls[0][1]?.body));
+    expect(body.travelMode).toBe("DRIVE");
+    expect(body.routingPreference).toBe("TRAFFIC_UNAWARE");
   });
   it("rejects truncated route geometry", () => {
     expect(() => decodePolyline("_p~iF~")).toThrow();

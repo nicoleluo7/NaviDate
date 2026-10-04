@@ -92,7 +92,8 @@ export async function schedule(
     })),
     ...(c.returnToStart ? [c.start] : []),
   ]) {
-    const walking = await router.route(from, target);
+    const travel = await router.route(from, target);
+    const driving = c.transport === "drive";
     const buses =
       c.transport === "bus"
         ? directTrips(
@@ -107,8 +108,8 @@ export async function schedule(
         : [];
     const bus = buses.find(
       (b) =>
-        (b.end < now + (walking?.minutes ?? Infinity) * 60000 ||
-          walkKm + (walking?.km ?? Infinity) > walkLimit) &&
+        (b.end < now + (travel?.minutes ?? Infinity) * 60000 ||
+          walkKm + (travel?.km ?? Infinity) > walkLimit) &&
         cost +
           b.route.fareForTwo +
           sequence
@@ -146,25 +147,27 @@ export async function schedule(
           demo: bus.trip.demo,
         },
       };
-    } else if (walking) {
+    } else if (travel) {
       leg = {
-        mode: "walk",
+        mode: driving ? "drive" : "walk",
         from,
         to: target,
         fromName: from.name,
         toName: target.name,
         departure: iso(now),
-        arrival: iso(now + walking.minutes * 60000),
-        minutes: walking.minutes,
-        walkKm: walking.km,
+        arrival: iso(now + travel.minutes * 60000),
+        minutes: travel.minutes,
+        walkKm: travel.km,
         cost: 0,
-        label: walking.label,
-        geometry: walking.geometry,
-        encodedPolyline: walking.encodedPolyline,
+        label: travel.label,
+        geometry: travel.geometry,
+        encodedPolyline: travel.encodedPolyline,
       };
     } else
       return reject(
-        "No supported walking route or catchable direct bus. Choose a supported starting landmark.",
+        driving
+          ? "No driving route for that stop. Choose a starting point on a road Google can route from."
+          : "No supported walking route or catchable direct bus. Choose a supported starting landmark.",
       );
     legs.push(leg);
     now = Date.parse(leg.arrival);
@@ -191,7 +194,7 @@ export async function schedule(
     return reject(
       `Duration: this combination needs ${(now - start) / 60000} minutes including travel. Add 45 minutes.`,
     );
-  if (walkKm > walkLimit)
+  if (c.transport !== "drive" && walkKm > walkLimit)
     return reject(
       `Walking: this combination needs ${walkKm.toFixed(1)} km. Increase the walking limit or start closer.`,
     );
@@ -220,9 +223,18 @@ export async function schedule(
     warnings.push(
       "Some opening hours are unverified. Confirm availability before heading out.",
     );
-  if (legs.some((l) => l.mode === "walk" && !l.geometry && l.minutes > 0))
+  if (
+    legs.some(
+      (l) =>
+        (l.mode === "walk" || l.mode === "drive") &&
+        !l.geometry &&
+        l.minutes > 0,
+    )
+  )
     warnings.push(
-      "Walking times use a curated estimate graph. Paths have not been field-verified; route lines are unavailable.",
+      c.transport === "drive"
+        ? "Driving times use a straight estimate. Open the map link for the road route."
+        : "Walking times use a curated estimate graph. Paths have not been field-verified; route lines are unavailable.",
     );
   if (c.dietary.length)
     warnings.push(
@@ -389,7 +401,7 @@ export async function planDates(
     ai: false,
     ...(!selected.length
       ? {
-          error: `${[...reasons].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Not enough venues match the budget and indoor/outdoor preference. Try allowing either setting."} No two-stop plan fits the ${c.unrestricted?.includes("budget") ? "flexible" : "$" + c.budget} budget, ${c.duration} minutes, ${c.unrestricted?.includes("distance") ? "flexible" : c.maxWalkKm + " km"} walking limit, setting and known opening hours with available routes. Try a supported landmark, add 45 minutes, increase your budget by $15, or loosen the indoor/outdoor preference.`,
+          error: `${[...reasons].sort((a, b) => b[1] - a[1])[0]?.[0] ?? "Not enough venues match the budget and indoor/outdoor preference. Try allowing either setting."} No two-stop plan fits the ${c.unrestricted?.includes("budget") ? "flexible" : "$" + c.budget} budget, ${c.duration} minutes, ${c.transport === "drive" ? "a driving route" : c.unrestricted?.includes("distance") ? "a flexible walking distance" : c.maxWalkKm + " km of walking"}, setting and known opening hours with available routes. Try a supported landmark, add 45 minutes, increase your budget by $15, or loosen the indoor/outdoor preference.`,
         }
       : {}),
   };

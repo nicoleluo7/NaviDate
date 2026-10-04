@@ -26,7 +26,7 @@ const waypoint = (point: Point & { googlePlaceId?: string }) =>
 export async function computeRoute(
   origin: Point & { googlePlaceId?: string },
   destination: Point & { googlePlaceId?: string },
-  travelMode: "WALK",
+  travelMode: "WALK" | "DRIVE",
 ) {
   const key = googleMapsServerKey();
   if (!key) return null;
@@ -44,6 +44,9 @@ export async function computeRoute(
         origin: waypoint(origin),
         destination: waypoint(destination),
         travelMode,
+        ...(travelMode === "DRIVE"
+          ? { routingPreference: "TRAFFIC_UNAWARE" }
+          : {}),
         polylineEncoding: "ENCODED_POLYLINE",
         computeAlternativeRoutes: false,
         languageCode: "en-US",
@@ -71,9 +74,15 @@ export async function computeRoute(
     encodedPolyline: route.polyline.encodedPolyline,
   };
 }
-export function createGoogleRouter(): WalkingRouter {
+export function createGoogleRouter(
+  travelMode: "WALK" | "DRIVE" = "WALK",
+): WalkingRouter {
   const cache = new Map<string, Promise<WalkEstimate | null>>();
   let calls = 0;
+  const label =
+    travelMode === "DRIVE"
+      ? "Google Maps · estimated driving time"
+      : "Google Maps · estimated walking time";
   return {
     route(from, to) {
       if (distance(from, to) < 0.01)
@@ -83,10 +92,8 @@ export function createGoogleRouter(): WalkingRouter {
       const pending = (async () => {
         if (calls++ >= 24) return null;
         try {
-          const result = await computeRoute(from, to, "WALK");
-          return result
-            ? { ...result, label: "Google Maps · estimated walking time" }
-            : null;
+          const result = await computeRoute(from, to, travelMode);
+          return result ? { ...result, label } : null;
         } catch {
           return null;
         }
@@ -96,7 +103,10 @@ export function createGoogleRouter(): WalkingRouter {
     },
   };
 }
-export function createPlannerRouter(): WalkingRouter {
+export function createPlannerRouter(
+  transport: "walk" | "bus" | "drive" = "walk",
+): WalkingRouter {
   // Scheduled bus planning remains in the transit engine, with fares and waits.
-  return googleMapsServerKey() ? createGoogleRouter() : createWalkingRouter();
+  if (!googleMapsServerKey()) return createWalkingRouter();
+  return createGoogleRouter(transport === "drive" ? "DRIVE" : "WALK");
 }

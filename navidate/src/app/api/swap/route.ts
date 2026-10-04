@@ -37,7 +37,7 @@ export async function POST(req: Request) {
       input.planId,
       input.index,
       draft.criteria,
-      { router: createPlannerRouter() },
+      { router: createPlannerRouter(draft.criteria.transport) },
     );
     if (!replaced || !("plan" in replaced))
       throw new HttpError(

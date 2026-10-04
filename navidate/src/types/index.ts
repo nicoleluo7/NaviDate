@@ -106,7 +106,7 @@ export type Weather = {
   source: string;
 };
 export type Leg = {
-  mode: "walk" | "bus";
+  mode: "walk" | "drive" | "bus";
   from: Point;
   to: Point;
   fromName: string;

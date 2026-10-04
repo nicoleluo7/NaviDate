@@ -578,19 +578,21 @@ export default function Planner({
                       { id: "outdoor", name: "Outdoor activities" },
                     ]}
                   />
-                  <label>
-                    <span>Maximum walking (km)</span>
-                    <input
-                      type="number"
-                      min={0.1}
-                      max={20}
-                      step={0.1}
-                      value={criteria.maxWalkKm}
-                      onChange={(e) =>
-                        update("maxWalkKm", Number(e.target.value))
-                      }
-                    />
-                  </label>
+                  {criteria.transport !== "drive" && (
+                    <label>
+                      <span>Maximum walking (km)</span>
+                      <input
+                        type="number"
+                        min={0.1}
+                        max={20}
+                        step={0.1}
+                        value={criteria.maxWalkKm}
+                        onChange={(e) =>
+                          update("maxWalkKm", Number(e.target.value))
+                        }
+                      />
+                    </label>
+                  )}
                 </div>
                 <fieldset className="dietary">
                   <legend>Dietary preferences</legend>
@@ -673,7 +675,9 @@ export default function Planner({
                     setHint(
                       l
                         ? "Supported landmark selected."
-                        : "Point selected. We’ll check walking routes from here.",
+                        : criteria.transport === "drive"
+                          ? "Point selected. We’ll check driving routes from here."
+                          : "Point selected. We’ll check walking routes from here.",
                     );
                   }}
                 />

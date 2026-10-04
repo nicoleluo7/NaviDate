@@ -31,7 +31,7 @@ export default function RootLayout({
       lang="en"
       className={`${bodoniModa.variable} ${pinyonScript.variable}`}
     >
-      <body>
+      <body suppressHydrationWarning>
         <a className="skip-link" href="#main-content">
           Skip to content
         </a>

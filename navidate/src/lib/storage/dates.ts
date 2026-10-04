@@ -83,7 +83,11 @@ export function publicPlan(plan: Plan): Plan {
                   googlePlaceId: remaining[0].googlePlaceId,
                 },
               ],
-        transport: plan.legs.some((leg) => leg.mode === "bus") ? "bus" : "walk",
+        transport: plan.legs.some((leg) => leg.mode === "bus")
+          ? "bus"
+          : plan.legs.some((leg) => leg.mode === "drive")
+            ? "drive"
+            : "walk",
       })
     : undefined;
   return safe;

@@ -76,17 +76,29 @@ export function toDiscoveredPlace(input: unknown): Place | null {
     (p.businessStatus && p.businessStatus !== "OPERATIONAL")
   )
     return null;
-  const categorize = (types: string): Place["category"] | undefined => {
-    if (/restaurant|meal_takeaway|food_court/.test(types)) return "food";
-    if (/ice_cream|bakery|dessert|confectionery/.test(types)) return "dessert";
-    if (/cafe|coffee|tea_house/.test(types)) return "café";
-    if (/park|garden|hiking/.test(types)) return "park";
-    if (/book_store/.test(types)) return "free";
-  };
-  const category =
-    categorize(p.primaryType ?? "") ??
-    categorize(p.types.join(" ")) ??
-    "culture";
+  const primary = (p.primaryType ?? "").toLowerCase();
+  const all = p.types.join(" ").toLowerCase();
+  const dessert = /ice_cream|bakery|dessert|confectionery/;
+  const food = /restaurant|meal_takeaway|food_court/;
+  const cafe = /cafe|coffee|tea_house/;
+  const category: Place["category"] = dessert.test(primary)
+    ? "dessert"
+    : food.test(primary)
+      ? "food"
+      : cafe.test(primary)
+        ? "café"
+        : dessert.test(all)
+          ? "dessert"
+          : food.test(all)
+            ? "food"
+            : cafe.test(all)
+              ? "café"
+              : /park|garden|hiking/.test(primary) ||
+                  /park|garden|hiking/.test(all)
+                ? "park"
+                : /book_store/.test(primary) || /book_store/.test(all)
+                  ? "free"
+                  : "culture";
   const base = {
     café: 18,
     food: 45,
@@ -153,7 +165,10 @@ export async function discoverPlaces(input: Criteria): Promise<Place[]> {
       "bowling_alley",
     ],
   ];
-  const radius = Math.min(5000, Math.max(500, c.maxWalkKm * 700));
+  const radius =
+    c.transport === "drive"
+      ? 12000
+      : Math.min(5000, Math.max(500, c.maxWalkKm * 700));
   const fields =
     "id,displayName,location,formattedAddress,googleMapsUri,websiteUri,types,primaryType,businessStatus,priceLevel,regularOpeningHours"
       .split(",")

@@ -266,7 +266,7 @@ export async function handleIncoming(
           conversation.history ?? [],
         );
         if (/google maps|maps route|directions|open route/i.test(text))
-          response = `Here’s your walking route, with the stops in order:\n${routeUrlForPlan(saved.plan) ?? url}`;
+          response = `Here’s your ${saved.plan.legs.some((leg) => leg.mode === "drive") ? "driving" : "walking"} route, with the stops in order:\n${routeUrlForPlan(saved.plan) ?? url}`;
         else if (local) response = local;
         else if (isVenueQuestion(text)) {
           try {
