@@ -60,6 +60,24 @@ afterEach(() => {
 });
 it("resolves there from the previous stop mentioned rather than refusing", () => {
   expect(isVenueQuestion("What do you recommend there?")).toBe(true);
+  expect(isVenueQuestion("what to order at paris baguette")).toBe(true);
+  expect(
+    referencedVenue(
+      {
+        ...plan,
+        stops: [
+          ...plan.stops,
+          {
+            place: {
+              name: "Paris Baguette · State Street",
+              category: "food",
+            },
+          },
+        ],
+      } as Plan,
+      "what to order at paris baguette",
+    )?.name,
+  ).toBe("Paris Baguette · State Street");
   expect(
     referencedVenue(plan, "What do you recommend there?", history)?.name,
   ).toBe("Fictional Bagels");

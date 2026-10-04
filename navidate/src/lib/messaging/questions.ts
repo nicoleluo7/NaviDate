@@ -395,7 +395,7 @@ export function answerAboutDate(
 }
 
 export function isVenueQuestion(text: string) {
-  return /what (?:do you |would you )?(?:recommend|suggest)|what (?:should|can|could) (?:we|i) (?:order|eat|try|do|get)|menu|what.*serv(?:e|ing)|reservation|accessib|parking|restroom|opening hours|is (?:it|that|the .+) open|tell me (?:more )?about|look up|search for/i.test(
+  return /what (?:do you |would you )?(?:recommend|suggest)|what (?:should|can|could) (?:we|i) (?:order|eat|try|do|get)|what to (?:order|eat|try|get|do)|what(?:'s| is|s) good|good to (?:order|eat|get|try)|menu|what.*serv(?:e|ing)|reservation|accessib|parking|restroom|opening hours|is (?:it|that|the .+) open|tell me (?:more )?about|look up|search for/i.test(
     text,
   );
 }
@@ -406,7 +406,11 @@ export function referencedVenue(
 ) {
   const named = (text: string) =>
     plan.stops
-      .filter((s) => text.toLowerCase().includes(s.place.name.toLowerCase()))
+      .filter((stop) =>
+        aliases(stop.place.name).some((alias) =>
+          normalize(text).includes(alias),
+        ),
+      )
       .at(-1)?.place;
   if (named(text)) return named(text)!;
   if (/\bfirst\b/i.test(text)) return plan.stops[0]?.place;

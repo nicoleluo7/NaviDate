@@ -7,7 +7,7 @@ export async function claimDaily(
 ) {
   const parsed = Number(requested ?? fallback),
     limit = Number.isFinite(parsed)
-      ? Math.max(0, Math.min(100, Math.floor(parsed)))
+      ? Math.max(0, Math.min(500, Math.floor(parsed)))
       : fallback;
   const store = getStorage(),
     day = new Date().toISOString().slice(0, 10);
